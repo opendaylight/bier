@@ -1,0 +1,133 @@
+module bier-channel-api {
+	namespace "urn:bier:channel";
+	prefix "bier-channel-api";
+	import ietf-inet-types {
+       prefix "inet";
+     }
+  import ietf-mpls {
+       prefix "mpls";
+     }
+  
+  import ietf-bier {
+        prefix bier;
+    }
+  import bier-common {
+      prefix bier-common;
+  }
+  import bier-channel {
+      prefix bier-channel;
+  }
+  
+	organization "zte";	
+	revision 2016-11-02 {
+    description "Initial revision.";
+  }
+  	
+ rpc get-channel {
+		input {
+			leaf topology-id {
+			  type string;
+		  }
+		}
+		output {
+		  list channel-name {
+					key name;
+					leaf name {
+						type string;
+					}
+				}
+		}
+	}
+	
+ rpc query-channel {
+		input {
+		    leaf topology-id {
+			    type string;
+		    }
+				leaf-list channel-name {
+					type string;
+				}
+		}
+		output {
+				list channel {
+					key name;
+					uses bier-channel:channel;
+				}
+		}
+	}
+			
+	rpc add-channel {
+		input {
+		  leaf topology-id {
+			  type string;
+		  }
+			container channel {
+					uses bier-channel:channel;
+				}
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+       }
+		}
+	}
+	
+	rpc remove-channel {
+		input {
+			leaf topology-id {
+			  type string;
+		  }
+		  leaf channel-name {
+			  type string;
+		  }
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+       }
+		}
+	}
+	
+	rpc modify-channel {
+		input {
+		  leaf topology-id {
+			  type string;
+		  }
+			container channel {
+					uses bier-channel:channel;
+				}
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+       }
+		}
+	}
+	
+	rpc deploy-channel {
+		input {
+		  leaf topology-id {
+			  type string;
+		  }
+		  leaf channel-name {
+			  type string;
+		  }
+		  leaf node-id {
+		    type string;
+		  }
+			leaf ingress-node {
+			  type bier:bfr-id;
+		  }
+		  list egress-node {
+			  leaf node {
+			      type bier:bfr-id;
+			  }
+		  }
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+       }
+		}
+	}
+}				

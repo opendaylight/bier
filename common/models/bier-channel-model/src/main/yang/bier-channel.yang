@@ -1,0 +1,76 @@
+module bier-channel {
+	namespace "urn:bier:channel";
+	prefix "bier-channel";
+	import ietf-inet-types {
+       prefix "inet";
+     }
+  import ietf-mpls {
+       prefix "mpls";
+     }
+  
+  import ietf-bier {
+        prefix bier;
+    }
+  import bier-common {
+      prefix bier-common;
+  }
+	organization "zte";	
+	revision 2016-11-02 {
+    description "Initial revision.";
+  }
+  
+  container bier-network-channel {
+    list bier-channel {
+      key "topology-id";
+      leaf topology-id {
+			  type string;
+		  } 
+      list channel {
+        key "name";
+        uses channel;
+        
+        leaf node-id {
+          type string;
+        }
+        leaf ingress-node {
+			    type bier:bfr-id;
+		    }
+		    list egress-node {
+			    leaf node {
+			      type bier:bfr-id;
+			    }
+			  }
+      }
+    }
+  }
+  
+  grouping channel {
+      leaf name {
+			  type string;
+			}
+			
+			leaf src-ip {
+			  type inet:ip-address;
+			}
+			
+			leaf dst-group {
+			  type inet:ip-address;
+			}
+			
+			leaf domain-id {
+			  type bier-common:domain-id;
+			}
+			
+			leaf sub-domain-id {
+			  type bier:sub-domain-id;
+			}
+			
+		  leaf source-wildcard {
+			  type uint8;
+			}
+			
+			leaf group-wildcard {
+			  type uint8;
+			}
+		}
+}				

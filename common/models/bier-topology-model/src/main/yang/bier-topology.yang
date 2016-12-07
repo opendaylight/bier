@@ -1,0 +1,184 @@
+module bier-topology {
+	namespace "urn:bier:topology";
+	prefix "bier-topology";
+	
+  import ietf-inet-types {
+       prefix "inet";
+     }
+  
+  import ietf-mpls {
+       prefix "mpls";
+     }
+  
+  import ietf-bier {
+        prefix bier;
+    }
+ 
+  import bier-common {
+        prefix bier-common;
+    }
+	
+	organization "zte";	
+	revision 2016-11-02 {
+    description "Initial revision.";
+  }
+  
+  container bier-network-topology {
+    list bier-topology {
+      key "topology-id";
+      leaf topology-id {
+			  type string;
+			}   
+			      
+			list bier-node {
+			  key "node-id";
+			  uses bier-node;
+		  }
+					  		
+			list bier-link {
+			  key "link-id";
+				uses bier-link;
+		  }
+						  
+		  list bier-domain
+			{
+			  key "domain-id";
+			  leaf domain-id {
+			    type bier-common:domain-id;
+			  }
+			  list bier-sub-domain {
+			    key "sub-domain-id";
+			    leaf sub-domain-id {
+			      type bier:sub-domain-id;
+			    }
+			  }
+			}
+		}
+  }
+  	
+  grouping bier-node-params {
+    list domain {
+      key "domain-id";
+      leaf domain-id {
+			  type bier-common:domain-id;
+			}
+		
+		  leaf encapsulation-type {
+			  type identityref {
+          base bier:bier-encapsulation;
+        }
+       default "bier:bier-encapsulation-mpls";
+		  }
+		  
+		  leaf bfr-id {
+			  type bier:bfr-id;
+		  }
+		    
+		  leaf bitstringlength {
+			  type bier:bsl;
+		  }
+		
+		  leaf ipv4-bfr-prefix {
+			  type inet:ipv4-prefix;
+		  }
+		
+		  leaf ipv6-bfr-prefix {
+			  type inet:ipv6-prefix;
+		  }
+		  
+		  list sub-domain {
+		    key "sub-domain-id";
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    
+		    leaf igp-type {
+          type bier:igp-type;
+            description "IGP type.";
+        }
+		    leaf bfr-id {
+			    type bier:bfr-id;
+		    }
+		    leaf bitstringlength {
+			    type bier:bsl;
+		    }
+		    leaf mt-id {
+			    default 0;
+			    type bier:mt-id;
+		    }
+		  
+        list ipv4 {
+		      uses bier:bier-mpls-cfg;
+		    }
+		
+		    list ipv6 {
+		      uses bier:bier-mpls-cfg;
+		    } 
+		  }   
+	  }
+  }
+  
+  
+  grouping bier-node {
+		leaf node-id {
+			type string;
+		}
+		leaf name {
+			type string;
+		}
+		leaf router-id {
+			type string;
+		}
+		container bier-node-params {
+		    uses bier-node-params;
+		}
+		leaf latitude {
+			default 0;
+			type uint64;
+		}
+		leaf longitude {
+			default 0;
+			type uint64;
+		}
+		list bier-termination-point {
+		    key "tp-id";
+				leaf tp-id {
+					type string;
+				}
+		}
+	}
+	
+	grouping bier-link {
+		leaf link-id {
+			type string;
+		}
+		container link-source {
+		  leaf source-node {
+			  type string;
+		  }
+		  leaf source-tp {
+			  type string;
+		  }
+		}
+		container link-dest {
+		  leaf dest-node {
+			  type string;
+		  }
+		  leaf dest-tp {
+			  type string;
+		  }
+		}
+		leaf bfr-adj-id {
+			type uint16;
+		}
+		leaf delay {
+			default 0;
+			type uint64;
+		}
+		leaf loss {
+			default 0;
+			type uint64;
+		}
+	}
+	
+}

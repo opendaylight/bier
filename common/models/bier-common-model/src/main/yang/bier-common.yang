@@ -1,0 +1,28 @@
+module bier-common {
+	namespace "urn:bier:common";
+	prefix "bier-common";
+	
+	organization "zte";	
+	revision 2016-11-02 {
+    description "Initial revision.";
+  }
+  
+  typedef domain-id {
+      type uint16;
+      description
+            "The identifier for domain-id";
+  }
+  
+  grouping configure-result {
+      leaf result {
+				  type enumeration {
+            enum SUCCESS;
+			      enum FAILURE;
+          }
+       }
+       leaf errorCause {
+           type string;
+       }
+  }
+	
+}

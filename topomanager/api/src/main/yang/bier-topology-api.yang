@@ -1,0 +1,256 @@
+module bier-topology-api {
+	namespace "urn:bier:topology:api";
+	prefix "bier-topology-api";
+	
+  import ietf-inet-types {
+       prefix "inet";
+     }
+  
+  import ietf-mpls {
+       prefix "mpls";
+     }
+  
+  import ietf-bier {
+        prefix bier;
+    }
+    
+  import bier-common {
+        prefix bier-common;
+    }
+  
+  import bier-topology {
+        prefix bier-topology;
+    }
+	
+	organization "zte";	
+	revision 2016-11-02 {
+    description "Initial revision.";
+  }
+  
+  grouping topology {
+    leaf topology-id {
+			type string;
+		}
+		list node-id {
+		  leaf node-id {
+				type string;
+		  }
+		}
+		list link-id {
+			leaf link-id {
+				type string;
+			}
+		}
+  }
+  
+	rpc load-topology {
+		input {
+			leaf topology-id {
+			  type string;
+		  }
+		}
+		output {
+		  list topology {
+					key topology-id;
+					leaf topology-id {
+						type string;
+					}
+				}
+		}
+	}
+	
+	rpc query-topology {
+		input {
+			leaf topology-id {
+			  type string;
+		  }
+		}
+		output {
+		  uses topology;
+		}
+	}
+
+	rpc query-node {
+		input {
+		    leaf topology-id {
+			    type string;
+		    }
+				leaf-list node {
+				  type string;  
+				}
+		}
+		output {
+				list node {
+					key node-id;
+					uses bier-topology:bier-node;
+				}
+		}
+	}
+	
+	rpc query-link {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+				leaf-list link {
+				  type string;  
+				}
+		}
+		output {
+				list link {
+					key link-id;
+					uses bier-topology:bier-link;
+				}
+		}
+	}
+	
+	rpc configure-domain {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		    list domain {
+		      leaf domain-id {
+		        type bier-common:domain-id;
+		      }
+		    } 
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+       }
+		}
+	}
+	
+	rpc configure-subdomain {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    
+		    list sub-domain-id {
+		      leaf sub-domain-id {
+		        type bier:sub-domain-id;
+		      }
+		    }
+		    
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+       }
+		}
+	}								
+	
+	rpc configure-node {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+				leaf node-id {
+			    type string; 
+		    }
+		    container bier-node-params {
+		      uses bier-topology:bier-node-params;
+		    }
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+       }
+		}
+	}
+	
+	rpc query-domain	{
+	  input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		}
+		output {
+				list domain {
+           leaf domain-id {
+             type bier-common:domain-id;
+           }
+       }
+		}	
+	}
+	
+	rpc query-subdomain	{
+	  input {
+		    leaf topology-id {
+			    type string;
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		}
+		output {
+				list subdomain {
+           leaf sub-domain-id {
+             type bier:sub-domain-id;
+           }
+       }
+		}	
+	}
+	
+	rpc delete-domain	{
+	input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		     leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+        }
+		}	
+	}
+	
+	rpc delete-subdomain	{
+	input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		     leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+        }
+		}	
+	}
+	
+	rpc delete-node	{
+	  input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		     leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    leaf node-id {
+			    type string;
+		    }
+		}
+		output {
+				container configure-result {
+           uses bier-common:configure-result;
+        }
+		}	
+	}									
+}
