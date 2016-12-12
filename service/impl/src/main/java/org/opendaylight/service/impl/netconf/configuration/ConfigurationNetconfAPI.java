@@ -136,8 +136,8 @@ public class ConfigurationNetconfAPI implements BindingAwareConsumer {
 
     public static Future<RpcResult<Void>> writeMultiCastInfo(ConfigurationType type,Channel channel) {
         LOG.info("configurations write to node : multicast info");
-        MountPoint node = getMountPoin(channel.getNodeId());
-        if (null == getMountPoin(channel.getNodeId())) {
+        MountPoint node = getMountPoin(channel.getIngressNode());
+        if (null == getMountPoin(channel.getIngressNode())) {
 
             return Futures.immediateFuture(RPC_FAILED);
         }

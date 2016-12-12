@@ -14,15 +14,17 @@ module bier-common {
   }
   
   grouping configure-result {
-      leaf result {
-				  type enumeration {
-            enum SUCCESS;
-			      enum FAILURE;
+      container configure-result {
+          leaf result {
+              type enumeration {
+                enum SUCCESS;
+                enum FAILURE;
+              }
           }
-       }
-       leaf errorCause {
-           type string;
-       }
+           leaf errorCause {
+               type string;
+           }
+      }
   }
 	
 }

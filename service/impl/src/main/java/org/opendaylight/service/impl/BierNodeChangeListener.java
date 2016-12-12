@@ -12,8 +12,6 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopol
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.routing.BierBuilder;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.routing.bier.BierGlobalBuilder;
 
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
@@ -69,8 +67,6 @@ public class BierNodeChangeListener implements DataTreeChangeListener<BierNode> 
     }
 
     public void processAddedNode(BierNode after) {
-        BierBuilder bierBuilder = new BierBuilder();
-        BierGlobalBuilder bierGlobalBuilder = new BierGlobalBuilder();
 
     }
 

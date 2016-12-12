@@ -7,10 +7,10 @@
  */
 package org.opendaylight.channel.cli.impl;
 
+import org.opendaylight.channel.cli.api.ChannelCliCommands;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.opendaylight.channel.cli.api.ChannelCliCommands;
 
 public class ChannelCliCommandsImpl implements ChannelCliCommands {
 

@@ -61,14 +61,10 @@ module bier-channel-api {
 		  leaf topology-id {
 			  type string;
 		  }
-			container channel {
-					uses bier-channel:channel;
-				}
+		uses bier-channel:channel;
 		}
 		output {
-				container configure-result {
            uses bier-common:configure-result;
-       }
 		}
 	}
 	
@@ -82,9 +78,7 @@ module bier-channel-api {
 		  }
 		}
 		output {
-				container configure-result {
            uses bier-common:configure-result;
-       }
 		}
 	}
 	
@@ -93,14 +87,10 @@ module bier-channel-api {
 		  leaf topology-id {
 			  type string;
 		  }
-			container channel {
-					uses bier-channel:channel;
-				}
+		  uses bier-channel:channel;
 		}
 		output {
-				container configure-result {
            uses bier-common:configure-result;
-       }
 		}
 	}
 	
@@ -112,22 +102,17 @@ module bier-channel-api {
 		  leaf channel-name {
 			  type string;
 		  }
-		  leaf node-id {
-		    type string;
-		  }
 			leaf ingress-node {
-			  type bier:bfr-id;
+			  type string;
 		  }
 		  list egress-node {
-			  leaf node {
-			      type bier:bfr-id;
+			  leaf node-id {
+			      type string;
 			  }
 		  }
 		}
 		output {
-				container configure-result {
            uses bier-common:configure-result;
-       }
 		}
 	}
 }				

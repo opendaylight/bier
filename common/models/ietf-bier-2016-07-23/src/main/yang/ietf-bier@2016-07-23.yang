@@ -23,6 +23,11 @@ module ietf-bier {
      import ietf-ospf  {
        prefix "ospf";
      }
+     import yang-ext {
+       prefix "ext";
+     }
+
+
 
      organization
        "IETF BIER(Bit Indexed Explicit Replication ) Working Group";
@@ -279,15 +284,7 @@ module ietf-bier {
                 "Defines the necessary label ranges per bitstring length.";
           }
 
-     /* Configuration Data */
-      augment "/rt:routing" {
-            description
-                  "This augments routing-instance configuration with bier.";
-            container bier{
-                  container bier-global {
-                    uses bier-parameters;
-                        list sub-domain{
-              key "sub-domain-id";
+          grouping bier-subdomain{
                       leaf sub-domain-id{
                         type sub-domain-id;
                         description
@@ -336,9 +333,26 @@ module ietf-bier {
             description
               "Denfines subdomain configuration";
                 }
+
+          grouping bier-global-cfg {
+                  container bier-global {
+                    uses bier-parameters;
+                        list sub-domain{
+                              key "sub-domain-id";
+                              uses bier-subdomain;
+                              }
                 description
                   "BIER global config.";
                 }
+          }
+
+     /* Configuration Data */
+      augment "/rt:routing" {
+           ext:augment-identifier "bier-configuration";
+           description
+                  "This augments routing-instance configuration with bier.";
+            container bier{
+              uses bier-global-cfg ;
              description "BIER config.";
             }
         }

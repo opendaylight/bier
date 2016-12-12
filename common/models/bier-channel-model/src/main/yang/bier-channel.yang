@@ -28,16 +28,13 @@ module bier-channel {
       list channel {
         key "name";
         uses channel;
-        
-        leaf node-id {
-          type string;
-        }
+
         leaf ingress-node {
-			    type bier:bfr-id;
+			    type string;
 		    }
 		    list egress-node {
-			    leaf node {
-			      type bier:bfr-id;
+			    leaf node-id {
+			      type string;
 			    }
 			  }
       }
@@ -45,32 +42,32 @@ module bier-channel {
   }
   
   grouping channel {
-      leaf name {
-			  type string;
-			}
-			
-			leaf src-ip {
-			  type inet:ip-address;
-			}
-			
-			leaf dst-group {
-			  type inet:ip-address;
-			}
-			
-			leaf domain-id {
-			  type bier-common:domain-id;
-			}
-			
-			leaf sub-domain-id {
-			  type bier:sub-domain-id;
-			}
-			
-		  leaf source-wildcard {
-			  type uint8;
-			}
-			
-			leaf group-wildcard {
-			  type uint8;
-			}
-		}
+        leaf name {
+          type string;
+        }
+
+        leaf src-ip {
+          type inet:ip-address;
+        }
+
+        leaf dst-group {
+          type inet:ip-address;
+        }
+
+        leaf domain-id {
+          type bier-common:domain-id;
+        }
+
+        leaf sub-domain-id {
+          type bier:sub-domain-id;
+        }
+
+        leaf source-wildcard {
+          type uint8;
+        }
+
+        leaf group-wildcard {
+          type uint8;
+        }
+  }
 }				

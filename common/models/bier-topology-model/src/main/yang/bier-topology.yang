@@ -62,59 +62,7 @@ module bier-topology {
       leaf domain-id {
 			  type bier-common:domain-id;
 			}
-		
-		  leaf encapsulation-type {
-			  type identityref {
-          base bier:bier-encapsulation;
-        }
-       default "bier:bier-encapsulation-mpls";
-		  }
-		  
-		  leaf bfr-id {
-			  type bier:bfr-id;
-		  }
-		    
-		  leaf bitstringlength {
-			  type bier:bsl;
-		  }
-		
-		  leaf ipv4-bfr-prefix {
-			  type inet:ipv4-prefix;
-		  }
-		
-		  leaf ipv6-bfr-prefix {
-			  type inet:ipv6-prefix;
-		  }
-		  
-		  list sub-domain {
-		    key "sub-domain-id";
-		    leaf sub-domain-id {
-			    type bier:sub-domain-id;
-		    }
-		    
-		    leaf igp-type {
-          type bier:igp-type;
-            description "IGP type.";
-        }
-		    leaf bfr-id {
-			    type bier:bfr-id;
-		    }
-		    leaf bitstringlength {
-			    type bier:bsl;
-		    }
-		    leaf mt-id {
-			    default 0;
-			    type bier:mt-id;
-		    }
-		  
-        list ipv4 {
-		      uses bier:bier-mpls-cfg;
-		    }
-		
-		    list ipv6 {
-		      uses bier:bier-mpls-cfg;
-		    } 
-		  }   
+	  uses bier:bier-global-cfg;
 	  }
   }
   
