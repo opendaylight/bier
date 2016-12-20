@@ -183,8 +183,17 @@
       <artifactId>ietf-multicast-information-2016-10-28</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>bier-adapter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>bier-driver</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
-    
   </dependencies>
 
 </project>

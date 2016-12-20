@@ -109,14 +109,12 @@ module bier-topology-api {
 		    leaf topology-id {
 			    type string; 
 		    }
-		    list domain {
-		      leaf domain-id {
-		        type bier-common:domain-id;
-		      }
+		    leaf-list domain {
+		      type bier-common:domain-id;
 		    } 
 		}
 		output {
-				container configure-result {
+				container configure-domain-result {
            uses bier-common:configure-result;
        }
 		}
@@ -131,15 +129,13 @@ module bier-topology-api {
 			    type bier-common:domain-id; 
 		    }
 		    
-		    list sub-domain-id {
-		      leaf sub-domain-id {
-		        type bier:sub-domain-id;
-		      }
+		    leaf-list sub-domain-id {
+		      type bier:sub-domain-id;
 		    }
 		    
 		}
 		output {
-				container configure-result {
+				container configure-subdomain-result {
            uses bier-common:configure-result;
        }
 		}
@@ -153,12 +149,11 @@ module bier-topology-api {
 				leaf node-id {
 			    type string; 
 		    }
-		    container bier-node-params {
-		      uses bier-topology:bier-node-params;
-		    }
+		    
+		    uses bier-topology:bier-node-params;
 		}
 		output {
-				container configure-result {
+				container configure-node-result {
            uses bier-common:configure-result;
        }
 		}
@@ -197,6 +192,44 @@ module bier-topology-api {
 		}	
 	}
 	
+	rpc query-subdomain-node	{
+	  input {
+		    leaf topology-id {
+			    type string;
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		}
+		output {
+				list subdomain-node {
+           uses bier-topology:bier-node;
+       }
+		}	
+	}
+	
+	rpc query-subdomain-link	{
+	  input {
+		    leaf topology-id {
+			    type string;
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		}
+		output {
+				list subdomain-link {
+           uses bier-topology:bier-link;
+       }
+		}	
+	}
+	
 	rpc delete-domain	{
 	input {
 		    leaf topology-id {
@@ -207,7 +240,7 @@ module bier-topology-api {
 		    }
 		}
 		output {
-				container configure-result {
+				container delete-domain-result {
            uses bier-common:configure-result;
         }
 		}	
@@ -226,7 +259,7 @@ module bier-topology-api {
 		    }
 		}
 		output {
-				container configure-result {
+				container delete-subdomain-result {
            uses bier-common:configure-result;
         }
 		}	
@@ -248,7 +281,7 @@ module bier-topology-api {
 		    }
 		}
 		output {
-				container configure-result {
+				container delete-node-result {
            uses bier-common:configure-result;
         }
 		}	

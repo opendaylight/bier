@@ -7,9 +7,9 @@
  */
 package org.opendaylight.service.impl;
 
+import  org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
-import org.opendaylight.service.impl.netconf.configuration.ConfigurationNetconfAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +20,15 @@ public class ServiceProvider {
     private final DataBroker dataBroker;
 
     private BindingAwareBroker bindingAwareBroker = null;
-    private ConfigurationNetconfAPI api;
+    private BierConfigWriter bierConfigWriter;
+    private ServiceManager serviceManager;
 
     public ServiceProvider(final DataBroker dataBroker) {
         this.dataBroker = dataBroker;
     }
 
-    public void setBindingRegistry(BindingAwareBroker bindingAwareBroker) {
-        this.bindingAwareBroker = bindingAwareBroker;
+    public void setBierConfigWriter(BierConfigWriter bierConfigWriter) {
+        this.bierConfigWriter = bierConfigWriter;
     }
 
     /**
@@ -35,10 +36,7 @@ public class ServiceProvider {
      */
     public void init() {
         LOG.info("ServiceProvider Session Initiated");
-        api = new ConfigurationNetconfAPI();
-        bindingAwareBroker.registerConsumer(api);
-        ServiceManager serviceManager = new ServiceManager(dataBroker);
-
+        serviceManager = new ServiceManager(dataBroker, bierConfigWriter);
     }
 
     /**

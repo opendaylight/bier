@@ -8,8 +8,8 @@
 package org.opendaylight.topomanager.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
+import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.BierTopologyApiService;
 
 import org.slf4j.Logger;
@@ -17,43 +17,44 @@ import org.slf4j.LoggerFactory;
 
 public class BierTopologyProvider {
 
-	private static final Logger LOG = LoggerFactory.getLogger(BierTopologyProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BierTopologyProvider.class);
 
-	private final RpcProviderRegistry rpcRegistry;
-	private final DataBroker dataBroker;
+    private final RpcProviderRegistry rpcRegistry;
+    private final DataBroker dataBroker;
     private BierTopologyManager topoManager;
 
-	private RpcRegistration<BierTopologyApiService> topoService = null;
+    private RpcRegistration<BierTopologyApiService> topoService = null;
 
-	public BierTopologyProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcRegistry) {
-		this.dataBroker = dataBroker;
-		this.rpcRegistry = rpcRegistry;
-	}
-	
-	public DataBroker getDataBroker() {
-	    return dataBroker;
-	}
+    public BierTopologyProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcRegistry) {
+        this.dataBroker = dataBroker;
+        this.rpcRegistry = rpcRegistry;
+    }
 
-	/**
-	 * Method called when the blueprint container is created.
-	 */
-	public void init() {
-		LOG.info("BierTopologyProvider Session Initiated");
-		topoService = rpcRegistry.addRpcImplementation(BierTopologyApiService.class, new BierTopologyServiceImpl(dataBroker));
-		
+    public DataBroker getDataBroker() {
+        return dataBroker;
+    }
+
+    /**
+    * Method called when the blueprint container is created.
+    */
+    public void init() {
+        LOG.info("BierTopologyProvider Session Initiated");
+        topoService = rpcRegistry.addRpcImplementation(BierTopologyApiService.class,
+                new BierTopologyServiceImpl(dataBroker));
+
         topoManager = new BierTopologyManager(this);
         topoManager.start();
-	}
+    }
 
-	/**
-	 * Method called when the blueprint container is destroyed.
-	 */
-	public void close() {
-		LOG.info("BierTopologyProvider Closed");
-		if (topoService != null) {
-			topoService.close();
-		}
-	}
+    /**
+    * Method called when the blueprint container is destroyed.
+    */
+    public void close() {
+        LOG.info("BierTopologyProvider Closed");
+        if (topoService != null) {
+            topoService.close();
+        }
+    }
 }
 
 // Following is previous method

@@ -19,8 +19,9 @@
     	  <module>common</module>
     	  <module>topomanager</module>
         <module>channel</module>
+        <module>sbi-adapter</module>
         <module>service</module>
-
+        <module>drivers</module>
         <module>features</module>
         <module>karaf</module>
     </modules>

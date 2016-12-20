@@ -3,6 +3,7 @@ module bier-channel {
 	prefix "bier-channel";
 	import ietf-inet-types {
        prefix "inet";
+       revision-date "2013-07-15";
      }
   import ietf-mpls {
        prefix "mpls";
@@ -27,16 +28,25 @@ module bier-channel {
 		  } 
       list channel {
         key "name";
+        ordered-by user;
         uses channel;
 
         leaf ingress-node {
-			    type string;
-		    }
-		    list egress-node {
-			    leaf node-id {
-			      type string;
-			    }
-			  }
+			type string;
+		}
+		leaf ingress-bfr-id {
+		    type bier:bfr-id;
+		}
+        list egress-node {
+            key "node-id";
+            ordered-by user;
+            leaf node-id {
+              type string;
+            }
+            leaf egress-bfr-id {
+                type bier:bfr-id;
+            }
+          }
       }
     }
   }

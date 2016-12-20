@@ -1,13 +1,7 @@
 module bier-channel-api {
-	namespace "urn:bier:channel";
+	namespace "urn:bier:channel:api";
 	prefix "bier-channel-api";
-	import ietf-inet-types {
-       prefix "inet";
-     }
-  import ietf-mpls {
-       prefix "mpls";
-     }
-  
+
   import ietf-bier {
         prefix bier;
     }
@@ -52,6 +46,14 @@ module bier-channel-api {
 				list channel {
 					key name;
 					uses bier-channel:channel;
+					leaf ingress-node {
+                        type string;
+                    }
+                    list egress-node {
+                        leaf node-id {
+                          type string;
+                        }
+                    }
 				}
 		}
 	}
@@ -115,4 +117,5 @@ module bier-channel-api {
            uses bier-common:configure-result;
 		}
 	}
+
 }				

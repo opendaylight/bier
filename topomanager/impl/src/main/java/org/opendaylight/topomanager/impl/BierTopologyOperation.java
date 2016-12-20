@@ -7,16 +7,13 @@
  */
 package org.opendaylight.topomanager.impl;
 
-import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-
 import com.google.common.util.concurrent.ListenableFuture;
-
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 
 public interface BierTopologyOperation {
 
-    
     void writeOperation(ReadWriteTransaction transaction);
 
-    
-    <T> ListenableFuture<T> ReadOperation(ReadWriteTransaction transaction);
+
+    <T> ListenableFuture<T> readOperation(ReadWriteTransaction transaction);
 }

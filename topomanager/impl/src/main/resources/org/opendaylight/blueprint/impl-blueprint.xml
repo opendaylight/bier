@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!-- vi: set et smarttab sw=4 tabstop=4: -->
 <!--
 Copyright © 2016 ZTE,Inc. and others. All rights reserved.
@@ -14,11 +14,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <reference id="dataBroker"
     interface="org.opendaylight.controller.md.sal.binding.api.DataBroker"
     odl:type="default" />
+  <reference id="rpcRegistry"
+		interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry" />
 
   <bean id="provider"
-    class="org.opendaylight.topomanager.impl.TopomanagerProvider"
+    class="org.opendaylight.topomanager.impl.BierTopologyProvider"
     init-method="init" destroy-method="close">
     <argument ref="dataBroker" />
+    <argument ref="rpcRegistry" />
   </bean>
 
 </blueprint>

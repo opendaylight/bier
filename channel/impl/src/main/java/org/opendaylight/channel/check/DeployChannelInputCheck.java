@@ -7,12 +7,15 @@
  */
 package org.opendaylight.channel.check;
 
-import org.opendaylight.channel.util.ChannelDBUtil;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.DeployChannelInput;
+import com.google.common.base.Preconditions;
 
-public class DeployChannelInputCheck implements InputCheck {
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannelInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class DeployChannelInputCheck extends ChannelInputCheck {
     private DeployChannelInput deployChannelInput;
-    private ChannelDBUtil channelDBUtil = ChannelDBUtil.getInstance();
+    private static final Logger LOG = LoggerFactory.getLogger(DeployChannelInputCheck.class);
 
     public DeployChannelInputCheck(DeployChannelInput input) {
         this.deployChannelInput = input;
@@ -24,18 +27,26 @@ public class DeployChannelInputCheck implements InputCheck {
         if (result.isInputIllegal()) {
             return result;
         }
-        if (!checkChannelExist()) {
+        if (!checkChannelExist(deployChannelInput.getChannelName(),deployChannelInput.getTopologyId())) {
             return new CheckResult(true, "The Channel does not exists!");
         }
         return new CheckResult(false, "");
     }
 
-    private boolean checkChannelExist() {
-        return channelDBUtil.isChannelExists(deployChannelInput.getChannelName(), deployChannelInput.getTopologyId());
-
+    private CheckResult checkParam() {
+        return checkInputNull(deployChannelInput);
     }
 
-    private CheckResult checkParam() {
-        return null;
+    private CheckResult checkInputNull(DeployChannelInput input) {
+        try {
+            Preconditions.checkNotNull(input, "Input is null!");
+            Preconditions.checkNotNull(input.getChannelName(), "channel-name is null!");
+            Preconditions.checkNotNull(input.getIngressNode(), "ingress-node is null!");
+            Preconditions.checkNotNull(input.getEgressNode(), "egress-node is null!");
+        } catch (NullPointerException e) {
+            LOG.warn("NullPointerException: {}",e);
+            return new CheckResult(true,e.getMessage());
+        }
+        return new CheckResult(false,"");
     }
 }

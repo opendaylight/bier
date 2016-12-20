@@ -12,8 +12,5 @@ import org.slf4j.LoggerFactory;
 
 
 public class BierTpChangeListenerImpl {
-	private static final Logger LOG =  LoggerFactory.getLogger(BierTpChangeListenerImpl.class);    // 日志记录
-	
-	
-	
+    private static final Logger LOG =  LoggerFactory.getLogger(BierTpChangeListenerImpl.class);    // 日志记录
 }

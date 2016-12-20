@@ -15,15 +15,14 @@ import java.util.concurrent.ExecutionException;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.AddChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannelBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.DeployChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.ModifyChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.QueryChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.RemoveChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannel;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannelKey;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelBuilder;
@@ -40,8 +39,9 @@ public class ChannelDBUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ChannelDBUtil.class);
     private ChannelDBContext context;
     private static ChannelDBUtil instance = new ChannelDBUtil();
+    private static final String DEFAULT_TOPO_ID = "flow:1";
 
-    public ChannelDBUtil() {
+    ChannelDBUtil() {
     }
 
 
@@ -54,16 +54,16 @@ public class ChannelDBUtil {
     }
 
     public boolean isChannelExists(String name, String topologyId) {
-        Optional<Channel> channel = readChannel(name,topologyId);
+        Optional<Channel> channel = readChannel(name,buildTopoId(topologyId));
 
         if (channel == null || !channel.isPresent()) {
             return false;
-        } else {
-            return true;
         }
+        return true;
+
     }
 
-    private Optional<Channel> readChannel(String name, String topologyId) {
+    public Optional<Channel> readChannel(String name, String topologyId) {
         ReadOnlyTransaction rtx = context.newReadOnlyTransaction();
         try {
             return rtx.read(LogicalDatastoreType.CONFIGURATION,
@@ -108,62 +108,44 @@ public class ChannelDBUtil {
                 .child(Channel.class, new ChannelKey(name));
     }
 
+
     private InstanceIdentifier<BierNetworkChannel> buildBierNetworkChannelPath() {
         return InstanceIdentifier.create(BierNetworkChannel.class);
     }
 
     public boolean writeChannelToDB(AddChannelInput input) {
         WriteTransaction wtx = context.newWriteOnlyTransaction();
-        boolean result = true;
 
-        if (!isBierTopoIdExists(input.getTopologyId())) {
-            BierChannel bierChannel = new BierChannelBuilder()
-                    .setTopologyId(input.getTopologyId())
-                    .build();
-            wtx.put(LogicalDatastoreType.CONFIGURATION,
-                    buildBierChannelPath(input.getTopologyId()),bierChannel,true);
-            result = submitTransaction(wtx);
-        }
+        Channel channel = new ChannelBuilder(input).build();
+        wtx.put(LogicalDatastoreType.CONFIGURATION,
+                buildChannelPath(input.getName(), buildTopoId(input.getTopologyId())), channel, true);
+        return submitTransaction(wtx);
 
-        if (result) {
-            ChannelBuilder channelBuilder = new ChannelBuilder(input);
-            wtx.put(LogicalDatastoreType.CONFIGURATION,
-                    buildChannelPath(input.getName(),input.getTopologyId()),channelBuilder.build(),true);
-            result = submitTransaction(wtx);
-        }
-        return result;
     }
 
 
     public boolean writeDeployChannelToDB(DeployChannelInput input) {
         WriteTransaction wtx = context.newWriteOnlyTransaction();
         Channel channel = buildDeployChannelInfo(input);
-        wtx.merge(LogicalDatastoreType.CONFIGURATION,
-                buildChannelPath(input.getChannelName(),input.getTopologyId()),channel,true);
+        wtx.put(LogicalDatastoreType.CONFIGURATION,
+                buildChannelPath(input.getChannelName(),buildTopoId(input.getTopologyId())),channel);
         return submitTransaction(wtx);
 
     }
 
+
     private Channel buildDeployChannelInfo(DeployChannelInput input) {
+        Channel oldChannel = readChannel(input.getChannelName(),buildTopoId(input.getTopologyId())).get();
         List<EgressNode> egressNodeList = new ArrayList<>();
-        for (org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.deploy.channel.input.EgressNode egressNode
+        for (org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNode egressNode
                 : input.getEgressNode()) {
             egressNodeList.add(new EgressNodeBuilder().setNodeId(egressNode.getNodeId()).build());
         }
-        return new ChannelBuilder().setIngressNode(input.getIngressNode()).setEgressNode(egressNodeList).build();
+        return new ChannelBuilder(oldChannel)
+                .setIngressNode(input.getIngressNode())
+                .setEgressNode(egressNodeList).build();
     }
 
-    private boolean isBierTopoIdExists(String topologyId) {
-        Optional<BierChannel> bierChannel = readBierChannel(topologyId);
-
-        if (bierChannel == null || !bierChannel.isPresent()) {
-            return false;
-        } else {
-            return true;
-        }
-
-
-    }
 
     private InstanceIdentifier<BierChannel> buildBierChannelPath(String topologyId) {
         return InstanceIdentifier.create(BierNetworkChannel.class)
@@ -186,7 +168,8 @@ public class ChannelDBUtil {
         }
         WriteTransaction wtx = context.newWriteOnlyTransaction();
 
-        wtx.delete(LogicalDatastoreType.CONFIGURATION, buildChannelPath(input.getChannelName(),input.getTopologyId()));
+        wtx.delete(LogicalDatastoreType.CONFIGURATION, buildChannelPath(input.getChannelName(),
+                buildTopoId(input.getTopologyId())));
         return submitTransaction(wtx);
 
     }
@@ -196,14 +179,14 @@ public class ChannelDBUtil {
 
         ChannelBuilder channelBuilder = new ChannelBuilder(input);
         wtx.merge(LogicalDatastoreType.CONFIGURATION,
-                buildChannelPath(input.getName(),input.getTopologyId()),channelBuilder.build(),true);
+                buildChannelPath(input.getName(),buildTopoId(input.getTopologyId())),channelBuilder.build(),true);
         return submitTransaction(wtx);
     }
 
     public List<Channel> queryChannels(QueryChannelInput input) {
         List<Channel> channels = new ArrayList<>();
         for (String channelName : input.getChannelName()) {
-            Optional<Channel> channel = readChannel(channelName, input.getTopologyId());
+            Optional<Channel> channel = readChannel(channelName, buildTopoId(input.getTopologyId()));
             if (channel != null && channel.isPresent()) {
                 channels.add(channel.get());
             }
@@ -213,13 +196,17 @@ public class ChannelDBUtil {
 
     public List<String> getChannels(String topoId) {
         List<String> channelNames = new ArrayList<>();
-        Optional<BierChannel> bierChannel = readBierChannel(topoId);
+        Optional<BierChannel> bierChannel = readBierChannel(buildTopoId(topoId));
         if (bierChannel != null && bierChannel.isPresent()) {
             for (Channel channel : bierChannel.get().getChannel()) {
                 channelNames.add(channel.getName());
             }
         }
         return channelNames;
+    }
+
+    private String buildTopoId(String topoId) {
+        return topoId != null ? topoId : DEFAULT_TOPO_ID;
     }
 
     public void initDB() {
@@ -231,6 +218,15 @@ public class ChannelDBUtil {
                     new BierNetworkChannelBuilder().build());
         }
         submitTransaction(wtx);
+    }
+
+    public boolean hasChannelDeplyed(String name, String topologyId) {
+        Optional<Channel> channel = readChannel(name,buildTopoId(topologyId));
+
+        if (channel != null && channel.isPresent() && channel.get().getIngressNode() != null) {
+            return true;
+        }
+        return false;
     }
 
 }

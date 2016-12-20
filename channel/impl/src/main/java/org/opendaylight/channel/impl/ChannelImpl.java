@@ -17,31 +17,34 @@ import org.opendaylight.channel.check.CheckResult;
 import org.opendaylight.channel.check.DeployChannelInputCheck;
 import org.opendaylight.channel.check.ModifyChannelInputCheck;
 import org.opendaylight.channel.check.RemoveChannelInputCheck;
+import org.opendaylight.channel.util.ChannelDBContext;
 import org.opendaylight.channel.util.ChannelDBUtil;
 import org.opendaylight.channel.util.RpcReturnUtil;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.AddChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.AddChannelOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.AddChannelOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierChannelApiService;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.DeployChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.DeployChannelOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.DeployChannelOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.GetChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.GetChannelOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.GetChannelOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.ModifyChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.ModifyChannelOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.ModifyChannelOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.QueryChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.QueryChannelOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.QueryChannelOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.RemoveChannelInput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.RemoveChannelOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.RemoveChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.BierChannelApiService;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannelOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.GetChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.GetChannelOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.GetChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.output.ChannelName;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.output.ChannelNameBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.ChannelBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.EgressNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.get.channel.output.ChannelName;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.get.channel.output.ChannelNameBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.query.channel.output.ChannelBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResultBuilder;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -54,15 +57,16 @@ public class ChannelImpl implements BierChannelApiService {
     private ChannelDBUtil channelDBUtil = ChannelDBUtil.getInstance();
 
 
-    public ChannelImpl() {
+    ChannelImpl(ChannelDBContext context) {
+        channelDBUtil.setContext(context);
     }
 
     @Override
     public Future<RpcResult<GetChannelOutput>> getChannel(GetChannelInput input) {
-        LOG.info("Channel:Query-channel {}", input);
+        LOG.info("Channel:get-channel {}", input);
         GetChannelOutputBuilder output = new GetChannelOutputBuilder();
-        if (input == null || input.getTopologyId() == null) {
-            return RpcReturnUtil.returnErr("input or topology-id  is null!");
+        if (input == null) {
+            return RpcReturnUtil.returnErr("input is null!");
         }
         List<String> channels = channelDBUtil.getChannels(input.getTopologyId());
         output.setChannelName(buildOutputChannelName(channels));
@@ -89,7 +93,7 @@ public class ChannelImpl implements BierChannelApiService {
             return RpcReturnUtil.returnRpcResult(output.build());
         }
 
-        if (channelDBUtil.modifyChannelToDB(input)) {
+        if (!channelDBUtil.modifyChannelToDB(input)) {
             output.setConfigureResult(
                     buildConfigResult(ConfigureResult.Result.FAILURE,"modify Channel to DB fail!"));
             return RpcReturnUtil.returnRpcResult(output.build());
@@ -113,7 +117,7 @@ public class ChannelImpl implements BierChannelApiService {
                     buildConfigResult(ConfigureResult.Result.FAILURE,checkInputResult.getErrorCause()));
             return RpcReturnUtil.returnRpcResult(output.build());
         }
-        if (channelDBUtil.writeDeployChannelToDB(input)) {
+        if (!channelDBUtil.writeDeployChannelToDB(input)) {
             output.setConfigureResult(
                     buildConfigResult(ConfigureResult.Result.FAILURE,"Write Deploy-Channel to DB fail!"));
             return RpcReturnUtil.returnRpcResult(output.build());
@@ -133,7 +137,7 @@ public class ChannelImpl implements BierChannelApiService {
                     buildConfigResult(ConfigureResult.Result.FAILURE,checkInputResult.getErrorCause()));
             return RpcReturnUtil.returnRpcResult(output.build());
         }
-        if (channelDBUtil.deleteChannelFromDB(input)) {
+        if (!channelDBUtil.deleteChannelFromDB(input)) {
             output.setConfigureResult(buildConfigResult(ConfigureResult.Result.FAILURE,"Delete Channel from DB fail!"));
             return RpcReturnUtil.returnRpcResult(output.build());
         }
@@ -145,23 +149,38 @@ public class ChannelImpl implements BierChannelApiService {
     public Future<RpcResult<QueryChannelOutput>> queryChannel(QueryChannelInput input) {
         LOG.info("Channel:Query-channel {}", input);
         QueryChannelOutputBuilder output = new QueryChannelOutputBuilder();
-        if (input == null || input.getTopologyId() == null
-                || input.getChannelName() == null || input.getChannelName().isEmpty()) {
-            return RpcReturnUtil.returnErr("input or topology-id or channel-name is null!");
+        if (input == null || input.getChannelName() == null || input.getChannelName().isEmpty()) {
+            return RpcReturnUtil.returnErr("input or channel-name is null!");
         }
         List<Channel> channels = channelDBUtil.queryChannels(input);
         output.setChannel(buildOutputChannels(channels));
         return RpcReturnUtil.returnRpcResult(output.build());
     }
 
-    private List<org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102
+    private List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102
             .query.channel.output.Channel> buildOutputChannels(List<Channel> channels) {
-        List<org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.query.channel.output.Channel>
+        List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.Channel>
                 channelList = new ArrayList<>();
         for (Channel channel: channels) {
-            channelList.add(new ChannelBuilder(channel).build());
+            org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.ChannelBuilder
+                    channelBuilder = new ChannelBuilder(channel);
+            channelBuilder.setIngressNode(channel.getIngressNode());
+            channelBuilder.setEgressNode(buildEgressNodes(channel.getEgressNode()));
+            channelList.add(channelBuilder.build());
         }
         return channelList;
+    }
+
+    private List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel
+            .EgressNode> buildEgressNodes(List<EgressNode> egressNode) {
+        List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.EgressNode>
+                egressNodeList = new ArrayList<>();
+        if (egressNode != null && !egressNode.isEmpty()) {
+            for (EgressNode node : egressNode) {
+                egressNodeList.add(new EgressNodeBuilder().setNodeId(node.getNodeId()).build());
+            }
+        }
+        return egressNodeList;
     }
 
     @Override
@@ -176,11 +195,15 @@ public class ChannelImpl implements BierChannelApiService {
             return RpcReturnUtil.returnRpcResult(output.build());
         }
 
-        if (channelDBUtil.writeChannelToDB(input)) {
+        if (!channelDBUtil.writeChannelToDB(input)) {
             output.setConfigureResult(buildConfigResult(ConfigureResult.Result.FAILURE,"Write Channel to DB fail!"));
             return RpcReturnUtil.returnRpcResult(output.build());
         }
         output.setConfigureResult(buildConfigResult(ConfigureResult.Result.SUCCESS,""));
         return RpcReturnUtil.returnRpcResult(output.build());
+    }
+
+    public void start() {
+        channelDBUtil.initDB();
     }
 }

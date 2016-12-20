@@ -7,10 +7,16 @@
  */
 package org.opendaylight.channel.check;
 
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.RemoveChannelInput;
+import com.google.common.base.Preconditions;
 
-public class RemoveChannelInputCheck implements InputCheck {
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+public class RemoveChannelInputCheck extends ChannelInputCheck {
     private RemoveChannelInput removeChannelInput;
+    private static final Logger LOG = LoggerFactory.getLogger(RemoveChannelInputCheck.class);
 
     public RemoveChannelInputCheck(RemoveChannelInput input) {
         this.removeChannelInput = input;
@@ -18,14 +24,21 @@ public class RemoveChannelInputCheck implements InputCheck {
 
     @Override
     public CheckResult check() {
-        CheckResult result = checkParam();
-        if (result.isInputIllegal()) {
-            return result;
-        }
-        return new CheckResult(false, "");
+        return checkParam();
     }
 
     private CheckResult checkParam() {
-        return null;
+        return checkInputNull(removeChannelInput);
+    }
+
+    private CheckResult checkInputNull(RemoveChannelInput input) {
+        try {
+            Preconditions.checkNotNull(input, "Input is null!");
+            Preconditions.checkNotNull(input.getChannelName(), "channel-name is null!");
+        } catch (NullPointerException e) {
+            LOG.warn("NullPointerException: {}",e);
+            return new CheckResult(true,e.getMessage());
+        }
+        return new CheckResult(false,"");
     }
 }

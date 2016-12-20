@@ -535,7 +535,7 @@
                 instance.";
            }
            container static-routes {
-             when "derived-from-or-self(../type, 'rt:static')" {
+             when "../type = 'rt:static'" {
                description
                  "This container is only valid for the 'static' routing
                   protocol.";
