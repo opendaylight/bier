@@ -40,6 +40,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.bier.domain.BierSubDomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.bier.domain.BierSubDomainKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
@@ -84,10 +85,6 @@ public class BierTopologyManager {
 
         //写bier拓扑的datastore
         setTopologyData(topo);
-
-        //监听openflow topo datastore
-
-        //启动websocket服务
     }
 
     private boolean isBierTopologyExist(final InstanceIdentifier<BierTopology> path) {
@@ -203,11 +200,12 @@ public class BierTopologyManager {
         return null;
     }
 
-    public static void setDomainData(final DataBroker dataBroker,String topologyId, final List<BierDomain> domainList) {
+    public static boolean setDomainData(final DataBroker dataBroker,String topologyId,
+            final List<BierDomain> domainList) {
         // 参数检查
         if ( null == dataBroker || null == domainList || domainList.isEmpty() ) {
             LOG.error("ZTE:Set bier domain input is error!");
-            return;
+            return false;
         }
 
         // 创建执行器，用来执行数据
@@ -245,11 +243,11 @@ public class BierTopologyManager {
             ListenableFuture<BierDomain> result = future.get();         // 获取执行后的结果
             if ( null == result.get() ) {
                 LOG.error("ZTE:Set bier domain failed!");
-                return;
+                return false;
             }
 
             LOG.info("ZTE:Set bier domain succeed!");
-            return;
+            return true;
         } catch (InterruptedException e) {
             LOG.error("ZTE:Set bier domain is Interrupted by", e);
         } catch (ExecutionException e) {
@@ -258,7 +256,7 @@ public class BierTopologyManager {
 
         // 数据错误
         LOG.error("ZTE:Set bier domain failed!");
-        return;
+        return false;
     }
 
     public static BierDomain getDomainData(DataBroker dataBroker, String topologyId,DomainId domainId) {
@@ -309,12 +307,12 @@ public class BierTopologyManager {
         return null;
     }
 
-    public static void setSubDomainData(final DataBroker dataBroker,String topologyId,
+    public static boolean setSubDomainData(final DataBroker dataBroker,String topologyId,
             DomainId domainId,final List<BierSubDomain> subDomainList) {
         // 参数检查
         if ( null == dataBroker || null == subDomainList || subDomainList.isEmpty() ) {
             LOG.error("ZTE:Set bier sub-domai input is error!");
-            return;
+            return false;
         }
 
         // 创建执行器，用来执行数据
@@ -354,11 +352,11 @@ public class BierTopologyManager {
             ListenableFuture<BierSubDomain> result = future.get();         // 获取执行后的结果
             if ( null == result.get() ) {
                 LOG.error("ZTE:Set bier sub-domain failed!");
-                return;
+                return false;
             }
 
             LOG.info("ZTE:Set bier sub-domain succeed!");
-            return;
+            return true;
         } catch (InterruptedException e) {
             LOG.error("ZTE:Set bier sub-domain is Interrupted by", e);
         } catch (ExecutionException e) {
@@ -367,15 +365,15 @@ public class BierTopologyManager {
 
         // 数据错误
         LOG.error("ZTE:Set bier sub-domain failed!");
-        return;
+        return false;
     }
 
-    public static void delDomainData(final DataBroker dataBroker,final String topologyId,
+    public static boolean delDomainData(final DataBroker dataBroker,final String topologyId,
             final DomainId domainId,final List<BierNode> nodeList) {
         // 参数检查
         if ( null == dataBroker || null == domainId ) {
             LOG.error("ZTE:Del bier domain input is error!");
-            return;
+            return false;
         }
 
         // 创建执行器，用来执行数据
@@ -410,21 +408,21 @@ public class BierTopologyManager {
         try {
             ListenableFuture<BierDomain> result = future.get();         // 获取执行后的结果
             if ( null == result.get() ) {
-                LOG.error("ZTE:Del domain Node failed!");
-                return;
+                LOG.error("ZTE:Del bier domain failed!");
+                return false;
             }
 
-            LOG.info("ZTE:Del domain Node succeed!");
-            return;
+            LOG.info("ZTE:Del domain bier domain succeed!");
+            return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Del domain Node is Interrupted by", e);
+            LOG.error("ZTE:Del bier domain is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Del domain Node is faild cause by", e);
+            LOG.error("ZTE:Del bier domain is faild cause by", e);
         }
 
         // 数据错误
-        LOG.error("ZTE:Del domain Node failed!");
-        return;
+        LOG.error("ZTE:Del bier domain failed!");
+        return false;
     }
 
     public static void updateAffectedDomainNode(ReadWriteTransaction transaction,String topologyId,
@@ -437,7 +435,7 @@ public class BierTopologyManager {
             int domainSize = domainList.size();
             for (int jloop = 0; jloop < domainSize; ++jloop) {
                 Domain domain = domainList.get(jloop);
-                if (domain.getDomainId() == domainId) {
+                if (domain.getDomainId().equals(domainId)) {
                     BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
                     List<Domain> newDomainList = newNodeBuilder.getBierNodeParams().getDomain();
                     newDomainList.remove(jloop);
@@ -455,16 +453,16 @@ public class BierTopologyManager {
             BierNode domainNode = domainNodeList.get(iloop);
             final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, domainNode.getKey());
             //transaction.delete(LogicalDatastoreType.OPERATIONAL,path);
-            transaction.merge(LogicalDatastoreType.OPERATIONAL,path,domainNode);
+            transaction.put(LogicalDatastoreType.OPERATIONAL,path,domainNode);
         }
     }
 
-    public static void delSubDomainData(final DataBroker dataBroker,final String topologyId,final DomainId domainId,
+    public static boolean delSubDomainData(final DataBroker dataBroker,final String topologyId,final DomainId domainId,
             final SubDomainId subDomainId,final List<BierNode> nodeList) {
         // 参数检查
         if ( null == dataBroker || null == domainId ) {
             LOG.error("ZTE:Del bier sub-domain input is error!");
-            return;
+            return false;
         }
 
         // 创建执行器，用来执行数据
@@ -501,11 +499,11 @@ public class BierTopologyManager {
             ListenableFuture<BierSubDomain> result = future.get();         // 获取执行后的结果
             if ( null == result.get() ) {
                 LOG.error("ZTE:Del sub-domain failed!");
-                return;
+                return false;
             }
 
             LOG.info("ZTE:Del sub-domain succeed!");
-            return;
+            return true;
         } catch (InterruptedException e) {
             LOG.error("ZTE:Del sub-domain is Interrupted by", e);
         } catch (ExecutionException e) {
@@ -514,11 +512,14 @@ public class BierTopologyManager {
 
         // 数据错误
         LOG.error("ZTE:Del Optical Node failed!");
-        return;
+        return false;
     }
 
     public static void updateAffectedSubDomainNode(ReadWriteTransaction transaction,String topologyId,
             DomainId domainId,SubDomainId subDomainId,List<BierNode> nodeList) {
+        if (nodeList == null) {
+            return;
+        }
         List<BierNode> subDomainNodeList = new ArrayList<BierNode>();
         int nodeSize = nodeList.size();
         for (int iloop = 0; iloop < nodeSize; ++iloop) {
@@ -527,15 +528,24 @@ public class BierTopologyManager {
             int domainSize = domainList.size();
             for (int jloop = 0; jloop < domainSize; ++jloop) {
                 Domain domain = domainList.get(jloop);
+                if (!domainId.equals(domain.getDomainId())) {
+                    continue;
+                }
                 List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
                 int subDomainSize = subDomainList.size();
                 for (int kloop = 0; kloop < subDomainSize; ++kloop) {
                     SubDomain subDomain = subDomainList.get(kloop);
-                    if (subDomain.getSubDomainId() == subDomainId) {
+                    if (subDomain.getSubDomainId().equals(subDomainId)) {
                         BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
                         List<SubDomain> newSubDomainList = newNodeBuilder.getBierNodeParams()
                                 .getDomain().get(jloop).getBierGlobal().getSubDomain();
                         newSubDomainList.remove(kloop);
+
+                        if (newSubDomainList.isEmpty()) {
+                            List<Domain> newDomainList = newNodeBuilder.getBierNodeParams()
+                                    .getDomain();
+                            newDomainList.remove(jloop);
+                        }
                         subDomainNodeList.add(newNodeBuilder.build());
                         break;
                     }
@@ -550,15 +560,15 @@ public class BierTopologyManager {
         for (int iloop = 0; iloop < subDomainNodeSize; ++iloop) {
             BierNode subDomainNode = subDomainNodeList.get(iloop);
             final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, subDomainNode.getKey());
-            transaction.merge(LogicalDatastoreType.OPERATIONAL,path,subDomainNode);
+            transaction.put(LogicalDatastoreType.OPERATIONAL,path,subDomainNode);
         }
     }
 
-    public static void setNodeData(final DataBroker dataBroker,String topologyId, final BierNode node) {
+    public static boolean setNodeData(final DataBroker dataBroker,String topologyId, final BierNode node) {
         // 参数检查
         if ( null == dataBroker || node == null ) {
             LOG.error("ZTE:Set bier node input is error!");
-            return;
+            return false;
         }
 
         // 创建执行器，用来执行数据
@@ -591,21 +601,21 @@ public class BierTopologyManager {
         try {
             ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
             if ( null == result.get() ) {
-                LOG.error("ZTE:Set bier domain failed!");
-                return;
+                LOG.error("ZTE:Set bier node failed!");
+                return false;
             }
 
-            LOG.info("ZTE:Set bier domain succeed!");
-            return;
+            LOG.info("ZTE:Set bier node succeed!");
+            return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Set bier domain is Interrupted by", e);
+            LOG.error("ZTE:Set bier node is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Set bier domain is faild cause by", e);
+            LOG.error("ZTE:Set bier node is faild cause by", e);
         }
 
         // 数据错误
         LOG.error("ZTE:Set bier domain failed!");
-        return;
+        return false;
     }
 
     public static BierNode getNodeData(DataBroker dataBroker, String topologyId,String nodeId) {
@@ -654,7 +664,7 @@ public class BierTopologyManager {
         return null;
     }
 
-    public static void delNodeFromDomain(DataBroker dataBroker, String topologyId,final DomainId domainId,
+    public static boolean delNodeFromDomain(DataBroker dataBroker, String topologyId,final DomainId domainId,
             final SubDomainId subDomainId,final BierNode node) {
         // 创建执行器，用来执行数据
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
@@ -677,16 +687,21 @@ public class BierTopologyManager {
                     int subDomainSize = subDomainList.size();
                     for (int kloop = 0; kloop < subDomainSize; ++kloop) {
                         SubDomain subDomain = subDomainList.get(kloop);
-                        if (subDomain.getSubDomainId() == subDomainId) {
+                        if (subDomain.getSubDomainId().equals(subDomainId)) {
                             List<SubDomain> newSubDomainList = newNodeBuilder.getBierNodeParams().getDomain()
                                     .get(jloop).getBierGlobal().getSubDomain();
                             newSubDomainList.remove(kloop);
+
+                            if (newSubDomainList.isEmpty()) {
+                                List<Domain> newDomainList = newNodeBuilder.getBierNodeParams().getDomain();
+                                newDomainList.remove(jloop);
+                            }
                             break;
                         }
                     }
                 }
 
-                transaction.merge(LogicalDatastoreType.OPERATIONAL,path,newNodeBuilder.build());
+                transaction.put(LogicalDatastoreType.OPERATIONAL,path,newNodeBuilder.build());
                 // Auto-generated method stub
             }
 
@@ -705,11 +720,11 @@ public class BierTopologyManager {
             ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
             if ( null == result.get() ) {
                 LOG.error("ZTE:Del bier node failed!");
-                return;
+                return false;
             }
 
             LOG.info("ZTE:Del bier node succeed!");
-            return;
+            return true;
         } catch (InterruptedException e) {
             LOG.error("ZTE:Del bier node is Interrupted by", e);
         } catch (ExecutionException e) {
@@ -718,7 +733,7 @@ public class BierTopologyManager {
 
         // 数据错误
         LOG.error("ZTE:Del bier Node failed!");
-        return;
+        return false;
     }
 
     public static BierLink getLinkData(DataBroker dataBroker, String topologyId,String linkId) {
@@ -798,7 +813,7 @@ public class BierTopologyManager {
         int domainSize = domainList.size();
         for (int jloop = 0; jloop < domainSize; ++jloop) {
             Domain domain = domainList.get(jloop);
-            if (domainId != domain.getDomainId()) {
+            if (!domainId.equals(domain.getDomainId())) {
                 continue;
             }
 
@@ -806,7 +821,7 @@ public class BierTopologyManager {
             int subDomainSize = subDomainList.size();
             for (int kloop = 0; kloop < subDomainSize; ++kloop) {
                 SubDomain subDomain = subDomainList.get(kloop);
-                if (subDomain.getSubDomainId() != subDomainId) {
+                if (!subDomain.getSubDomainId().equals(subDomainId)) {
                     continue;
                 }
 
@@ -862,5 +877,87 @@ public class BierTopologyManager {
         }
 
         return linkList;
+    }
+
+    public static boolean checkDomainExist(DataBroker dataBroker,String topologyId,List<Domain> domainList) {
+        if (domainList == null || domainList.isEmpty()) {
+            return false;
+        }
+
+        Domain domain = domainList.get(0);
+        DomainId domainId  = domain.getDomainId();
+        BierDomain bierDomain = getDomainData(dataBroker, topologyId,domainId);
+        if (bierDomain == null) {
+            return false;
+        }
+
+        DomainBuilder domainBuilder = new DomainBuilder(domain);
+        List<SubDomain> subDomainList = domainBuilder.getBierGlobal().getSubDomain();
+        if (subDomainList == null || subDomainList.isEmpty()) {
+            return false;
+        }
+        boolean subDomainExistFlag = false;
+        SubDomainId subDomainId  = subDomainList.get(0).getSubDomainId();
+        List<BierSubDomain> bierSubDomainList = bierDomain.getBierSubDomain();
+        int subDomainSize = bierSubDomainList.size();
+        for (int iloop = 0; iloop < subDomainSize; ++iloop) {
+            BierSubDomain subDomain = bierSubDomainList.get(iloop);
+            if (subDomainId.equals(subDomain.getSubDomainId())) {
+                subDomainExistFlag = true;
+                break;
+            }
+        }
+        if (!subDomainExistFlag) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean checkDomainExist(DataBroker dataBroker,String topologyId,DomainId domainId,
+            List<BierDomain> domainList) {
+        if (domainList == null || domainList.isEmpty()) {
+            return false;
+        }
+
+        int domainSize = domainList.size();
+        for (int iloop = 0; iloop < domainSize; ++iloop) {
+            BierDomain domain = domainList.get(iloop);
+            if (domain.getDomainId().equals(domainId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean checkSubDomainExist(DataBroker dataBroker,String topologyId,
+            DomainId domainId,SubDomainId subDomainId,List<BierDomain> domainList) {
+        if (domainList == null || domainList.isEmpty()) {
+            return false;
+        }
+
+        int domainSize = domainList.size();
+        for (int iloop = 0; iloop < domainSize; ++iloop) {
+            BierDomain domain = domainList.get(iloop);
+            if (!domain.getDomainId().equals(domainId)) {
+                continue;
+            }
+
+            List<BierSubDomain> subDomainList = domain.getBierSubDomain();
+            if (subDomainList == null || subDomainList.isEmpty()) {
+                return false;
+            }
+
+            int subDomainSize = subDomainList.size();
+            for (int jloop = 0; jloop < subDomainSize; ++jloop) {
+                BierSubDomain subDomain = subDomainList.get(jloop);
+                if (subDomain.getSubDomainId().equals(subDomainId)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

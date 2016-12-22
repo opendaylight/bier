@@ -23,6 +23,12 @@ module bier-topology {
     description "Initial revision.";
   }
   
+  identity bier-encapsulation-mpls {
+       base bier:bier-encapsulation;
+       description
+         "This identity represents MPLS encapsulation for bier.";
+     }
+  
   container bier-network-topology {
     list bier-topology {
       key "topology-id";

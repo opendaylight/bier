@@ -21,7 +21,9 @@ public class BierConfigResult {
     public static final String NETCONF_LOCK_FAILUE = "Device is busy,try again later";
     public static final String NETCONF_EDIT_FAILUE = "Netconf edit config failed with error message:";
     public static final String READ_ROUTING_FAIL = "Netconf read routing node fail";
-
+    public static final String SUBDOMAINID_NULL = "Subdomain without subdomain id ,node id:";
+    public static final String IPV4_BSL_NULL = "Subdomain's ipv4 mpls without bsl ,node id:";
+    public static final String IPV4_BSL_INVALID = "Subdomain's ipv4 mpls with invalid bsl ,node id:";
 
     private ConfigurationResult cfgResult;
     private String failureReason;

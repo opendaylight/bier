@@ -33,9 +33,11 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParamsBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPoint;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPointKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.link.attributes.Destination;
@@ -168,8 +170,9 @@ public class BierTopologyAdapter {
     public BierNode toBierNode(Node node) {
         NodeBuilder nodeBuilder = new NodeBuilder(node);
         BierNodeBuilder bierNodeBuilder = new BierNodeBuilder();
-        bierNodeBuilder.setNodeId(nodeBuilder.getNodeId().getValue());
-        BierNodeKey bierNodeKey = new BierNodeKey(nodeBuilder.getNodeId().getValue());
+        String nodeId = nodeBuilder.getNodeId().getValue();
+        bierNodeBuilder.setNodeId(nodeId);
+        BierNodeKey bierNodeKey = new BierNodeKey(nodeId);
         bierNodeBuilder.setKey(bierNodeKey);
 
         List<BierTerminationPoint> bierTpList = new ArrayList<BierTerminationPoint>();
@@ -182,6 +185,13 @@ public class BierTopologyAdapter {
             bierTpList.add(bierTp);
         }
         bierNodeBuilder.setBierTerminationPoint(bierTpList);
+
+        BierNodeParamsBuilder nodeParamsBuilder = new BierNodeParamsBuilder();
+        List<Domain> domainList = new ArrayList<Domain>();
+        nodeParamsBuilder.setDomain(domainList);
+        bierNodeBuilder.setBierNodeParams(nodeParamsBuilder.build());
+        bierNodeBuilder.setRouterId(nodeId);
+        bierNodeBuilder.setName(nodeId);
 
         return bierNodeBuilder.build();
     }

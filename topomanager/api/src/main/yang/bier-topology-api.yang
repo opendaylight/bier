@@ -27,6 +27,12 @@ module bier-topology-api {
     description "Initial revision.";
   }
   
+  identity bier-encapsulation-mpls {
+       base bier:bier-encapsulation;
+       description
+         "This identity represents MPLS encapsulation for bier.";
+     }
+  
   grouping topology {
     leaf topology-id {
 			type string;
@@ -114,9 +120,7 @@ module bier-topology-api {
 		    } 
 		}
 		output {
-				container configure-domain-result {
-           uses bier-common:configure-result;
-       }
+        uses bier-common:configure-result;
 		}
 	}
 	
@@ -129,15 +133,13 @@ module bier-topology-api {
 			    type bier-common:domain-id; 
 		    }
 		    
-		    leaf-list sub-domain-id {
+		    leaf-list sub-domain {
 		      type bier:sub-domain-id;
 		    }
 		    
 		}
 		output {
-				container configure-subdomain-result {
-           uses bier-common:configure-result;
-       }
+       uses bier-common:configure-result;
 		}
 	}								
 	
@@ -153,9 +155,7 @@ module bier-topology-api {
 		    uses bier-topology:bier-node-params;
 		}
 		output {
-				container configure-node-result {
-           uses bier-common:configure-result;
-       }
+       uses bier-common:configure-result;
 		}
 	}
 	
@@ -240,9 +240,7 @@ module bier-topology-api {
 		    }
 		}
 		output {
-				container delete-domain-result {
-           uses bier-common:configure-result;
-        }
+       uses bier-common:configure-result;
 		}	
 	}
 	
@@ -259,9 +257,7 @@ module bier-topology-api {
 		    }
 		}
 		output {
-				container delete-subdomain-result {
-           uses bier-common:configure-result;
-        }
+       uses bier-common:configure-result;
 		}	
 	}
 	
@@ -281,9 +277,7 @@ module bier-topology-api {
 		    }
 		}
 		output {
-				container delete-node-result {
-           uses bier-common:configure-result;
-        }
+        uses bier-common:configure-result;
 		}	
 	}									
 }

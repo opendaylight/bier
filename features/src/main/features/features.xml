@@ -57,6 +57,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   </feature>
   <feature name='odl-bier-topomanager' version='${project.version}' description='OpenDaylight :: bier :: topomanager'>
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+    <feature version='0.3.1-Boron-SR1'>odl-openflowplugin-southbound</feature>
     <feature version='${project.version}'>odl-bier-topomanager-api</feature>
     <bundle>mvn:org.opendaylight.bier/topomanager-impl/{{VERSION}}</bundle>
   </feature>
@@ -103,7 +104,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   
   <feature name='odl-bier-service' version='${project.version}' description='OpenDaylight :: bier :: service'>
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-    <feature version='${netconf.version}'>odl-netconf-connector-all</feature>
     <feature version='${project.version}'>odl-bier-models</feature>
     <bundle>mvn:org.opendaylight.bier/service-impl/{{VERSION}}</bundle>
   </feature>
@@ -124,6 +124,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
   <feature name='odl-bier-adapter' version='${project.version}' description='OpenDaylight :: bier :: adapter'>
     <feature version='${project.version}'>odl-bier-models</feature>
+    <feature version='${netconf.version}'>odl-netconf-connector-all</feature>
+    <feature version='${netconf.version}'>odl-netconf-topology</feature>
     <bundle>mvn:org.opendaylight.bier/bier-adapter/{{VERSION}}</bundle>
   </feature>
   <feature name='odl-bier-driver' version='${project.version}' description='OpenDaylight :: bier :: driver'>

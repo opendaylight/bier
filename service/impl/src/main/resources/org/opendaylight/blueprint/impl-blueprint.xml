@@ -16,11 +16,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     odl:type="default" />
   <reference id="bierConfigWriter"
              interface="org.opendaylight.bier.adapter.api.BierConfigWriter"/>
+  <reference id="channelConfigWrtier"
+             interface="org.opendaylight.bier.adapter.api.ChannelConfigWrtier"/>
+             
+    
   <bean id="provider"
     class="org.opendaylight.service.impl.ServiceProvider"
     init-method="init" destroy-method="close">
     <argument ref="dataBroker" />
-    <property name="bierConfigWriter" ref="bierConfigWriter"/>
+    <argument ref="bierConfigWriter" />
+    <argument ref="channelConfigWrtier" />
   </bean>
 
 </blueprint>

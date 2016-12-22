@@ -7,9 +7,9 @@
  */
 package org.opendaylight.service.impl;
 
-import  org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,16 +19,20 @@ public class ServiceProvider {
 
     private final DataBroker dataBroker;
 
-    private BindingAwareBroker bindingAwareBroker = null;
-    private BierConfigWriter bierConfigWriter;
+    private final ChannelConfigWriter bierChannelWriter;
+    private final BierConfigWriter bierConfigWriter;
+
     private ServiceManager serviceManager;
 
-    public ServiceProvider(final DataBroker dataBroker) {
+    public ServiceProvider(final DataBroker dataBroker,final BierConfigWriter bierConfigWriter,
+                           final ChannelConfigWriter channelConfigWrtier) {
         this.dataBroker = dataBroker;
+        this.bierConfigWriter = bierConfigWriter;
+        this.bierChannelWriter = channelConfigWrtier;
     }
 
-    public void setBierConfigWriter(BierConfigWriter bierConfigWriter) {
-        this.bierConfigWriter = bierConfigWriter;
+    public ServiceManager getServiceManeger( ) {
+        return this.serviceManager;
     }
 
     /**
@@ -36,7 +40,7 @@ public class ServiceProvider {
      */
     public void init() {
         LOG.info("ServiceProvider Session Initiated");
-        serviceManager = new ServiceManager(dataBroker, bierConfigWriter);
+        serviceManager = new ServiceManager(dataBroker, bierConfigWriter,bierChannelWriter);
     }
 
     /**

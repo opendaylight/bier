@@ -8,6 +8,7 @@
 package org.opendaylight.service.impl;
 
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -17,29 +18,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-/**
- * Created by 10200860 on 2016/12/1.
- */
 public class ServiceManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceManager.class);
 
-    private final DataBroker dataProvider;
     private BierNodeChangeListener bierNodeChangeListener;
     private ChannelChangeListener channelChangeListener;
-    private BierConfigWriter bierConfigWriter;
 
-    public ServiceManager(final DataBroker dataBroker, BierConfigWriter bierConfig) {
-        dataProvider = dataBroker;
-        bierConfigWriter = bierConfig;
+    public ServiceManager(final DataBroker dataBroker, BierConfigWriter bierConfig,
+                          ChannelConfigWriter bierChannelWriter) {
         LOG.info("register bier-node listener");
-        bierNodeChangeListener = new BierNodeChangeListener(dataProvider, bierConfigWriter);
+        bierNodeChangeListener = new BierNodeChangeListener(bierConfig);
         dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<BierNode>(
-                LogicalDatastoreType.CONFIGURATION, bierNodeChangeListener.getBierNodeIid()), bierNodeChangeListener);
+                LogicalDatastoreType.CONFIGURATION, bierNodeChangeListener.getBierNodeId()), bierNodeChangeListener);
 
         LOG.info("register bier-channel listener");
-        channelChangeListener = new ChannelChangeListener(dataProvider);
+        channelChangeListener = new ChannelChangeListener(dataBroker,bierChannelWriter);
         dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<Channel>(
-                LogicalDatastoreType.CONFIGURATION, channelChangeListener.getChannelIid()), channelChangeListener);
+                LogicalDatastoreType.CONFIGURATION, channelChangeListener.getChannelId()), channelChangeListener);
     }
 }
