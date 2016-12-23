@@ -38,10 +38,10 @@
     
     <!-- bier Related Features -->
     <dependency>
-      <groupId>org.opendaylight.bier</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>features-bier</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
       <classifier>features</classifier>
+      <version>${project.version}</version>
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
