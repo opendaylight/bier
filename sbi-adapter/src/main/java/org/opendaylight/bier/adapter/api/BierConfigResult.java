@@ -24,7 +24,7 @@ public class BierConfigResult {
     public static final String SUBDOMAINID_NULL = "Subdomain without subdomain id ,node id:";
     public static final String IPV4_BSL_NULL = "Subdomain's ipv4 mpls without bsl ,node id:";
     public static final String IPV4_BSL_INVALID = "Subdomain's ipv4 mpls with invalid bsl ,node id:";
-
+    public static final String EGRESS_INFO_NULL = "Multicast info with null egress nodes";
     private ConfigurationResult cfgResult;
     private String failureReason;
 

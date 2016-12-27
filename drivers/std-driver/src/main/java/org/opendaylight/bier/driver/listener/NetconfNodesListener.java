@@ -8,7 +8,11 @@
 package org.opendaylight.bier.driver.listener;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+
 
 import org.opendaylight.bier.driver.NetconfDataOperator;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -37,17 +41,45 @@ import org.slf4j.LoggerFactory;
 
 public class NetconfNodesListener implements DataTreeChangeListener<Node> {
     private static final Logger LOG = LoggerFactory.getLogger(NetconfNodesListener.class);
+    private ListenerRegistration<NetconfNodesListener> listenerRegistration;
+    private Map<NodeId, ListenerRegistration<IetfBierListener>> mapNodeListenerReg = Maps.newHashMap();
+    private NetconfDataOperator netconfDataOperator ;
 
-    public NetconfNodesListener(final DataBroker dataBroker) {
-        dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<Node>(LogicalDatastoreType.OPERATIONAL,
+
+    public NetconfNodesListener(final DataBroker dataBroker,final NetconfDataOperator netconfDataOperator) {
+        listenerRegistration =
+                dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<Node>(LogicalDatastoreType.OPERATIONAL,
                         NetconfDataOperator.NETCONF_TOPO_IID.child(Node.class)),this);
+        this.netconfDataOperator = netconfDataOperator;
         LOG.info("Begin to listen to the changes of netconf nodes!");
+
+    }
+
+    public void unregisterListener() {
+        if (listenerRegistration != null) {
+            listenerRegistration.close();
+        }
+
+        Iterator<Map.Entry<NodeId, ListenerRegistration<IetfBierListener>>> entries =
+                mapNodeListenerReg.entrySet().iterator();
+
+        while (entries.hasNext()) {
+
+            Map.Entry<NodeId, ListenerRegistration<IetfBierListener>> entry = entries.next();
+
+            if (entry.getValue() != null ) {
+                entry.getValue().close();
+                LOG.info("unregisterListener {}",entry.getKey());
+
+            }
+
+        }
 
     }
 
     private void registerNotificationListener(final NodeId nodeId) {
 
-        MountPoint mountPoint = NetconfDataOperator.getMountPoint(nodeId.getValue());
+        MountPoint mountPoint = netconfDataOperator.getMountPoint(nodeId.getValue());
         if (null == mountPoint) {
             return;
         }
@@ -56,7 +88,7 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
         final Optional<NotificationService> notificationService = mountPoint.getService(NotificationService.class);
         final ListenerRegistration<IetfBierListener> listenerRegistration =
                 notificationService.get().registerNotificationListener(listener);
-
+        mapNodeListenerReg.put(nodeId,listenerRegistration);
 
         final Optional<RpcConsumerRegistry> service = mountPoint.getService(RpcConsumerRegistry.class);
         final NotificationsService rpcService = service.get().getRpcService(NotificationsService.class);

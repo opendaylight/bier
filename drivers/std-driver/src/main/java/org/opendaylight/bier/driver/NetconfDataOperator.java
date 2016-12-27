@@ -25,6 +25,11 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFaile
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
 
+
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierConfiguration;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
+
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.routing.Bier;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.routing.rev161020.Routing;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
@@ -41,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 public class NetconfDataOperator implements BindingAwareConsumer {
     private static final Logger LOG = LoggerFactory.getLogger(NetconfDataOperator.class);
-    private static MountPointService mountService = null;
+    private MountPointService mountService = null;
 
     public static final InstanceIdentifier<Topology> NETCONF_TOPO_IID =
             InstanceIdentifier
@@ -49,11 +54,11 @@ public class NetconfDataOperator implements BindingAwareConsumer {
                     .child(Topology.class,
                             new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName())));
 
-    /*public static final InstanceIdentifier<BierGlobal> BIER_GLOBAL_IID =
-            InstanceIdentifier.create(BierConfiguration.class)
+    public static final InstanceIdentifier<Routing> ROUTING_IID = InstanceIdentifier.create(Routing.class);
+
+    public static final InstanceIdentifier<BierGlobal> BIER_GLOBAL_IID =
+            ROUTING_IID.augmentation(BierConfiguration.class)
                     .child(Bier.class).child(BierGlobal.class);
-    public static final InstanceIdentifier<SubDomain> SUBDOMAIN_IID = BIER_GLOBAL_IID.child(SubDomain.class);
-    */
 
     public enum OperateType {
         CREATE,
@@ -65,7 +70,7 @@ public class NetconfDataOperator implements BindingAwareConsumer {
         }
     }
 
-    public static final InstanceIdentifier<Routing> ROUTING_IID = InstanceIdentifier.create(Routing.class);
+
 
 
     public static final int RETRY_WRITE_MAX = 3;
@@ -78,7 +83,7 @@ public class NetconfDataOperator implements BindingAwareConsumer {
 
     }
 
-    public static MountPoint getMountPoint(String nodeID) {
+    public MountPoint getMountPoint(String nodeID) {
         if (mountService == null) {
             LOG.error("Mount service is null");
             return null;
@@ -97,7 +102,7 @@ public class NetconfDataOperator implements BindingAwareConsumer {
 
     }
 
-    public static <T extends DataObject> T read(DataBroker dataBroker,
+    public <T extends DataObject> T read(DataBroker dataBroker,
                                                                   InstanceIdentifier<T> path) {
         T result = null;
         final ReadOnlyTransaction transaction = dataBroker.newReadOnlyTransaction();
@@ -119,7 +124,7 @@ public class NetconfDataOperator implements BindingAwareConsumer {
 
 
 
-    public static <T extends DataObject> BierConfigResult operate(OperateType type,
+    public <T extends DataObject> BierConfigResult operate(OperateType type,
                                                        DataBroker dataBroker,
                                                        final int tries,
                                                        InstanceIdentifier<T> path, T data) {
@@ -173,7 +178,7 @@ public class NetconfDataOperator implements BindingAwareConsumer {
 
 
 
-    public static <T extends DataObject>  BierConfigResult write(OperateType type,
+    public <T extends DataObject>  BierConfigResult write(OperateType type,
                                                                  String nodeId,
                                                                  InstanceIdentifier<T> path, T data) {
 

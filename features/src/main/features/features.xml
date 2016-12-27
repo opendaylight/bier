@@ -57,7 +57,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   </feature>
   <feature name='odl-bier-topomanager' version='${project.version}' description='OpenDaylight :: bier :: topomanager'>
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-    <feature version='0.3.1-Boron-SR1'>odl-openflowplugin-southbound</feature>
+    <feature version='${openflowplugin.version}'>odl-openflowplugin-southbound</feature>
     <feature version='${project.version}'>odl-bier-topomanager-api</feature>
     <bundle>mvn:org.opendaylight.bier/topomanager-impl/{{VERSION}}</bundle>
   </feature>

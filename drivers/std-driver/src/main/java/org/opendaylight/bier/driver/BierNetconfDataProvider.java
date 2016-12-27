@@ -8,6 +8,9 @@
 package org.opendaylight.bier.driver;
 
 import  org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
+import org.opendaylight.bier.driver.configuration.channel.ChannelConfigWriterImpl;
+import org.opendaylight.bier.driver.configuration.node.BierConfigWriterImpl;
 import org.opendaylight.bier.driver.listener.NetconfNodesListener;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
@@ -24,7 +27,9 @@ public class BierNetconfDataProvider {
     private final DataBroker dataBroker;
 
     private BindingAwareBroker bindingAwareBroker;
-    private ServiceRegistration<BierConfigWriter> registration;
+    private ServiceRegistration<BierConfigWriter> registrationBierConfig;
+    private ServiceRegistration<ChannelConfigWriter> registrationChannelConfig;
+    private NetconfNodesListener netconfNodesListener;
 
     public BierNetconfDataProvider(final DataBroker dataBroker) {
         this.dataBroker = dataBroker;
@@ -39,13 +44,15 @@ public class BierNetconfDataProvider {
      */
     public void init() {
         LOG.info("session init");
-        final BundleContext context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
-        BierConfigWriterImpl impl = new BierConfigWriterImpl();
-        registration = context.registerService(BierConfigWriter.class, impl, null);
         NetconfDataOperator netconfWrtier = new NetconfDataOperator();
         bindingAwareBroker.registerConsumer(netconfWrtier);
-        NetconfNodesListener netconfNodesListener = new NetconfNodesListener(dataBroker);
 
+        final BundleContext context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+        BierConfigWriterImpl bierConfigImpl = new BierConfigWriterImpl(netconfWrtier);
+        registrationBierConfig = context.registerService(BierConfigWriter.class, bierConfigImpl, null);
+        ChannelConfigWriterImpl channelConfigImpl = new ChannelConfigWriterImpl(netconfWrtier);
+        registrationChannelConfig = context.registerService(ChannelConfigWriter.class, channelConfigImpl, null);
+        netconfNodesListener = new NetconfNodesListener(dataBroker,netconfWrtier);
     }
 
     /**
@@ -54,7 +61,21 @@ public class BierNetconfDataProvider {
     public void close() {
 
         LOG.info("session closed");
-        registration.unregister();
+
+        if (registrationBierConfig != null) {
+            registrationBierConfig.unregister();
+        }
+
+        if (registrationChannelConfig != null) {
+            registrationChannelConfig.unregister();
+        }
+
+        if (netconfNodesListener != null) {
+            netconfNodesListener.unregisterListener();
+        }
+
+
+
     }
 
 

@@ -169,12 +169,8 @@
               BFR-id of ingress nodes.";
         }
         list egress-nodes {
-            key "number";
+            key "egress-node";
             description "This ID information of one adjacency.";
-            leaf number {
-                type uint32;
-                description "The number of egress nodes.";
-            }
             leaf egress-node {
                 type bfr-id;
                 description
