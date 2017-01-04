@@ -175,9 +175,27 @@ public class ChannelDBUtil {
     }
 
     public boolean modifyChannelToDB(ModifyChannelInput input) {
+        Channel odlChannel = readChannel(input.getName(),buildTopoId(input.getTopologyId())).get();
+        ChannelBuilder channelBuilder = new ChannelBuilder(odlChannel);
+        if (input.getDomainId() != null) {
+            channelBuilder.setDomainId(input.getDomainId());
+        }
+        if (input.getSubDomainId() != null) {
+            channelBuilder.setSubDomainId(input.getSubDomainId());
+        }
+        if (input.getSrcIp() != null) {
+            channelBuilder.setSrcIp(input.getSrcIp());
+        }
+        if (input.getDstGroup() != null) {
+            channelBuilder.setDstGroup(input.getDstGroup());
+        }
+        if (input.getSourceWildcard() != null) {
+            channelBuilder.setSourceWildcard(input.getSourceWildcard());
+        }
+        if (input.getGroupWildcard() != null) {
+            channelBuilder.setGroupWildcard(input.getGroupWildcard());
+        }
         WriteTransaction wtx = context.newWriteOnlyTransaction();
-
-        ChannelBuilder channelBuilder = new ChannelBuilder(input);
         wtx.merge(LogicalDatastoreType.CONFIGURATION,
                 buildChannelPath(input.getName(),buildTopoId(input.getTopologyId())),channelBuilder.build(),true);
         return submitTransaction(wtx);

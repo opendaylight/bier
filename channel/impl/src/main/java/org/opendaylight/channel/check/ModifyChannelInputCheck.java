@@ -29,10 +29,10 @@ public class ModifyChannelInputCheck extends ChannelInputCheck {
             return result;
         }
         if (!checkChannelExist(modifyChannelInput.getName(),modifyChannelInput.getTopologyId())) {
-            return new CheckResult(true, "The Channel does not exists!");
+            return new CheckResult(true, CHANNEL_NOT_EXISTS);
         }
         if (hasChannelDeployed(modifyChannelInput.getName(),modifyChannelInput.getTopologyId())) {
-            return new CheckResult(true, "The Channel has deployed,can not modify");
+            return new CheckResult(true, CHANNEL_DEPLOYED);
         }
 
         return new CheckResult(false, "");
@@ -62,14 +62,8 @@ public class ModifyChannelInputCheck extends ChannelInputCheck {
 
     private CheckResult checkInputNull(ModifyChannelInput input) {
         try {
-            Preconditions.checkNotNull(input, "Input is null!");
-            Preconditions.checkNotNull(input.getName(), "channel-name is null!");
-            Preconditions.checkNotNull(input.getSrcIp(), "src-ip is null!");
-            Preconditions.checkNotNull(input.getDstGroup(), "dest-group is null!");
-            Preconditions.checkNotNull(input.getDomainId(), "domain-id is null!");
-            Preconditions.checkNotNull(input.getSubDomainId(), "sub-domain-id is null!");
-            Preconditions.checkNotNull(input.getSourceWildcard(), "src-wildcard is null!");
-            Preconditions.checkNotNull(input.getGroupWildcard(), "group-wildcard is null!");
+            Preconditions.checkNotNull(input, INPUT_IS_NULL);
+            Preconditions.checkNotNull(input.getName(), CHANNEL_NAME_IS_NULL);
         } catch (NullPointerException e) {
             LOG.warn("NullPointerException: {}",e);
             return new CheckResult(true,e.getMessage());

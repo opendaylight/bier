@@ -29,7 +29,7 @@ public class AddChannelInputCheck extends ChannelInputCheck {
             return result;
         }
         if (checkChannelExist(addChannelInput.getName(),addChannelInput.getTopologyId())) {
-            return new CheckResult(true, "The Channel already exists!");
+            return new CheckResult(true, CHANNEL_EXISTS);
         }
         return new CheckResult(false, "");
     }
@@ -56,14 +56,14 @@ public class AddChannelInputCheck extends ChannelInputCheck {
 
     private CheckResult checkInputNull(AddChannelInput input) {
         try {
-            Preconditions.checkNotNull(input, "Input is null!");
-            Preconditions.checkNotNull(input.getName(), "channel-name is null!");
-            Preconditions.checkNotNull(input.getSrcIp(), "src-ip is null!");
-            Preconditions.checkNotNull(input.getDstGroup(), "dest-group is null!");
-            Preconditions.checkNotNull(input.getDomainId(), "domain-id is null!");
-            Preconditions.checkNotNull(input.getSubDomainId(), "sub-domain-id is null!");
-            Preconditions.checkNotNull(input.getSourceWildcard(), "src-wildcard is null!");
-            Preconditions.checkNotNull(input.getGroupWildcard(), "group-wildcard is null!");
+            Preconditions.checkNotNull(input, INPUT_IS_NULL);
+            Preconditions.checkNotNull(input.getName(), CHANNEL_NAME_IS_NULL);
+            Preconditions.checkNotNull(input.getSrcIp(), SRCIP_IS_NULL);
+            Preconditions.checkNotNull(input.getDstGroup(), DEST_GROUP_IS_NULL);
+            Preconditions.checkNotNull(input.getDomainId(), DOMAIN_ID_IS_NULL);
+            Preconditions.checkNotNull(input.getSubDomainId(), SUB_DOMAIN_ID_IS_NULL);
+            Preconditions.checkNotNull(input.getSourceWildcard(), SRC_WILDCARD_IS_NULL);
+            Preconditions.checkNotNull(input.getGroupWildcard(), GROUP_WILDCARD_IS_NULL);
         } catch (NullPointerException e) {
             LOG.warn("NullPointerException: {}",e);
             return new CheckResult(true,e.getMessage());

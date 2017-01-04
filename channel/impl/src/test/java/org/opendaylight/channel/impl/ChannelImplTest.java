@@ -73,9 +73,9 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         RpcResult<AddChannelOutput> result = addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         QueryChannelOutput actulChannel = queryChannel("channel-1");
-        QueryChannelOutput expectChannel = buildExpectChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",null,
-                new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel
-                        .EgressNode>());
+        QueryChannelOutput expectChannel = buildExpectChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short) 24,
+                (short) 30,null, new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query
+                        .channel.output.channel.EgressNode>());
         assertChannelData(expectChannel.getChannel(),actulChannel.getChannel());
     }
 
@@ -93,13 +93,21 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
     public void modifyChannelBasictest() throws Exception {
         RpcResult<AddChannelOutput> result = addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
-        RpcResult<ModifyChannelOutput> modifyResult = modifyChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",
-                (short)24,(short)30);
+        RpcResult<ModifyChannelOutput> modifyResult = modifyChannel("channel-1",null,22,null,"225.1.1.1",
+                null,(short)24);
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         QueryChannelOutput actulChannel = queryChannel("channel-1");
-        QueryChannelOutput expectChannel = buildExpectChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",null,
-                new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel
-                        .EgressNode>());
+        QueryChannelOutput expectChannel = buildExpectChannel("channel-1",1,22,"1.1.1.1","225.1.1.1",(short) 24,
+                (short) 24, null, new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query
+                        .channel.output.channel.EgressNode>());
+        assertChannelData(expectChannel.getChannel(),actulChannel.getChannel());
+
+        modifyResult = modifyChannel("channel-1",2,null,"2.2.2.2",null,(short) 16,null);
+        Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+        actulChannel = queryChannel("channel-1");
+        expectChannel = buildExpectChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",(short) 16,
+                (short) 24, null, new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query
+                        .channel.output.channel.EgressNode>());
         assertChannelData(expectChannel.getChannel(),actulChannel.getChannel());
     }
 
@@ -179,8 +187,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         egressList.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel
                 .EgressNodeBuilder().setNodeId("node3").build());
 
-        QueryChannelOutput expectChannel = buildExpectChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",
-                "node1",egressList);
+        QueryChannelOutput expectChannel = buildExpectChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short) 24,
+                (short) 30, "node1",egressList);
         assertQueryChannelData(expectChannel.getChannel().get(0),actulChannel.getChannel().get(0));
     }
 
@@ -223,17 +231,21 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("channel-name is null!",modifyResult.getResult().getConfigureResult().getErrorCause());
 
-        modifyResult = modifyChannel("channel-1",1,11,"239.1.1.1","224.1.1.1",(short)24,(short)30);
+        modifyResult = modifyChannel("channel-1",null,11,"239.1.1.1",null,(short)24,(short)30);
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("src-ip is illegal!",modifyResult.getResult().getConfigureResult().getErrorCause());
 
-        modifyResult = modifyChannel("channel-1",1,11,"1.1.1.1","220.1.1.1",(short)24,(short)30);
+        modifyResult = modifyChannel("channel-1",null,null,null,"220.1.1.1",null,(short)30);
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("dest-group is not multicast ipaddress!",
                 modifyResult.getResult().getConfigureResult().getErrorCause());
 
+        modifyResult = modifyChannel("channel-1",null,null,null,null,(short)35,null);
+        Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertEquals("wildcard is invalid!", modifyResult.getResult().getConfigureResult().getErrorCause());
+
         deployChannel("channel-1");
-        modifyResult = modifyChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",(short)24,(short)30);
+        modifyResult = modifyChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",null,null);
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("The Channel has deployed,can not modify",
                 modifyResult.getResult().getConfigureResult().getErrorCause());
@@ -368,16 +380,27 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
                                                          String srcIp, String groupIp, Short srcWildcard,
                                                          Short groupWildcard)
             throws ExecutionException, InterruptedException {
-        ModifyChannelInput input = new ModifyChannelInputBuilder()
-                .setName(channelName)
-                .setDomainId(new DomainId(domainId))
-                .setSubDomainId(new SubDomainId(subDomainId))
-                .setSrcIp(new IpAddress(new Ipv4Address(srcIp)))
-                .setSourceWildcard(srcWildcard)
-                .setDstGroup(new IpAddress(new Ipv4Address(groupIp)))
-                .setGroupWildcard(groupWildcard)
-                .build();
-        return channelImpl.modifyChannel(input).get();
+        ModifyChannelInputBuilder input = new ModifyChannelInputBuilder();
+        input.setName(channelName);
+        if (domainId != null) {
+            input.setDomainId(new DomainId(domainId));
+        }
+        if (subDomainId != null) {
+            input.setSubDomainId(new SubDomainId(subDomainId));
+        }
+        if (srcIp != null) {
+            input.setSrcIp(new IpAddress(new Ipv4Address(srcIp)));
+        }
+        if (srcWildcard != null) {
+            input.setSourceWildcard(srcWildcard);
+        }
+        if (groupIp != null) {
+            input.setDstGroup(new IpAddress(new Ipv4Address(groupIp)));
+        }
+        if (groupWildcard != null) {
+            input.setGroupWildcard(groupWildcard);
+        }
+        return channelImpl.modifyChannel(input.build()).get();
     }
 
     private void assertChannelData(List<Channel> expectChannel, List<Channel> actulChannel) {
@@ -388,9 +411,9 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
     }
 
     private QueryChannelOutput buildExpectChannel(String channelName, Integer domainId, Integer subDomainID,
-                                                  String srcIp, String groupIp, String ingressNode,
-                                                  List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102
-                                                          .query.channel.output.channel.EgressNode> egressList) {
+                                                  String srcIp, String groupIp, Short srcWildcard, Short groupWildcard,
+                                                  String ingressNode, List<org.opendaylight.yang.gen.v1.urn.bier
+            .channel.api.rev161102.query.channel.output.channel.EgressNode> egressList) {
         List<Channel> channels = new ArrayList<>();
         Channel channel = new ChannelBuilder()
                 .setName(channelName)
@@ -398,8 +421,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
                 .setSubDomainId(new SubDomainId(subDomainID))
                 .setSrcIp(new IpAddress(new Ipv4Address(srcIp)))
                 .setDstGroup(new IpAddress(new Ipv4Address(groupIp)))
-                .setSourceWildcard((short) 24)
-                .setGroupWildcard((short) 30)
+                .setSourceWildcard(srcWildcard)
+                .setGroupWildcard(groupWildcard)
                 .setIngressNode(ingressNode)
                 .setEgressNode(egressList)
                 .build();

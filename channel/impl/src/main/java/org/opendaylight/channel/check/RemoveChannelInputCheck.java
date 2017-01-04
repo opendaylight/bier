@@ -33,8 +33,8 @@ public class RemoveChannelInputCheck extends ChannelInputCheck {
 
     private CheckResult checkInputNull(RemoveChannelInput input) {
         try {
-            Preconditions.checkNotNull(input, "Input is null!");
-            Preconditions.checkNotNull(input.getChannelName(), "channel-name is null!");
+            Preconditions.checkNotNull(input, INPUT_IS_NULL);
+            Preconditions.checkNotNull(input.getChannelName(), CHANNEL_NAME_IS_NULL);
         } catch (NullPointerException e) {
             LOG.warn("NullPointerException: {}",e);
             return new CheckResult(true,e.getMessage());

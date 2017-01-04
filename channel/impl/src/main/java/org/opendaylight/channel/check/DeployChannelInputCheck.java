@@ -28,7 +28,7 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
             return result;
         }
         if (!checkChannelExist(deployChannelInput.getChannelName(),deployChannelInput.getTopologyId())) {
-            return new CheckResult(true, "The Channel does not exists!");
+            return new CheckResult(true, CHANNEL_NOT_EXISTS);
         }
         return new CheckResult(false, "");
     }
@@ -39,10 +39,10 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
 
     private CheckResult checkInputNull(DeployChannelInput input) {
         try {
-            Preconditions.checkNotNull(input, "Input is null!");
-            Preconditions.checkNotNull(input.getChannelName(), "channel-name is null!");
-            Preconditions.checkNotNull(input.getIngressNode(), "ingress-node is null!");
-            Preconditions.checkNotNull(input.getEgressNode(), "egress-node is null!");
+            Preconditions.checkNotNull(input, INPUT_IS_NULL);
+            Preconditions.checkNotNull(input.getChannelName(), CHANNEL_NAME_IS_NULL);
+            Preconditions.checkNotNull(input.getIngressNode(), INGRESS_IS_NULL);
+            Preconditions.checkNotNull(input.getEgressNode(), EGRESS_IS_NULL);
         } catch (NullPointerException e) {
             LOG.warn("NullPointerException: {}",e);
             return new CheckResult(true,e.getMessage());
