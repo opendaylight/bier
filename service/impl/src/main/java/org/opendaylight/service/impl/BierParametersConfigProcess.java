@@ -370,7 +370,7 @@ public class BierParametersConfigProcess {
             return ipv4Before;
         }
         List<Ipv4> ipv4Change = new ArrayList<>();
-        if (ipv4Before.size() > ipv4Before.size()) {
+        if (ipv4Before.size() > ipv4After.size()) {
             for (Ipv4 ipv4 : ipv4Before) {
                 if (null == getIpv4ById(ipv4.getKey(), ipv4After)) {
                     ipv4Change.add(ipv4);
@@ -388,7 +388,7 @@ public class BierParametersConfigProcess {
             return ipv6Before;
         }
         List<Ipv6> ipv6Change = new ArrayList<>();
-        if (ipv6Before.size() > ipv6Before.size()) {
+        if (ipv6Before.size() > ipv6After.size()) {
             for (Ipv6 ipv6 : ipv6Before) {
                 if (null == getIpv6ById(ipv6.getKey(), ipv6After)) {
                     ipv6Change.add(ipv6);
@@ -468,35 +468,30 @@ public class BierParametersConfigProcess {
             return true;
         }
         if ((null == before.getAf().getIpv4() && null != after.getAf().getIpv4())
-                || (null != before.getAf().getIpv4() && null == after.getAf().getIpv4())) {
+                || (null == before.getAf().getIpv6() && null != after.getAf().getIpv6())) {
             return true;
         }
-        if ((null == before.getAf().getIpv6() && null != after.getAf().getIpv6())
-                || (null != before.getAf().getIpv6() && null == after.getAf().getIpv6())) {
-            return true;
-        }
-        if (null == before.getAf().getIpv4() && null == after.getAf().getIpv4()
-                && null == before.getAf().getIpv6() && null == after.getAf().getIpv6()) {
-            return false;
-        }
-
         if (null != before.getAf().getIpv4() && null != after.getAf().getIpv4()) {
-            if (before.getAf().getIpv4().size() != after.getAf().getIpv4().size()) {
+            if (before.getAf().getIpv4().size() < after.getAf().getIpv4().size()) {
                 return true;
             }
-            for (int i = 0; i < before.getAf().getIpv4().size(); i++) {
-                if (before.getAf().getIpv4().get(i).equals(after.getAf().getIpv4().get(i))) {
-                    return true;
+            if (before.getAf().getIpv4().size() == after.getAf().getIpv4().size()) {
+                for (int i = 0; i < before.getAf().getIpv4().size(); i++) {
+                    if (!before.getAf().getIpv4().get(i).equals(after.getAf().getIpv4().get(i))) {
+                        return true;
+                    }
                 }
             }
         }
         if (null != before.getAf().getIpv6() && null != after.getAf().getIpv6()) {
-            if (before.getAf().getIpv6().size() != after.getAf().getIpv6().size()) {
+            if (before.getAf().getIpv6().size() < after.getAf().getIpv6().size()) {
                 return true;
             }
-            for (int i = 0; i < before.getAf().getIpv6().size(); i++) {
-                if (before.getAf().getIpv6().get(i).equals(after.getAf().getIpv6().get(i))) {
-                    return true;
+            if (before.getAf().getIpv6().size() == after.getAf().getIpv6().size()) {
+                for (int i = 0; i < before.getAf().getIpv6().size(); i++) {
+                    if (!before.getAf().getIpv6().get(i).equals(after.getAf().getIpv6().get(i))) {
+                        return true;
+                    }
                 }
             }
         }
@@ -532,7 +527,7 @@ public class BierParametersConfigProcess {
 
     private boolean checkAddedSubDomain(List<SubDomain> subDomainlistBefore,
         List<SubDomain> subDomainlistAfter,boolean isDomainParaChange) {
-        if (null == subDomainlistBefore && null != subDomainlistAfter) {
+        if (null == subDomainlistBefore && null != subDomainlistAfter && !isDomainParaChange) {
             return true;
         }
         if (null != subDomainlistBefore && null != subDomainlistAfter

@@ -10,12 +10,12 @@ package org.opendaylight.service.impl;
 import com.google.common.base.Optional;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import org.opendaylight.bier.adapter.api.BierConfigResult;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
@@ -54,7 +54,6 @@ public class BierChannelConfigProcess {
         BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
                 ChannelConfigWriter.ConfigurationType.ADD, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
-            //reportToApp(writedDomainResult.getFailureReason());
             return;
         }
     }
@@ -68,7 +67,6 @@ public class BierChannelConfigProcess {
         BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
                 ChannelConfigWriter.ConfigurationType.DELETE, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
-            //reportToApp(writedDomainResult.getFailureReason());
             return;
         }
     }
@@ -80,10 +78,12 @@ public class BierChannelConfigProcess {
         if (checkChannelParaChange(before, after)) {
             LOG.info("Modify Channel!");
             Channel channel = addBfrIdToChannel(after,after.getEgressNode());
-            BierConfigResult writedChannelResult = bierConfigWriter.writeChannelEgressNode(
+            if (null == channel) {
+                return;
+            }
+            BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
                     ChannelConfigWriter.ConfigurationType.MODIFY, channel);
             if (!writedChannelResult.isSuccessful()) {
-                //reportToApp(writedDomainResult.getFailureReason());
                 return;
             }
         }
@@ -103,19 +103,18 @@ public class BierChannelConfigProcess {
         BierConfigResult writedChannelResult = bierConfigWriter.writeChannelEgressNode(
                ChannelConfigWriter.ConfigurationType.DELETE, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
-            //reportToApp(writedDomainResult.getFailureReason());
             return;
         }
     }
 
     private List<EgressNode>  getEgressNodeListDeleted(List<EgressNode> nodeBefore,List<EgressNode> nodeAfter) {
+        List<EgressNode> nodeDeleted = new ArrayList<>();
         if (null == nodeBefore &&  null == nodeAfter) {
-            return null;
+            return nodeDeleted;
         }
         if (null == nodeAfter && null != nodeBefore) {
             return nodeBefore;
         }
-        List<EgressNode> nodeDeleted = new ArrayList<>();
         if (nodeBefore.size() > nodeAfter.size()) {
             for (EgressNode egressNode : nodeBefore) {
                 if (null == getNodeById(egressNode.getNodeId(),nodeAfter)) {
@@ -126,8 +125,8 @@ public class BierChannelConfigProcess {
         return nodeDeleted;
     }
 
-    private EgressNode getNodeById(String nodeId, List<EgressNode> nodeAfter) {
-        if (null == nodeId || null == nodeAfter || 0 == nodeAfter.size()) {
+    private static EgressNode getNodeById(String nodeId, List<EgressNode> nodeAfter) {
+        if (null == nodeId || null == nodeAfter || nodeAfter.isEmpty()) {
             return null;
         }
         for (EgressNode node  : nodeAfter) {
@@ -175,42 +174,50 @@ public class BierChannelConfigProcess {
     }
 
     private boolean checkEgressNodeAdded(List<EgressNode> nodeBefore,List<EgressNode> nodeAfter) {
-        if ((null == nodeBefore && null != nodeAfter)
-            || (null != nodeBefore && null != nodeAfter
-            && nodeBefore.size() < nodeAfter.size())) {
+        if (null == nodeBefore && null != nodeAfter) {
+            return true;
+        }
+        if (null != nodeBefore && null != nodeAfter
+            && nodeBefore.size() < nodeAfter.size()) {
             return true;
         }
         return false;
     }
 
     private boolean checkEgressNodeDeleted(List<EgressNode> nodeBefore,List<EgressNode> nodeAfter) {
-        if ((null != nodeBefore && null == nodeAfter)
-            || (null != nodeBefore && null != nodeAfter
-            && nodeBefore.size() > nodeAfter.size())) {
+        if (null != nodeBefore && null == nodeAfter) {
+            return true;
+        }
+        if (null != nodeBefore && null != nodeAfter
+            && nodeBefore.size() > nodeAfter.size()) {
             return true;
         }
         return false;
     }
 
-    private BfrId getBfrIdByBierInfo(String nodeId,DomainId domainId,
-            SubDomainId subDomainId) {
+    private BfrId getBfrIdByBierInfo(String nodeId,DomainId domainId, SubDomainId subDomainId) {
         if (null == nodeId || null == domainId || null == subDomainId) {
             return null;
         }
         final InstanceIdentifier<BierNode> path = InstanceIdentifier.create(BierNetworkTopology.class)
                                                   .child(BierTopology.class, new BierTopologyKey("flow:1"))
                                                   .child(BierNode.class,new BierNodeKey(nodeId));
-        Future<Optional<BierNode>> future = dataProvider.newReadOnlyTransaction()
-                .read(LogicalDatastoreType.OPERATIONAL, path);
+        final ReadTransaction tx = dataProvider.newReadOnlyTransaction();
+        Optional<BierNode> bierNode = null;
         BierNode node = null;
         try {
-            node = future.get().get();
-        } catch (InterruptedException | ExecutionException e) {
-            // TODO Auto-generated catch block
+            bierNode = tx.read(LogicalDatastoreType.CONFIGURATION, path).checkedGet();
+            if (bierNode.isPresent()) {
+                node = bierNode.get();
+            }
+        } catch (ReadFailedException e) {
             LOG.error("Get node from bier topology is null");
         }
+        if (null == node) {
+            return null;
+        }
         List<Domain> domainList = node.getBierNodeParams().getDomain();
-        if (null == domainList || 0 == domainList.size()) {
+        if (null == domainList || domainList.isEmpty()) {
             return null;
         }
         for (Domain domain : domainList) {
@@ -232,11 +239,11 @@ public class BierChannelConfigProcess {
         }
         ChannelBuilder builder = new ChannelBuilder(channel);
         BfrId ingressBfrId = getBfrIdByBierInfo(channel.getIngressNode(),channel.getDomainId(),
-                channel.getSubDomainId());
+                    channel.getSubDomainId());
         if (null != ingressBfrId) {
             builder.setIngressBfrId(ingressBfrId);
         }
-        if (null != egressNodeList && 0 != egressNodeList.size()) {
+        if (null != egressNodeList && !egressNodeList.isEmpty()) {
             List<EgressNode> egressNodeBfrList = new ArrayList<>();
             for (EgressNode egressNode: egressNodeList) {
                 EgressNode egressNodeBfr = addBfrToEgressNode(channel,egressNode);
@@ -252,7 +259,7 @@ public class BierChannelConfigProcess {
             return null;
         }
         BfrId egressBfrId = getBfrIdByBierInfo(egressNode.getNodeId(),channel.getDomainId(),
-            channel.getSubDomainId());
+                  channel.getSubDomainId());
         EgressNodeBuilder builderNode = new EgressNodeBuilder(egressNode);
         builderNode.setEgressBfrId(egressBfrId);
         return builderNode.build();

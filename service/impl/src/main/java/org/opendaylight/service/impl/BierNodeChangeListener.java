@@ -47,7 +47,11 @@ public class BierNodeChangeListener implements DataTreeChangeListener<BierNode> 
                                         + "old BierNode: {}, new BierNode: {}",
                                 change.getRootPath().getRootIdentifier(), rootNode.getDataBefore(),
                                 rootNode.getDataAfter());
-                        processAddedNode(rootNode.getDataAfter());
+                        if (null == rootNode.getDataBefore()) {
+                            processAddedNode(rootNode.getDataAfter());
+                        } else {
+                            processModifiedNode(rootNode.getDataBefore(), rootNode.getDataAfter());
+                        }
                         break;
                     case SUBTREE_MODIFIED:
                         LOG.info("onDataTreeChanged - BierNode config with path {} was modified: "
@@ -99,7 +103,7 @@ public class BierNodeChangeListener implements DataTreeChangeListener<BierNode> 
     }
 
     private boolean bierInfoCheck(BierNode before, BierNode after) {
-        if (null == before || null == after) {
+        if (null == before && null == after) {
             return false;
         }
         if ((before.getBierNodeParams().getDomain() == null || before.getBierNodeParams().getDomain().isEmpty())

@@ -8,9 +8,9 @@
 package org.opendaylight.service.cli.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.service.cli.api.ServiceCliCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.opendaylight.service.cli.api.ServiceCliCommands;
 
 public class ServiceCliCommandsImpl implements ServiceCliCommands {
 

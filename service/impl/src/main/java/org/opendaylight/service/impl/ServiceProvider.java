@@ -25,10 +25,10 @@ public class ServiceProvider {
     private ServiceManager serviceManager;
 
     public ServiceProvider(final DataBroker dataBroker,final BierConfigWriter bierConfigWriter,
-                           final ChannelConfigWriter channelConfigWrtier) {
+                           final ChannelConfigWriter channelConfigWriter) {
         this.dataBroker = dataBroker;
         this.bierConfigWriter = bierConfigWriter;
-        this.bierChannelWriter = channelConfigWrtier;
+        this.bierChannelWriter = channelConfigWriter;
     }
 
     public ServiceManager getServiceManeger( ) {
@@ -40,7 +40,7 @@ public class ServiceProvider {
      */
     public void init() {
         LOG.info("ServiceProvider Session Initiated");
-        serviceManager = new ServiceManager(dataBroker, bierConfigWriter,bierChannelWriter);
+        serviceManager = new ServiceManager(dataBroker, bierConfigWriter, bierChannelWriter);
     }
 
     /**
