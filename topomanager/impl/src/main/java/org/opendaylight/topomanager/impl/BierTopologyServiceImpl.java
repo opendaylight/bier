@@ -7,11 +7,11 @@
  */
 package org.opendaylight.topomanager.impl;
 
+import com.google.common.util.concurrent.Futures;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResultBuilder;
@@ -34,7 +34,6 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteNodeOu
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LoadTopologyInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LoadTopologyOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LoadTopologyOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryDomainInput;
@@ -58,6 +57,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdoma
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.load.topology.output.Topology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.load.topology.output.TopologyBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.query.domain.output.Domain;
@@ -98,28 +98,17 @@ import org.slf4j.LoggerFactory;
 
 public class BierTopologyServiceImpl implements BierTopologyApiService {
     private static final Logger LOG = LoggerFactory.getLogger(BierTopologyServiceImpl.class);
-    public DataBroker dataBroker;
+    private BierTopologyManager topoManager;
 
-    public BierTopologyServiceImpl(DataBroker dataBroker) {
-        this.dataBroker = dataBroker;
+    public BierTopologyServiceImpl(BierTopologyManager topoManager) {
+        this.topoManager = topoManager;
     }
 
-    public Future<RpcResult<LoadTopologyOutput>> loadTopology(LoadTopologyInput input) {
-        if (null == input ) {
-            return returnRpcErr("input is null!");
-        }
-
-        String topologyId = input.getTopologyId();
-        if (topologyId.equals("")) {
-            topologyId = BierTopologyManager.TOPOLOGY_ID;
-        }
-
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
-        BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
+    public Future<RpcResult<LoadTopologyOutput>> loadTopology() {
 
         List<Topology> topoList = new ArrayList<Topology>();
         TopologyBuilder topoBuilder = new TopologyBuilder();
-        topoBuilder.setTopologyId(bierTopoBuilder.getTopologyId());
+        topoBuilder.setTopologyId(topoManager.TOPOLOGY_ID);
         topoList.add(topoBuilder.build());
         LoadTopologyOutputBuilder builder = new LoadTopologyOutputBuilder();
         builder.setTopology(topoList);
@@ -127,7 +116,6 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
     }
 
     public Future<RpcResult<QueryTopologyOutput>> queryTopology(QueryTopologyInput input) {
-        QueryTopologyOutputBuilder builder = new QueryTopologyOutputBuilder();
         if (null == input ) {
             return returnRpcErr("input is null!");
         }
@@ -137,8 +125,12 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return returnRpcErr("input param is error!");
         }
 
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
+        BierTopology  topo = topoManager.getTopologyData(topologyId);
+        if (topo == null) {
+            return returnRpcErr("topo is not exist!");
+        }
         BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
+        QueryTopologyOutputBuilder builder = new QueryTopologyOutputBuilder();
         builder.setTopologyId(bierTopoBuilder.getTopologyId());
         List<BierNode> bierNodeList = bierTopoBuilder.getBierNode();
         List<NodeId> nodeList = new ArrayList<NodeId>();
@@ -181,7 +173,10 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return returnRpcErr("input param is error!");
         }
 
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
+        BierTopology  topo = topoManager.getTopologyData(topologyId);
+        if (topo == null) {
+            return returnRpcErr("topo is not exist!");
+        }
         BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
         List<Node> nodeList = new ArrayList<Node>();
         List<BierNode> bierNodeList = bierTopoBuilder.getBierNode();
@@ -220,7 +215,10 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return returnRpcErr("input param is error!");
         }
 
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
+        BierTopology  topo = topoManager.getTopologyData(topologyId);
+        if (topo == null) {
+            return returnRpcErr("topo is not exist!");
+        }
         BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
         QueryLinkOutputBuilder builder = new QueryLinkOutputBuilder();
         List<Link> linkList = new ArrayList<Link>();
@@ -266,33 +264,40 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         }
 
         List<BierDomain> addDomainList = new ArrayList<BierDomain>();
+        BierTopology  topo = topoManager.getTopologyData(topologyId);
+        if (topo == null) {
+            builder.setConfigureResult(getConfigResult(false,"topo is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+        List<BierDomain> allDomainList = topo.getBierDomain();
         int domainSize = domainList.size();
         for (int iloop = 0; iloop < domainSize; ++iloop) {
             DomainId domainId = domainList.get(iloop);
             boolean existFlag = false;
-            /*if (bierDomainList != null) {
-                int nBierDomain = bierDomainList.size();
-                for(int j = 0; j < nBierDomain; ++j )
-                {
-                    BierDomain bierDomain = bierDomainList.get(j);
+            if (allDomainList != null) {
+                int allDomainSize = allDomainList.size();
+                for (int jloop = 0; jloop < allDomainSize; ++jloop ) {
+                    BierDomain bierDomain = allDomainList.get(jloop);
                     BierDomainBuilder bierDomainBuilder = new BierDomainBuilder(bierDomain);
-                    if(domainId == bierDomainBuilder.getDomainId())
-                    {
-                        bExist = true;
+                    if (domainId.equals(bierDomainBuilder.getDomainId())) {
+                        existFlag = true;
                         break;
                     }
                 }
-            }*/
-            if (!existFlag) {
-                BierDomainBuilder bierDomainBuilder = new BierDomainBuilder();
-                bierDomainBuilder.setDomainId(domainId);
-                BierDomainKey domainKey = new BierDomainKey(domainId);
-                bierDomainBuilder.setKey(domainKey);
-                addDomainList.add(bierDomainBuilder.build());
             }
+            if (existFlag) {
+                builder.setConfigureResult(getConfigResult(false,"domain " + domainId + " is exist!"));
+                return RpcResultBuilder.success(builder.build()).buildFuture();
+            }
+
+            BierDomainBuilder bierDomainBuilder = new BierDomainBuilder();
+            bierDomainBuilder.setDomainId(domainId);
+            BierDomainKey domainKey = new BierDomainKey(domainId);
+            bierDomainBuilder.setKey(domainKey);
+            addDomainList.add(bierDomainBuilder.build());
         }
 
-        if (!BierTopologyManager.setDomainData(dataBroker,topologyId,addDomainList)) {
+        if (!topoManager.setDomainData(topologyId,addDomainList)) {
             builder.setConfigureResult(getConfigResult(false,"write domain to datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
@@ -316,36 +321,41 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             builder.setConfigureResult(getConfigResult(false,"input param is error!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
-        BierDomain domain = BierTopologyManager.getDomainData(dataBroker,topologyId,domainId);
+        BierDomain domain = topoManager.getDomainData(topologyId,domainId);
         if (domain == null ) {
             builder.setConfigureResult(getConfigResult(false,"domain is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        //不需要比较，APP只下发新增的，不是全量下发
         List<BierSubDomain> addSubDomainList = new ArrayList<BierSubDomain>();
+        List<BierSubDomain> allSubDomainList = domain.getBierSubDomain();
         int subDomainSize = subDomainIdList.size();
         for (int iloop = 0; iloop < subDomainSize; ++iloop) {
             SubDomainId subDomainId = subDomainIdList.get(iloop);
             boolean existFlag = false;
-            /*int nExistSubDomain = subDomainList.size();
-            for (int j = 0; j < nExistSubDomain; ++j) {
-                if (subDomainList.get(i).getSubDomainId() == subDomainId) {
-                    bExist = true;
-                    break;
+            if (allSubDomainList != null) {
+                int allSubDomain = allSubDomainList.size();
+                for (int jloop = 0; jloop < allSubDomain; ++jloop) {
+                    if (allSubDomainList.get(jloop).getSubDomainId().equals(subDomainId)) {
+                        existFlag = true;
+                        break;
+                    }
                 }
-            }*/
-
-            if (!existFlag) {
-                BierSubDomainBuilder subDomainBuilder = new BierSubDomainBuilder();
-                subDomainBuilder.setSubDomainId(subDomainId);
-                BierSubDomainKey subDomainKey = new BierSubDomainKey(subDomainId);
-                subDomainBuilder.setKey(subDomainKey);
-                addSubDomainList.add(subDomainBuilder.build());
             }
+
+            if (existFlag) {
+                builder.setConfigureResult(getConfigResult(false,"subdomain " + subDomainId + " is  exist!"));
+                return RpcResultBuilder.success(builder.build()).buildFuture();
+            }
+
+            BierSubDomainBuilder subDomainBuilder = new BierSubDomainBuilder();
+            subDomainBuilder.setSubDomainId(subDomainId);
+            BierSubDomainKey subDomainKey = new BierSubDomainKey(subDomainId);
+            subDomainBuilder.setKey(subDomainKey);
+            addSubDomainList.add(subDomainBuilder.build());
         }
 
-        if (!BierTopologyManager.setSubDomainData(dataBroker,topologyId,domainId,addSubDomainList)) {
+        if (!topoManager.setSubDomainData(topologyId,domainId,addSubDomainList)) {
             builder.setConfigureResult(getConfigResult(false,"write subdomain to datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
@@ -368,19 +378,23 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        if (!BierTopologyManager.checkDomainExist(dataBroker,topologyId,input.getDomain())) {
+        if (!topoManager.checkDomainExist(topologyId,input.getDomain())) {
             builder.setConfigureResult(getConfigResult(false,"domain or subdomain is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        BierNode node = BierTopologyManager.getNodeData(dataBroker, topologyId, nodeId);
+        BierNode node = topoManager.getNodeData(topologyId, nodeId);
+        if (node == null) {
+            builder.setConfigureResult(getConfigResult(false,"node is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
         BierNodeBuilder nodeBuilder = new BierNodeBuilder(node);
         BierNodeParamsBuilder nodeParamsBuilder = new BierNodeParamsBuilder();
         nodeParamsBuilder.setDomain(input.getDomain());
         nodeBuilder.setBierNodeParams(nodeParamsBuilder.build());
 
         //可能是新增或者修改节点的bier配置，需要先比较
-        if (!BierTopologyManager.setNodeData(dataBroker, topologyId, nodeBuilder.build())) {
+        if (!topoManager.setNodeData(topologyId, nodeBuilder.build())) {
             builder.setConfigureResult(getConfigResult(false,"write node to datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
@@ -399,7 +413,10 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return returnRpcErr("input param is error!");
         }
 
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
+        BierTopology  topo = topoManager.getTopologyData(topologyId);
+        if (topo == null) {
+            return returnRpcErr("topo is not exist!");
+        }
         BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
         List<BierDomain> bierDomainList = bierTopoBuilder.getBierDomain();
 
@@ -420,6 +437,11 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
+    public Future<RpcResult<Void>> testNotificationPublish() {
+        NotificationProvider.getInstance().notify(new TopoChangeBuilder().setTopoId("flow:1").build());
+        return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
+    }
+
     public Future<RpcResult<QuerySubdomainOutput>> querySubdomain(QuerySubdomainInput input) {
         if ( null == input ) {
             return returnRpcErr("input is null!");
@@ -433,7 +455,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
 
         QuerySubdomainOutputBuilder builder = new QuerySubdomainOutputBuilder();
 
-        BierDomain domain = BierTopologyManager.getDomainData(dataBroker,topologyId,domainId);
+        BierDomain domain = topoManager.getDomainData(topologyId,domainId);
         if (domain == null ) {
             return returnRpcErr("domain is not exist!");
         }
@@ -465,7 +487,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return returnRpcErr("input param is error!");
         }
 
-        List<BierNode> nodeList = BierTopologyManager.getSubDomainNode(dataBroker,topologyId,domainId,subDomainId);
+        List<BierNode> nodeList = topoManager.getSubDomainNode(topologyId,domainId,subDomainId);
         List<SubdomainNode> subDomainNodeList = new ArrayList<SubdomainNode>();
         int nodeSize = nodeList.size();
         for (int iloop = 0; iloop < nodeSize; ++iloop) {
@@ -491,7 +513,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return returnRpcErr("input param is error!");
         }
 
-        List<BierLink> linkList = BierTopologyManager.getSubDomainLink(dataBroker,topologyId,domainId,subDomainId);
+        List<BierLink> linkList = topoManager.getSubDomainLink(topologyId,domainId,subDomainId);
         List<SubdomainLink> subDomainLinkList = new ArrayList<SubdomainLink>();
         int linkSize = linkList.size();
         for (int iloop = 0; iloop < linkSize; ++iloop) {
@@ -519,17 +541,20 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         }
 
         //删除域，并将属于该域的节点的域配置信息删除
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
+        BierTopology  topo = topoManager.getTopologyData(topologyId);
+        if (topo == null) {
+            return returnRpcErr("topo is not exist!");
+        }
         BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
 
         List<BierDomain> domainList = bierTopoBuilder.getBierDomain();
-        if (!BierTopologyManager.checkDomainExist(dataBroker,topologyId,domainId,domainList)) {
+        if (!topoManager.checkDomainExist(topologyId,domainId,domainList)) {
             builder.setConfigureResult(getConfigResult(false,"domain is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
         List<BierNode> nodeList = bierTopoBuilder.getBierNode();
-        if (!BierTopologyManager.delDomainData(dataBroker,topologyId,domainId,nodeList)) {
+        if (!topoManager.delDomainData(topologyId,domainId,nodeList)) {
             builder.setConfigureResult(getConfigResult(false,"delete domain form datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
@@ -554,16 +579,19 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         }
 
         //删除子域，并将属于该子域的节点的子域配置信息删除
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
+        BierTopology  topo = topoManager.getTopologyData(topologyId);
+        if (topo == null) {
+            return returnRpcErr("topo is not exist!");
+        }
         BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
         List<BierDomain> domainList = bierTopoBuilder.getBierDomain();
-        if (!BierTopologyManager.checkSubDomainExist(dataBroker,topologyId,domainId,subDomainId,domainList)) {
+        if (!topoManager.checkSubDomainExist(topologyId,domainId,subDomainId,domainList)) {
             builder.setConfigureResult(getConfigResult(false,"domain or subdomain is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
         List<BierNode> nodeList = bierTopoBuilder.getBierNode();
-        if (!BierTopologyManager.delSubDomainData(dataBroker,topologyId,domainId,subDomainId,nodeList)) {
+        if (!topoManager.delSubDomainData(topologyId,domainId,subDomainId,nodeList)) {
             builder.setConfigureResult(getConfigResult(false,"delete subdomain form datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
@@ -589,13 +617,17 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        BierNode node = BierTopologyManager.getNodeData(dataBroker, topologyId, nodeId);
+        BierNode node = topoManager.getNodeData(topologyId, nodeId);
         if (node == null) {
             builder.setConfigureResult(getConfigResult(false,"node is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        if (!BierTopologyManager.delNodeFromDomain(dataBroker, topologyId,domainId,subDomainId,node)) {
+        if (!topoManager.checkNodeBelongToDomain(domainId,subDomainId,node)) {
+            builder.setConfigureResult(getConfigResult(false,"node is not belong to domain or subdomain!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+        if (!topoManager.delNodeFromDomain(topologyId,domainId,subDomainId,node)) {
             builder.setConfigureResult(getConfigResult(false,"delete node form datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }

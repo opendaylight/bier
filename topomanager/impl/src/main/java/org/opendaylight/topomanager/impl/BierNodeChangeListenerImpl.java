@@ -70,6 +70,7 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
                     return null;
                 }
             });
+            notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         } else {
             LOG.debug("Instance identifier to inventory wasn't translated to topology while deleting node.");
         }
@@ -81,6 +82,7 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
         if (nodeIdInTopology != null) {
             final InstanceIdentifier<BierNode> iiToTopologyNode = provideIIToTopologyNode(nodeIdInTopology);
             sendToTransactionChain(prepareTopologyNode(nodeIdInTopology, iiToNodeInNetwork), iiToTopologyNode);
+            notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         } else {
             LOG.debug("Inventory node key is null. Data can't be written to topology");
         }

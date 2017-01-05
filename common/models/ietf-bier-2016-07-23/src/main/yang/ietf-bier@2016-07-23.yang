@@ -315,6 +315,7 @@ module ietf-bier {
                           container af {
                                 list ipv4 {
                                   key "bitstringlength bier-mpls-label-base";
+                                 ordered-by user;
                                   uses bier-mpls-cfg;
 
                                   description
@@ -322,6 +323,7 @@ module ietf-bier {
                                         }
                                 list ipv6 {
                                   key "bitstringlength bier-mpls-label-base";
+                                 ordered-by user;
                                   uses bier-mpls-cfg;
 
                                   description
@@ -339,6 +341,7 @@ module ietf-bier {
                     uses bier-parameters;
                         list sub-domain{
                               key "sub-domain-id";
+                             ordered-by user;
                               uses bier-subdomain;
                               }
                 description

@@ -16,12 +16,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     odl:type="default" />
   <reference id="rpcRegistry"
 		interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry" />
+  <reference id="notificationService"
+             interface="org.opendaylight.controller.md.sal.binding.api.NotificationPublishService"/>
 
   <bean id="provider"
     class="org.opendaylight.topomanager.impl.BierTopologyProvider"
     init-method="init" destroy-method="close">
     <argument ref="dataBroker" />
     <argument ref="rpcRegistry" />
+    <argument ref="notificationService"/>
   </bean>
 
 </blueprint>

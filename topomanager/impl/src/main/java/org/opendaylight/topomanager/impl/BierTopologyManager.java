@@ -50,15 +50,14 @@ import org.slf4j.LoggerFactory;
 
 public class BierTopologyManager {
     private static final Logger LOG =  LoggerFactory.getLogger(BierTopologyManager.class);    // 日志记录
-    private BierTopologyProvider bierTopologyProvider;
     private final DataBroker dataBroker;
     private BierTopologyAdapter topoAdapter = new BierTopologyAdapter();
     public static final String TOPOLOGY_ID = "flow:1";
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(7);          // 操作执行器
+    private final LogicalDatastoreType datastoreType = LogicalDatastoreType.CONFIGURATION;
 
-    public BierTopologyManager(BierTopologyProvider bierTopologyProvider) {
-        this.bierTopologyProvider = bierTopologyProvider;
-        dataBroker = bierTopologyProvider.getDataBroker();
+    public BierTopologyManager(DataBroker dataBroker) {
+        this.dataBroker = dataBroker;
     }
 
     public DataBroker getDataBroker() {
@@ -73,24 +72,22 @@ public class BierTopologyManager {
 
         if (!isBierTopologyExist(path)) {
             final ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-            tx.put(LogicalDatastoreType.OPERATIONAL, path, new BierTopologyBuilder().setKey(key).build(), true);
+            tx.put(datastoreType, path, new BierTopologyBuilder().setKey(key).build(), true);
             try {
                 tx.submit().get();
             } catch (InterruptedException | ExecutionException e) {
                 LOG.warn("Initial topology export failed, continuing anyway", e);
             }
+
+            BierTopology topo = topoAdapter.getBierTopology(dataBroker,TOPOLOGY_ID);
+            setTopologyData(topo);
         }
-
-        BierTopology topo = topoAdapter.getBierTopology(dataBroker,TOPOLOGY_ID);
-
-        //写bier拓扑的datastore
-        setTopologyData(topo);
     }
 
     private boolean isBierTopologyExist(final InstanceIdentifier<BierTopology> path) {
         final ReadTransaction tx = dataBroker.newReadOnlyTransaction();
         try {
-            Optional<BierTopology> bierTopology = tx.read(LogicalDatastoreType.OPERATIONAL, path).checkedGet();
+            Optional<BierTopology> bierTopology = tx.read(datastoreType, path).checkedGet();
             LOG.debug("Bier topology exist in the operational data store at {}",path);
             if (bierTopology.isPresent()) {
                 return true;
@@ -119,7 +116,7 @@ public class BierTopologyManager {
             // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
-                transaction.put(LogicalDatastoreType.OPERATIONAL,path,bierTopology ,true);
+                transaction.put(datastoreType,path,bierTopology ,true);
             }
 
             // 重载读操作函数
@@ -152,7 +149,7 @@ public class BierTopologyManager {
         return;
     }
 
-    public static BierTopology getTopologyData(DataBroker dataBroker, String topologyId) {
+    public BierTopology getTopologyData(String topologyId) {
         // 创建执行器，用来执行数据
         BierTopologyProcess<BierTopology> processor =  new BierTopologyProcess<BierTopology>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierTopologyBuilder()).build());
@@ -173,7 +170,7 @@ public class BierTopologyManager {
             public ListenableFuture<Optional<BierTopology>> readOperation(ReadWriteTransaction transaction) {
 
                 ListenableFuture<Optional<BierTopology>> listenableFuture =
-                        transaction.read(LogicalDatastoreType.OPERATIONAL, path);  // 读取数据
+                        transaction.read(datastoreType, path);  // 读取数据
 
                 return listenableFuture;
             }
@@ -200,8 +197,7 @@ public class BierTopologyManager {
         return null;
     }
 
-    public static boolean setDomainData(final DataBroker dataBroker,String topologyId,
-            final List<BierDomain> domainList) {
+    public boolean setDomainData(String topologyId,final List<BierDomain> domainList) {
         // 参数检查
         if ( null == dataBroker || null == domainList || domainList.isEmpty() ) {
             LOG.error("ZTE:Set bier domain input is error!");
@@ -224,7 +220,7 @@ public class BierTopologyManager {
                 for (int iloop = 0; iloop < domainSize; ++iloop) {
                     BierDomain domain = domainList.get(iloop);
                     final InstanceIdentifier<BierDomain> path = topoPath.child(BierDomain.class,domain.getKey());
-                    transaction.put(LogicalDatastoreType.OPERATIONAL,path, domain,true);
+                    transaction.put(datastoreType,path, domain,true);
                 }
             }
 
@@ -259,7 +255,7 @@ public class BierTopologyManager {
         return false;
     }
 
-    public static BierDomain getDomainData(DataBroker dataBroker, String topologyId,DomainId domainId) {
+    public BierDomain getDomainData(String topologyId,DomainId domainId) {
         // 创建执行器，用来执行数据
         BierTopologyProcess<BierDomain> processor =  new BierTopologyProcess<BierDomain>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierDomainBuilder()).build());
@@ -281,7 +277,7 @@ public class BierTopologyManager {
             public ListenableFuture<Optional<BierDomain>> readOperation(ReadWriteTransaction transaction) {
 
                 ListenableFuture<Optional<BierDomain>> listenableFuture =
-                        transaction.read(LogicalDatastoreType.OPERATIONAL, path);  // 读取数据
+                        transaction.read(datastoreType, path);  // 读取数据
 
                 return listenableFuture;
             }
@@ -307,8 +303,8 @@ public class BierTopologyManager {
         return null;
     }
 
-    public static boolean setSubDomainData(final DataBroker dataBroker,String topologyId,
-            DomainId domainId,final List<BierSubDomain> subDomainList) {
+    public boolean setSubDomainData(String topologyId,DomainId domainId,
+            final List<BierSubDomain> subDomainList) {
         // 参数检查
         if ( null == dataBroker || null == subDomainList || subDomainList.isEmpty() ) {
             LOG.error("ZTE:Set bier sub-domai input is error!");
@@ -333,7 +329,7 @@ public class BierTopologyManager {
                     BierSubDomain subDomain = subDomainList.get(iloop);
                     final InstanceIdentifier<BierSubDomain> path
                             = domainPath.child(BierSubDomain.class, subDomain.getKey());
-                    transaction.put(LogicalDatastoreType.OPERATIONAL,path, subDomain,true);
+                    transaction.put(datastoreType,path, subDomain,true);
                 }
             }
 
@@ -368,8 +364,7 @@ public class BierTopologyManager {
         return false;
     }
 
-    public static boolean delDomainData(final DataBroker dataBroker,final String topologyId,
-            final DomainId domainId,final List<BierNode> nodeList) {
+    public boolean delDomainData(final String topologyId,final DomainId domainId,final List<BierNode> nodeList) {
         // 参数检查
         if ( null == dataBroker || null == domainId ) {
             LOG.error("ZTE:Del bier domain input is error!");
@@ -388,7 +383,7 @@ public class BierTopologyManager {
             // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
-                transaction.delete(LogicalDatastoreType.OPERATIONAL,path);
+                transaction.delete(datastoreType,path);
 
                 //修改影响的节点
                 updateAffectedDomainNode(transaction,topologyId,domainId,nodeList);
@@ -425,7 +420,7 @@ public class BierTopologyManager {
         return false;
     }
 
-    public static void updateAffectedDomainNode(ReadWriteTransaction transaction,String topologyId,
+    public void updateAffectedDomainNode(ReadWriteTransaction transaction,String topologyId,
             DomainId domainId,List<BierNode> nodeList) {
         List<BierNode> domainNodeList = new ArrayList<BierNode>();
         int nodeSize = nodeList.size();
@@ -452,12 +447,12 @@ public class BierTopologyManager {
         for (int iloop = 0; iloop < domainNodeSize; ++iloop) {
             BierNode domainNode = domainNodeList.get(iloop);
             final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, domainNode.getKey());
-            //transaction.delete(LogicalDatastoreType.OPERATIONAL,path);
-            transaction.put(LogicalDatastoreType.OPERATIONAL,path,domainNode);
+            //transaction.delete(datastoreType,path);
+            transaction.put(datastoreType,path,domainNode);
         }
     }
 
-    public static boolean delSubDomainData(final DataBroker dataBroker,final String topologyId,final DomainId domainId,
+    public boolean delSubDomainData(final String topologyId,final DomainId domainId,
             final SubDomainId subDomainId,final List<BierNode> nodeList) {
         // 参数检查
         if ( null == dataBroker || null == domainId ) {
@@ -478,7 +473,7 @@ public class BierTopologyManager {
             // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
-                transaction.delete(LogicalDatastoreType.OPERATIONAL,path);
+                transaction.delete(datastoreType,path);
 
                 //修改影响的节点
                 updateAffectedSubDomainNode(transaction,topologyId,domainId,subDomainId,nodeList);
@@ -515,7 +510,7 @@ public class BierTopologyManager {
         return false;
     }
 
-    public static void updateAffectedSubDomainNode(ReadWriteTransaction transaction,String topologyId,
+    public void updateAffectedSubDomainNode(ReadWriteTransaction transaction,String topologyId,
             DomainId domainId,SubDomainId subDomainId,List<BierNode> nodeList) {
         if (nodeList == null) {
             return;
@@ -525,6 +520,7 @@ public class BierTopologyManager {
         for (int iloop = 0; iloop < nodeSize; ++iloop) {
             BierNode node = nodeList.get(iloop);
             List<Domain> domainList =  node.getBierNodeParams().getDomain();
+            boolean findFlag = false;
             int domainSize = domainList.size();
             for (int jloop = 0; jloop < domainSize; ++jloop) {
                 Domain domain = domainList.get(jloop);
@@ -540,7 +536,7 @@ public class BierTopologyManager {
                         List<SubDomain> newSubDomainList = newNodeBuilder.getBierNodeParams()
                                 .getDomain().get(jloop).getBierGlobal().getSubDomain();
                         newSubDomainList.remove(kloop);
-
+                        findFlag = true;
                         if (newSubDomainList.isEmpty()) {
                             List<Domain> newDomainList = newNodeBuilder.getBierNodeParams()
                                     .getDomain();
@@ -549,6 +545,9 @@ public class BierTopologyManager {
                         subDomainNodeList.add(newNodeBuilder.build());
                         break;
                     }
+                }
+                if (findFlag) {
+                    break;
                 }
             }
         }
@@ -560,11 +559,11 @@ public class BierTopologyManager {
         for (int iloop = 0; iloop < subDomainNodeSize; ++iloop) {
             BierNode subDomainNode = subDomainNodeList.get(iloop);
             final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, subDomainNode.getKey());
-            transaction.put(LogicalDatastoreType.OPERATIONAL,path,subDomainNode);
+            transaction.put(datastoreType,path,subDomainNode);
         }
     }
 
-    public static boolean setNodeData(final DataBroker dataBroker,String topologyId, final BierNode node) {
+    public boolean setNodeData(String topologyId, final BierNode node) {
         // 参数检查
         if ( null == dataBroker || node == null ) {
             LOG.error("ZTE:Set bier node input is error!");
@@ -584,7 +583,7 @@ public class BierTopologyManager {
             // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
-                transaction.merge(LogicalDatastoreType.OPERATIONAL,path, node,true);
+                transaction.merge(datastoreType,path, node,true);
             }
 
             // 重载读操作函数
@@ -618,7 +617,7 @@ public class BierTopologyManager {
         return false;
     }
 
-    public static BierNode getNodeData(DataBroker dataBroker, String topologyId,String nodeId) {
+    public BierNode getNodeData(String topologyId,String nodeId) {
         // 创建执行器，用来执行数据
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierNodeBuilder()).build());
@@ -639,7 +638,7 @@ public class BierTopologyManager {
             @Override
             public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
                 ListenableFuture<Optional<BierNode>> listenableFuture =
-                        transaction.read(LogicalDatastoreType.OPERATIONAL, path);// 读取数据
+                        transaction.read(datastoreType, path);// 读取数据
                 return listenableFuture;
             }
         });
@@ -664,7 +663,7 @@ public class BierTopologyManager {
         return null;
     }
 
-    public static boolean delNodeFromDomain(DataBroker dataBroker, String topologyId,final DomainId domainId,
+    public boolean delNodeFromDomain(String topologyId,final DomainId domainId,
             final SubDomainId subDomainId,final BierNode node) {
         // 创建执行器，用来执行数据
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
@@ -681,8 +680,12 @@ public class BierTopologyManager {
                 BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
                 List<Domain> domainList =  node.getBierNodeParams().getDomain();
                 int domainSize = domainList.size();
+                boolean findFlag = false;
                 for (int jloop = 0; jloop < domainSize; ++jloop) {
                     Domain domain = domainList.get(jloop);
+                    if (!domain.getDomainId().equals(domainId)) {
+                        continue;
+                    }
                     List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
                     int subDomainSize = subDomainList.size();
                     for (int kloop = 0; kloop < subDomainSize; ++kloop) {
@@ -691,7 +694,7 @@ public class BierTopologyManager {
                             List<SubDomain> newSubDomainList = newNodeBuilder.getBierNodeParams().getDomain()
                                     .get(jloop).getBierGlobal().getSubDomain();
                             newSubDomainList.remove(kloop);
-
+                            findFlag = true;
                             if (newSubDomainList.isEmpty()) {
                                 List<Domain> newDomainList = newNodeBuilder.getBierNodeParams().getDomain();
                                 newDomainList.remove(jloop);
@@ -699,9 +702,12 @@ public class BierTopologyManager {
                             break;
                         }
                     }
+                    if (findFlag) {
+                        break;
+                    }
                 }
 
-                transaction.put(LogicalDatastoreType.OPERATIONAL,path,newNodeBuilder.build());
+                transaction.put(datastoreType,path,newNodeBuilder.build());
                 // Auto-generated method stub
             }
 
@@ -736,7 +742,7 @@ public class BierTopologyManager {
         return false;
     }
 
-    public static BierLink getLinkData(DataBroker dataBroker, String topologyId,String linkId) {
+    public BierLink getLinkData(String topologyId,String linkId) {
         // 创建执行器，用来执行数据
         BierTopologyProcess<BierLink> processor =  new BierTopologyProcess<BierLink>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierLinkBuilder()).build());
@@ -757,7 +763,7 @@ public class BierTopologyManager {
             @Override
             public ListenableFuture<Optional<BierLink>> readOperation(ReadWriteTransaction transaction) {
                 ListenableFuture<Optional<BierLink>> listenableFuture = transaction
-                        .read(LogicalDatastoreType.OPERATIONAL, path);  // 读取数据
+                        .read(datastoreType, path);  // 读取数据
 
                 return listenableFuture;
             }
@@ -783,10 +789,10 @@ public class BierTopologyManager {
         return null;
     }
 
-    public static List<BierNode> getSubDomainNode(DataBroker dataBroker,String topologyId,DomainId domainId,
+    public List<BierNode> getSubDomainNode(String topologyId,DomainId domainId,
             SubDomainId subDomainId) {
         List<BierNode> nodeList = new ArrayList<BierNode>();
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
+        BierTopology  topo = getTopologyData(topologyId);
         if (topo == null) {
             LOG.error("querySubdomainNode rpc topo is not exist!");
             return nodeList;
@@ -806,7 +812,7 @@ public class BierTopologyManager {
         return nodeList;
     }
 
-    public static boolean isNodeBelongToSubDomain(DomainId domainId,SubDomainId subDomainId,BierNode node) {
+    public boolean isNodeBelongToSubDomain(DomainId domainId,SubDomainId subDomainId,BierNode node) {
         boolean findFlag = false;
         BierNodeBuilder nodeBuilder = new BierNodeBuilder(node);
         List<Domain> domainList = nodeBuilder.getBierNodeParams().getDomain();
@@ -836,10 +842,9 @@ public class BierTopologyManager {
         return findFlag;
     }
 
-    public static List<BierLink> getSubDomainLink(DataBroker dataBroker,String topologyId,
-            DomainId domainId,SubDomainId subDomainId) {
+    public List<BierLink> getSubDomainLink(String topologyId,DomainId domainId,SubDomainId subDomainId) {
         List<BierLink> linkList = new ArrayList<BierLink>();
-        BierTopology  topo = BierTopologyManager.getTopologyData(dataBroker,topologyId);
+        BierTopology  topo = getTopologyData(topologyId);
         if (topo == null) {
             LOG.error("querySubdomainLink rpc topo is not exist!");
             return linkList;
@@ -879,14 +884,14 @@ public class BierTopologyManager {
         return linkList;
     }
 
-    public static boolean checkDomainExist(DataBroker dataBroker,String topologyId,List<Domain> domainList) {
+    public boolean checkDomainExist(String topologyId,List<Domain> domainList) {
         if (domainList == null || domainList.isEmpty()) {
             return false;
         }
 
         Domain domain = domainList.get(0);
         DomainId domainId  = domain.getDomainId();
-        BierDomain bierDomain = getDomainData(dataBroker, topologyId,domainId);
+        BierDomain bierDomain = getDomainData(topologyId,domainId);
         if (bierDomain == null) {
             return false;
         }
@@ -894,7 +899,7 @@ public class BierTopologyManager {
         DomainBuilder domainBuilder = new DomainBuilder(domain);
         List<SubDomain> subDomainList = domainBuilder.getBierGlobal().getSubDomain();
         if (subDomainList == null || subDomainList.isEmpty()) {
-            return false;
+            return true;
         }
         boolean subDomainExistFlag = false;
         SubDomainId subDomainId  = subDomainList.get(0).getSubDomainId();
@@ -914,7 +919,7 @@ public class BierTopologyManager {
         return true;
     }
 
-    public static boolean checkDomainExist(DataBroker dataBroker,String topologyId,DomainId domainId,
+    public boolean checkDomainExist(String topologyId,DomainId domainId,
             List<BierDomain> domainList) {
         if (domainList == null || domainList.isEmpty()) {
             return false;
@@ -931,8 +936,8 @@ public class BierTopologyManager {
         return false;
     }
 
-    public static boolean checkSubDomainExist(DataBroker dataBroker,String topologyId,
-            DomainId domainId,SubDomainId subDomainId,List<BierDomain> domainList) {
+    public boolean checkSubDomainExist(String topologyId,DomainId domainId,SubDomainId subDomainId,
+            List<BierDomain> domainList) {
         if (domainList == null || domainList.isEmpty()) {
             return false;
         }
@@ -958,6 +963,32 @@ public class BierTopologyManager {
             }
         }
 
+        return false;
+    }
+
+    public boolean checkNodeBelongToDomain(DomainId domainId,SubDomainId subDomainId,BierNode node) {
+        List<Domain> domainList =  node.getBierNodeParams().getDomain();
+        if (domainList == null) {
+            return false;
+        }
+        int domainSize = domainList.size();
+        for (int jloop = 0; jloop < domainSize; ++jloop) {
+            Domain domain = domainList.get(jloop);
+            if (!domain.getDomainId().equals(domainId)) {
+                continue;
+            }
+            List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
+            if (subDomainList == null) {
+                return false;
+            }
+            int subDomainSize = subDomainList.size();
+            for (int kloop = 0; kloop < subDomainSize; ++kloop) {
+                SubDomain subDomain = subDomainList.get(kloop);
+                if (subDomain.getSubDomainId().equals(subDomainId)) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 }

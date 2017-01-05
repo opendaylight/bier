@@ -177,12 +177,14 @@ public class BierTopologyAdapter {
 
         List<BierTerminationPoint> bierTpList = new ArrayList<BierTerminationPoint>();
         List<TerminationPoint> tpList = nodeBuilder.getTerminationPoint();
-        int tpSize = tpList.size();
-        for (int iloop = 0; iloop < tpSize; ++iloop) {
-            TerminationPoint tp = tpList.get(iloop);
-            BierTerminationPoint bierTp = toBierTp(tp);
+        if (tpList != null) {
+            int tpSize = tpList.size();
+            for (int iloop = 0; iloop < tpSize; ++iloop) {
+                TerminationPoint tp = tpList.get(iloop);
+                BierTerminationPoint bierTp = toBierTp(tp);
 
-            bierTpList.add(bierTp);
+                bierTpList.add(bierTp);
+            }
         }
         bierNodeBuilder.setBierTerminationPoint(bierTpList);
 
