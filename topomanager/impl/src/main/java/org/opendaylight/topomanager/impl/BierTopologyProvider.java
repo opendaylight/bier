@@ -8,10 +8,12 @@
 package org.opendaylight.topomanager.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.BierTopologyApiService;
-
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,13 +23,17 @@ public class BierTopologyProvider {
 
     private final RpcProviderRegistry rpcRegistry;
     private final DataBroker dataBroker;
+    private final NotificationPublishService notificationService;
     private BierTopologyManager topoManager;
+    private BierNodeChangeListenerImpl nodeListener;
 
     private RpcRegistration<BierTopologyApiService> topoService = null;
 
-    public BierTopologyProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcRegistry) {
+    public BierTopologyProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcRegistry,
+                                final NotificationPublishService notificationService) {
         this.dataBroker = dataBroker;
         this.rpcRegistry = rpcRegistry;
+        this.notificationService = notificationService;
     }
 
     public DataBroker getDataBroker() {
@@ -39,10 +45,14 @@ public class BierTopologyProvider {
     */
     public void init() {
         LOG.info("BierTopologyProvider Session Initiated");
+        NotificationProvider.getInstance().setNotificationService(notificationService);
+        topoManager = new BierTopologyManager(dataBroker);
         topoService = rpcRegistry.addRpcImplementation(BierTopologyApiService.class,
-                new BierTopologyServiceImpl(dataBroker));
+                new BierTopologyServiceImpl(topoManager));
+        BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
+                BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
+        nodeListener = new BierNodeChangeListenerImpl(dataBroker,processor);
 
-        topoManager = new BierTopologyManager(this);
         topoManager.start();
     }
 
@@ -53,6 +63,13 @@ public class BierTopologyProvider {
         LOG.info("BierTopologyProvider Closed");
         if (topoService != null) {
             topoService.close();
+        }
+        try {
+            if (nodeListener != null) {
+                nodeListener.close();
+            }
+        } catch (Exception e) {
+            LOG.error("close nodeListener error!");
         }
     }
 }

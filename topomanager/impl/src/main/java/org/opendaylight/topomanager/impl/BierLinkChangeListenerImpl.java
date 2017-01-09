@@ -72,6 +72,7 @@ public class BierLinkChangeListenerImpl
                     return null;
                 }
             });
+            notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         }
     }
 
@@ -81,6 +82,7 @@ public class BierLinkChangeListenerImpl
         if (linkIdInTopology != null) {
             final InstanceIdentifier<BierLink> iiToTopologyLink = provideIIToTopologyLink(linkIdInTopology);
             sendToTransactionChain(prepareTopologyNode(linkIdInTopology, iiToLinkInNetwork), iiToTopologyLink);
+            notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         } else {
             LOG.debug("Inventory node key is null. Data can't be written to topology");
         }

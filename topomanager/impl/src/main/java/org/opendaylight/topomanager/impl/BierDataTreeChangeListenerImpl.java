@@ -15,6 +15,8 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.openflowplugin.common.wait.SimpleTaskRetryLooper;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChange;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLinkKey;
@@ -125,5 +127,11 @@ public abstract class BierDataTreeChangeListenerImpl<T extends DataObject>
             return inventoryLinkKey.getLinkId();
         }
         return null;
+    }
+
+    protected void notifyTopoChange(String topoId) {
+        TopoChange notification = new TopoChangeBuilder().setTopoId(topoId).build();
+        LOG.info("notify TopoChange:" + topoId);
+        NotificationProvider.getInstance().notify(notification);
     }
 }

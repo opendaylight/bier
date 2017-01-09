@@ -50,11 +50,6 @@ module bier-topology-api {
   }
   
 	rpc load-topology {
-		input {
-			leaf topology-id {
-			  type string;
-		  }
-		}
 		output {
 		  list topology {
 					key topology-id;
@@ -279,5 +274,14 @@ module bier-topology-api {
 		output {
         uses bier-common:configure-result;
 		}	
-	}									
+	}
+
+	notification topo-change {
+        leaf topo-id {
+            type string;
+        }
+	}
+
+	rpc test-notification-publish {
+	}
 }

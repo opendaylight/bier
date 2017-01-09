@@ -32,28 +32,33 @@ module bier-topology {
   container bier-network-topology {
     list bier-topology {
       key "topology-id";
+      ordered-by user;
       leaf topology-id {
 			  type string;
 			}   
 			      
 			list bier-node {
 			  key "node-id";
+			  ordered-by user;
 			  uses bier-node;
-		  }
+		        }
 					  		
 			list bier-link {
 			  key "link-id";
+			  ordered-by user;
 				uses bier-link;
-		  }
+		        }
 						  
 		  list bier-domain
 			{
 			  key "domain-id";
+			  ordered-by user;
 			  leaf domain-id {
 			    type bier-common:domain-id;
 			  }
 			  list bier-sub-domain {
 			    key "sub-domain-id";
+			    ordered-by user;
 			    leaf sub-domain-id {
 			      type bier:sub-domain-id;
 			    }
@@ -65,6 +70,7 @@ module bier-topology {
   grouping bier-node-params {
     list domain {
       key "domain-id";
+      ordered-by user;
       leaf domain-id {
 			  type bier-common:domain-id;
 			}
@@ -96,6 +102,7 @@ module bier-topology {
 		}
 		list bier-termination-point {
 		    key "tp-id";
+		    ordered-by user;
 				leaf tp-id {
 					type string;
 				}
