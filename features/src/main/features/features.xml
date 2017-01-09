@@ -34,6 +34,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-bier-channel-cli</feature>
         <feature version='${project.version}'>odl-bier-adapter</feature>
         <feature version='${project.version}'>odl-bier-driver</feature>
+        <feature version='${project.version}'>odl-bier-service-api</feature>
         <feature version='${project.version}'>odl-bier-service</feature>
         <feature version='${project.version}'>odl-bier-service-rest</feature>
         <feature version='${project.version}'>odl-bier-service-ui</feature>
@@ -100,11 +101,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${project.version}">odl-bier-channel</feature>
     <bundle>mvn:org.opendaylight.bier/channel-cli/{{VERSION}}</bundle>
   </feature>
-  
-  
+
+  <feature name='odl-bier-service-api' version='${project.version}' description='OpenDaylight :: bier :: service :: api'>
+    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
+    <bundle>mvn:org.opendaylight.bier/service-api/{{VERSION}}</bundle>
+  </feature>
   <feature name='odl-bier-service' version='${project.version}' description='OpenDaylight :: bier :: service'>
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
     <feature version='${project.version}'>odl-bier-models</feature>
+    <feature version='${project.version}'>odl-bier-service-api</feature>
     <bundle>mvn:org.opendaylight.bier/service-impl/{{VERSION}}</bundle>
   </feature>
   <feature name='odl-bier-service-rest' version='${project.version}' description='OpenDaylight :: bier :: service :: REST'>
