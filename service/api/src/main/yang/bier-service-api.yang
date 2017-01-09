@@ -1,0 +1,18 @@
+module bier-service-api {
+    yang-version 1;
+    namespace "urn:bier:service:api";
+    prefix "bier-service-api";
+
+    revision "2017-01-05" {
+        description "Initial revision of service model";
+    }
+
+    notification report-message {
+            leaf failure-reason {
+                type string;
+            }
+    	}
+
+     rpc test-notification-publish {
+     	}
+}

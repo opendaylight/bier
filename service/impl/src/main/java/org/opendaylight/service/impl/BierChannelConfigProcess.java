@@ -21,6 +21,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.chan
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
+import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.ReportMessage;
+import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.ReportMessageBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
@@ -50,10 +52,15 @@ public class BierChannelConfigProcess {
             return;
         }
         LOG.info("Add Channel!");
+        if (!checkChannelInput(channel)) {
+            LOG.error("Channel input error!");
+            return;
+        }
         Channel channelBfr = addBfrIdToChannel(channel,channel.getEgressNode());
         BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
                 ChannelConfigWriter.ConfigurationType.ADD, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
+            notifyFailureReason(writedChannelResult.getFailureReason());
             return;
         }
     }
@@ -63,10 +70,15 @@ public class BierChannelConfigProcess {
             return;
         }
         LOG.info("Del Channel!");
+        if (!checkChannelInput(channel)) {
+            LOG.error("Channel input error!");
+            return;
+        }
         Channel channelBfr = addBfrIdToChannel(channel,channel.getEgressNode());
         BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
                 ChannelConfigWriter.ConfigurationType.DELETE, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
+            notifyFailureReason(writedChannelResult.getFailureReason());
             return;
         }
     }
@@ -75,15 +87,16 @@ public class BierChannelConfigProcess {
         if (null == before || null == after) {
             return;
         }
-        if (checkChannelParaChange(before, after)) {
-            LOG.info("Modify Channel!");
+        if (!checkChannelInput(after)) {
+            LOG.error("Channel input error!");
+            return;
+        } else {
+            LOG.info("Deploy Channel!");
             Channel channel = addBfrIdToChannel(after,after.getEgressNode());
-            if (null == channel) {
-                return;
-            }
             BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
                     ChannelConfigWriter.ConfigurationType.MODIFY, channel);
             if (!writedChannelResult.isSuccessful()) {
+                notifyFailureReason(writedChannelResult.getFailureReason());
                 return;
             }
         }
@@ -103,6 +116,7 @@ public class BierChannelConfigProcess {
         BierConfigResult writedChannelResult = bierConfigWriter.writeChannelEgressNode(
                ChannelConfigWriter.ConfigurationType.DELETE, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
+            notifyFailureReason(writedChannelResult.getFailureReason());
             return;
         }
     }
@@ -125,7 +139,7 @@ public class BierChannelConfigProcess {
         return nodeDeleted;
     }
 
-    private static EgressNode getNodeById(String nodeId, List<EgressNode> nodeAfter) {
+    private EgressNode getNodeById(String nodeId, List<EgressNode> nodeAfter) {
         if (null == nodeId || null == nodeAfter || nodeAfter.isEmpty()) {
             return null;
         }
@@ -137,24 +151,6 @@ public class BierChannelConfigProcess {
         return null;
     }
 
-    private boolean checkChannelParaChange(Channel before, Channel after) {
-        if (null == before || null == after) {
-            return false;
-        }
-        if (!before.getName().equals(after.getName())
-                || !before.getDomainId().equals(after.getDomainId())
-                || !before.getIngressNode().equals(after.getIngressNode())
-                || !before.getKey().equals(after.getKey())
-                || !before.getGroupWildcard().equals(after.getGroupWildcard())
-                || !before.getSourceWildcard().equals(after.getSourceWildcard())
-                || !before.getSubDomainId().equals(after.getSubDomainId())
-                || !before.getDstGroup().equals(after.getDstGroup())
-                || !before.getSrcIp().equals(after.getSrcIp())
-                || checkEgressNodeListChange(before.getEgressNode(),after.getEgressNode())) {
-            return true;
-        }
-        return false;
-    }
 
     private boolean checkEgressNodeListChange(List<EgressNode> nodeBefore,List<EgressNode> nodeAfter) {
         if (null == nodeBefore && null == nodeAfter) {
@@ -263,5 +259,24 @@ public class BierChannelConfigProcess {
         EgressNodeBuilder builderNode = new EgressNodeBuilder(egressNode);
         builderNode.setEgressBfrId(egressBfrId);
         return builderNode.build();
+    }
+
+    private boolean checkChannelInput(Channel channel) {
+        if (null == channel) {
+            return false;
+        }
+        if (null == channel.getIngressNode()) {
+            return false;
+        }
+        if (null == channel.getEgressNode() || channel.getEgressNode().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
+    private void notifyFailureReason(String failureReason) {
+        LOG.info("report failureReason to app");
+        ReportMessage message = new ReportMessageBuilder().setFailureReason(failureReason).build();
+        NotificationProvider.getInstance().notify(message);
     }
 }

@@ -10,6 +10,9 @@ package org.opendaylight.service.impl;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
+import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.BierServiceApiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,21 +21,21 @@ public class ServiceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceProvider.class);
 
     private final DataBroker dataBroker;
-
+    private final RpcProviderRegistry rpcRegistry;
+    private final NotificationPublishService notificationService;
     private final ChannelConfigWriter bierChannelWriter;
     private final BierConfigWriter bierConfigWriter;
 
     private ServiceManager serviceManager;
 
-    public ServiceProvider(final DataBroker dataBroker,final BierConfigWriter bierConfigWriter,
-                           final ChannelConfigWriter channelConfigWriter) {
+    public ServiceProvider(final DataBroker dataBroker,final RpcProviderRegistry rpcRegistry,
+                           final NotificationPublishService notificationService,
+                           final BierConfigWriter bierConfigWriter, final ChannelConfigWriter channelConfigWriter) {
         this.dataBroker = dataBroker;
+        this.rpcRegistry = rpcRegistry;
+        this.notificationService = notificationService;
         this.bierConfigWriter = bierConfigWriter;
         this.bierChannelWriter = channelConfigWriter;
-    }
-
-    public ServiceManager getServiceManeger( ) {
-        return this.serviceManager;
     }
 
     /**
@@ -40,7 +43,8 @@ public class ServiceProvider {
      */
     public void init() {
         LOG.info("ServiceProvider Session Initiated");
-        serviceManager = new ServiceManager(dataBroker, bierConfigWriter, bierChannelWriter);
+        serviceManager = new ServiceManager(dataBroker, notificationService, bierConfigWriter, bierChannelWriter);
+        rpcRegistry.addRpcImplementation(BierServiceApiService.class,serviceManager);
     }
 
     /**

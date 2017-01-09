@@ -45,7 +45,12 @@ public class ChannelChangeListener implements DataTreeChangeListener<Channel> {
                                     + "old BierChannel: {}, new BierChannel: {}",
                             change.getRootPath().getRootIdentifier(), rootNode.getDataBefore(),
                             rootNode.getDataAfter());
-                    bierChannelConfigProcess.processAddedChannel(rootNode.getDataAfter());
+                    if (null == rootNode.getDataBefore()) {
+                        bierChannelConfigProcess.processAddedChannel(rootNode.getDataAfter());
+                    } else {
+                        bierChannelConfigProcess.processModifiedChannel(rootNode.getDataBefore(),
+                                rootNode.getDataAfter());
+                    }
                     break;
                 case SUBTREE_MODIFIED:
                     LOG.info("onDataTreeChanged - BierChannel config with path {} was modified: "
