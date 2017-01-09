@@ -12,7 +12,7 @@
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
-  
+
   <prerequisites>
     <maven>3.1.1</maven>
   </prerequisites>
@@ -23,12 +23,12 @@
     <restconf.version>1.5.0-SNAPSHOT</restconf.version>
     <netconf.version>1.2.0-SNAPSHOT</netconf.version>
     <yangtools.version>1.1.0-SNAPSHOT</yangtools.version>
-    <dlux.version>0.5.0-SNAPSHOT</dlux.version>
+    <dluxapps.version>0.5.0-SNAPSHOT</dluxapps.version>
     <openflowplugin.version>0.4.0-SNAPSHOT</openflowplugin.version>
     <openflowjava.version>0.9.0-SNAPSHOT</openflowjava.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
-  
+
   <dependencyManagement>
     <dependencies>
       <!-- project specific dependencies -->
@@ -103,10 +103,10 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.opendaylight.dlux</groupId>
-      <artifactId>features-dlux</artifactId>
+      <groupId>org.opendaylight.dluxapps</groupId>
+      <artifactId>features-dluxapps</artifactId>
       <classifier>features</classifier>
-      <version>${dlux.version}</version>
+      <version>${dluxapps.version}</version>
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
@@ -126,9 +126,9 @@
       <type>xml</type>
       <scope>runtime</scope>
     </dependency>
-    
-    
-    
+
+
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>channel-impl</artifactId>
@@ -144,7 +144,7 @@
       <artifactId>channel-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>service-api</artifactId>
@@ -160,7 +160,7 @@
       <artifactId>service-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>topomanager-impl</artifactId>
@@ -176,7 +176,7 @@
       <artifactId>topomanager-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
-    
+
 
     <dependency>
       <groupId>${project.groupId}</groupId>

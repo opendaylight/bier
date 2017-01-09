@@ -14,12 +14,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
-  <repository>mvn:org.opendaylight.dlux/features-dlux/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-netconf/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-netconf-connector/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.openflowjava/features-openflowjava/{{VERSION}}/xml/features</repository>
-  
+
   <feature name='odl-bier-all' version='${project.version}' description="OpenDaylight :: Bier :: All">
         <feature version='${project.version}'>odl-bier-models</feature>
         <feature version='${project.version}'>odl-bier-topomanager-api</feature>
@@ -42,7 +42,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
 
   </feature>
-    
+
   <feature name='odl-bier-models' version='${project.version}' description='OpenDaylight :: bier :: models'>
     <feature version="${mdsal.model.version}">odl-mdsal-models</feature>
     <bundle>mvn:org.opendaylight.bier/ietf-bier-2016-07-23/{{VERSION}}</bundle>
@@ -51,7 +51,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <bundle>mvn:org.opendaylight.bier/bier-topology-model/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-channel-model/{{VERSION}}</bundle>
   </feature>
-    
+
   <feature name='odl-bier-topomanager-api' version='${project.version}' description='OpenDaylight :: bier :: topomanager :: api'>
     <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
     <bundle>mvn:org.opendaylight.bier/topomanager-api/{{VERSION}}</bundle>
@@ -70,14 +70,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${project.version}">odl-bier-topomanager-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
     <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
-    <feature version="${dlux.version}">odl-dlux-yangui</feature>
+    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
   </feature>
   <feature name='odl-bier-topomanager-cli' version='${project.version}' description='OpenDaylight :: bier :: topomanager :: CLI'>
     <feature version="${project.version}">odl-bier-topomanager</feature>
     <bundle>mvn:org.opendaylight.bier/topomanager-cli/{{VERSION}}</bundle>
   </feature>
-  
-  
+
+
   <feature name='odl-bier-channel-api' version='${project.version}' description='OpenDaylight :: bier :: channel :: api'>
     <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
     <bundle>mvn:org.opendaylight.bier/channel-api/{{VERSION}}</bundle>
@@ -95,7 +95,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${project.version}">odl-bier-channel-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
     <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
-    <feature version="${dlux.version}">odl-dlux-yangui</feature>
+    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
   </feature>
   <feature name='odl-bier-channel-cli' version='${project.version}' description='OpenDaylight :: bier :: channel :: CLI'>
     <feature version="${project.version}">odl-bier-channel</feature>
@@ -120,7 +120,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${project.version}">odl-bier-service-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
     <feature version="${mdsal.version}">odl-mdsal-xsql</feature>
-    <feature version="${dlux.version}">odl-dlux-yangui</feature>
+    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
   </feature>
   <feature name='odl-bier-service-cli' version='${project.version}' description='OpenDaylight :: bier :: service :: CLI'>
     <feature version="${project.version}">odl-bier-service</feature>
