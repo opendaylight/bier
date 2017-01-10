@@ -171,8 +171,9 @@ public class BierTopologyAdapter {
         NodeBuilder nodeBuilder = new NodeBuilder(node);
         BierNodeBuilder bierNodeBuilder = new BierNodeBuilder();
         String nodeId = nodeBuilder.getNodeId().getValue();
-        bierNodeBuilder.setNodeId(nodeId);
-        BierNodeKey bierNodeKey = new BierNodeKey(nodeId);
+        String bierNodeId = toBierNodeId(nodeId);
+        bierNodeBuilder.setNodeId(bierNodeId);
+        BierNodeKey bierNodeKey = new BierNodeKey(bierNodeId);
         bierNodeBuilder.setKey(bierNodeKey);
 
         List<BierTerminationPoint> bierTpList = new ArrayList<BierTerminationPoint>();
@@ -192,10 +193,20 @@ public class BierTopologyAdapter {
         List<Domain> domainList = new ArrayList<Domain>();
         nodeParamsBuilder.setDomain(domainList);
         bierNodeBuilder.setBierNodeParams(nodeParamsBuilder.build());
-        bierNodeBuilder.setRouterId(nodeId);
-        bierNodeBuilder.setName(nodeId);
+        bierNodeBuilder.setRouterId(bierNodeId);
+        bierNodeBuilder.setName(bierNodeId);
 
         return bierNodeBuilder.build();
+    }
+
+    public String toBierNodeId(String nodeId) {
+        String bierNodeId = nodeId;
+        int index = nodeId.indexOf(":");
+        if (index != -1) {
+            bierNodeId = nodeId.substring(index + 1);
+        }
+
+        return bierNodeId;
     }
 
     public BierTerminationPoint toBierTp(TerminationPoint tp) {
@@ -220,14 +231,16 @@ public class BierTopologyAdapter {
         Source source = linkBuilder.getSource();
         SourceBuilder sourceBuilder = new SourceBuilder(source);
         LinkSourceBuilder bierSource = new LinkSourceBuilder();
-        bierSource.setSourceNode(sourceBuilder.getSourceNode().getValue());
+        String sourceNodeId = sourceBuilder.getSourceNode().getValue();
+        bierSource.setSourceNode(toBierNodeId(sourceNodeId));
         bierSource.setSourceTp(sourceBuilder.getSourceTp().getValue());
         bierLinkBuilder.setLinkSource(bierSource.build());
 
         Destination dest = linkBuilder.getDestination();
         DestinationBuilder destBuilder = new DestinationBuilder(dest);
         LinkDestBuilder bierDest = new LinkDestBuilder();
-        bierDest.setDestNode(destBuilder.getDestNode().getValue());
+        String destNodeId = destBuilder.getDestNode().getValue();
+        bierDest.setDestNode(toBierNodeId(destNodeId));
         bierDest.setDestTp(destBuilder.getDestTp().getValue());
         bierLinkBuilder.setLinkDest(bierDest.build());
 

@@ -9,13 +9,19 @@ package org.opendaylight.topomanager.impl;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.annotation.Nonnull;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
@@ -29,10 +35,12 @@ import org.slf4j.LoggerFactory;
 public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<Node> {
     private static final Logger LOG =  LoggerFactory.getLogger(BierNodeChangeListenerImpl.class);    // 日志记录
 
-    public BierNodeChangeListenerImpl(final DataBroker dataBroker, final BierTopologyProcess bierTopologyProcess) {
-        super(bierTopologyProcess, dataBroker, InstanceIdentifier
+    private final ExecutorService executor = Executors.newFixedThreadPool(7);
+
+    public BierNodeChangeListenerImpl(final DataBroker dataBroker) {
+        super(dataBroker, InstanceIdentifier
                 .create(NetworkTopology.class)
-                .child(Topology.class, new TopologyKey(new TopologyId("flow：1"))).child(Node.class));
+                .child(Topology.class, new TopologyKey(new TopologyId(TOPOLOGY_IID))).child(Node.class));
     }
 
     @Override
@@ -55,14 +63,17 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
     }
 
     public void processRemovedNode(final DataTreeModification<Node> modification) {
-        final InstanceIdentifier<Node> iiToNodeInInventory = modification.getRootPath().getRootIdentifier();
-        final String nodeId = provideTopologyNodeId(iiToNodeInInventory);
-        InstanceIdentifier<BierNode> iiToTopologyRemovedNode = provideIIToTopologyNode(nodeId);
+        final Node node = modification.getRootNode().getDataBefore();
+        final String nodeId = node.getNodeId().getValue();
+        BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
+                BierTopologyProcess.FLAG_WRITE, (new BierNodeBuilder()).build());
+        InstanceIdentifier<BierNode> iiToTopologyRemovedNode =
+                provideIIToTopologyNode(BIER_TOPOLOGY_ADAPTER.toBierNodeId(nodeId));
         if (iiToTopologyRemovedNode != null) {
-            bierTopologyProcess.enqueueOperation(new BierTopologyOperation() {
+            processor.enqueueOperation(new BierTopologyOperation() {
                 @Override
                 public void writeOperation(final ReadWriteTransaction transaction) {
-                    transaction.delete(LogicalDatastoreType.OPERATIONAL, iiToTopologyRemovedNode);
+                    transaction.delete(LogicalDatastoreType.CONFIGURATION, iiToTopologyRemovedNode);
                 }
 
                 @Override
@@ -70,6 +81,7 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
                     return null;
                 }
             });
+            executor.submit(processor);
             notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         } else {
             LOG.debug("Instance identifier to inventory wasn't translated to topology while deleting node.");
@@ -77,21 +89,42 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
     }
 
     public void processAddedNode(final DataTreeModification<Node> modification) {
-        final InstanceIdentifier<Node> iiToNodeInNetwork = modification.getRootPath().getRootIdentifier();
-        final String nodeIdInTopology = provideTopologyNodeId(iiToNodeInNetwork);
+        final Node node = modification.getRootNode().getDataAfter();
+        BierNode bierNode = BIER_TOPOLOGY_ADAPTER.toBierNode(node);
+        final String nodeIdInTopology = node.getNodeId().getValue();
         if (nodeIdInTopology != null) {
-            final InstanceIdentifier<BierNode> iiToTopologyNode = provideIIToTopologyNode(nodeIdInTopology);
-            sendToTransactionChain(prepareTopologyNode(nodeIdInTopology, iiToNodeInNetwork), iiToTopologyNode);
+            final InstanceIdentifier<BierNode> iiToTopologyNode =
+                    provideIIToTopologyNode(BIER_TOPOLOGY_ADAPTER.toBierNodeId(nodeIdInTopology));
+            sendToTransactionChain(bierNode, iiToTopologyNode);
             notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         } else {
             LOG.debug("Inventory node key is null. Data can't be written to topology");
         }
     }
 
-    public static BierNode prepareTopologyNode(final String nodeIdInTopology,
-                                               final InstanceIdentifier<Node> iiToNodeInInventory) {
-        BierNodeBuilder bierNodeBuilder = new BierNodeBuilder();
-        bierNodeBuilder.setNodeId(nodeIdInTopology);
-        return bierNodeBuilder.build();
+    public void sendToTransactionChain(final BierNode bierNode,
+                                       final InstanceIdentifier<BierNode> iiToTopologyBier) {
+        BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
+                BierTopologyProcess.FLAG_WRITE, (new BierNodeBuilder()).build());
+        processor.enqueueOperation(new BierTopologyOperation() {
+            @Override
+            public void writeOperation(final ReadWriteTransaction transaction) {
+                transaction.merge(LogicalDatastoreType.CONFIGURATION, iiToTopologyBier, bierNode, true);
+            }
+
+            @Override
+            public <T> ListenableFuture<T> readOperation(final ReadWriteTransaction transaction) {
+                return null;
+            }
+        });
+        executor.submit(processor);
+
+    }
+
+    public InstanceIdentifier<BierNode> provideIIToTopologyNode(final String nodeIdInTopology) {
+        BierNodeKey bierNodeKey = new BierNodeKey(nodeIdInTopology);
+        return InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(TOPOLOGY_IID))
+                .child(BierNode.class, bierNodeKey);
     }
 }

@@ -286,7 +286,6 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         configureDomain();
         configureSubdomain();
         configureNode();
-        
         DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
         inputBuilder.setTopologyId("flow:1");
         inputBuilder.setDomainId(new DomainId(1));
@@ -302,7 +301,6 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         configureDomain();
         configureSubdomain();
         configureNode();
-        
         DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
         inputBuilder.setTopologyId("flow:1");
         inputBuilder.setDomainId(new DomainId(2));
