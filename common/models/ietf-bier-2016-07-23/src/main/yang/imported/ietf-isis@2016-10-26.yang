@@ -4,23 +4,28 @@
     prefix isis;
 
     import ietf-routing {
-              prefix "rt";
+      prefix "rt";
+      revision-date 2016-10-20;
     }
 
     import ietf-inet-types {
       prefix inet;
+      revision-date 2013-07-15;
     }
 
     import ietf-yang-types {
       prefix yang;
+      revision-date 2013-07-15;
     }
 
     import ietf-interfaces {
       prefix "if";
+      revision-date 2014-05-08;
     }
 
     import ietf-key-chain {
-    prefix "key-chain";
+      prefix "key-chain";
+      revision-date 2015-10-15;
     }
 
     organization

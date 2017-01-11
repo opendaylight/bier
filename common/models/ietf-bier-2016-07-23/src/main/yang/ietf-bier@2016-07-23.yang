@@ -6,25 +6,31 @@ module ietf-bier {
 
      import ietf-routing {
        prefix "rt";
+       revision-date 2016-10-20;
      }
 
      import ietf-inet-types {
        prefix "inet";
+       revision-date 2013-07-15;
      }
 
      import ietf-mpls {
        prefix "mpls";
+       revision-date 2016-07-05;
      }
 
      import ietf-isis{
        prefix "isis";
+       revision-date 2016-10-26;
      }
 
      import ietf-ospf  {
        prefix "ospf";
+       revision-date 2016-10-31;
      }
      import yang-ext {
        prefix "ext";
+       revision-date 2013-07-09;
      }
 
 

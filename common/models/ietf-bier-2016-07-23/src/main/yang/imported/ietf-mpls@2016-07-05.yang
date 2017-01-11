@@ -6,10 +6,12 @@
 
      import ietf-routing {
        prefix "rt";
+       revision-date 2016-10-20;
      }
 
      import ietf-interfaces {
        prefix "if";
+       revision-date 2014-05-08;
      }
 
      organization "IETF MPLS Working Group";
