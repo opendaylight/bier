@@ -7,20 +7,18 @@
  */
 package org.opendaylight.bier.driver;
 
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import org.opendaylight.bier.adapter.api.BierConfigResult;
+import org.opendaylight.bier.driver.common.DataGetter;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.OptimisticLockFailedException;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
@@ -31,14 +29,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.routing.Bier;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.routing.rev161020.Routing;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyKey;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeKey;
+
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
@@ -48,11 +39,6 @@ public class NetconfDataOperator implements BindingAwareConsumer {
     private static final Logger LOG = LoggerFactory.getLogger(NetconfDataOperator.class);
     private MountPointService mountService = null;
 
-    public static final InstanceIdentifier<Topology> NETCONF_TOPO_IID =
-            InstanceIdentifier
-                    .create(NetworkTopology.class)
-                    .child(Topology.class,
-                            new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName())));
 
     public static final InstanceIdentifier<Routing> ROUTING_IID = InstanceIdentifier.create(Routing.class);
 
@@ -84,43 +70,11 @@ public class NetconfDataOperator implements BindingAwareConsumer {
     }
 
     public MountPoint getMountPoint(String nodeID) {
-        if (mountService == null) {
-            LOG.error("Mount service is null");
-            return null;
-        }
-        Optional<MountPoint> nodeMountPoint = mountService.getMountPoint(NETCONF_TOPO_IID
-                .child(Node.class, new NodeKey(new NodeId(nodeID))));
-
-
-        if (!nodeMountPoint.isPresent()) {
-            LOG.error("Mount point for node {} doesn't exist", nodeID);
-            return null;
-        }
-
-
-        return nodeMountPoint.get();
+        BierConfigResult result = new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+        return DataGetter.getMountPoint(nodeID,result,mountService);
 
     }
 
-    public <T extends DataObject> T read(DataBroker dataBroker,
-                                                                  InstanceIdentifier<T> path) {
-        T result = null;
-        final ReadOnlyTransaction transaction = dataBroker.newReadOnlyTransaction();
-        Optional<T> optionalData;
-        try {
-            optionalData = transaction.read(LogicalDatastoreType.CONFIGURATION, path).checkedGet();
-            if (optionalData.isPresent()) {
-                result = optionalData.get();
-            } else {
-                LOG.debug("{}: Failed to read {}", Thread.currentThread().getStackTrace()[1], path);
-            }
-        } catch (ReadFailedException e) {
-            LOG.warn("Failed to read {} ", path, e);
-        }
-        transaction.close();
-        return result;
-
-    }
 
 
 
@@ -183,28 +137,29 @@ public class NetconfDataOperator implements BindingAwareConsumer {
                                                                  InstanceIdentifier<T> path, T data) {
 
         BierConfigResult ncResult = new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
-
-        if (mountService == null) {
-            LOG.error(BierConfigResult.MOUNT_SERVICE_NULL);
-            ncResult.setFailureReason(BierConfigResult.MOUNT_SERVICE_NULL);
-            return ncResult;
-        }
-        Optional<MountPoint> nodeMountPoint = mountService.getMountPoint(NETCONF_TOPO_IID
-                .child(Node.class, new NodeKey(new NodeId(nodeId))));
-
-
-        if (!nodeMountPoint.isPresent()) {
-            LOG.error(BierConfigResult.MOUNT_POINT_FAILUE);
-            ncResult.setFailureReason(BierConfigResult.MOUNT_POINT_FAILUE);
+        final DataBroker nodeBroker = DataGetter.getDataBroker(nodeId, ncResult, mountService);
+        if (nodeBroker == null) {
             return ncResult;
         }
 
+        return operate(type, nodeBroker, RETRY_WRITE_MAX, path ,data);
+
+    }
 
 
-        final DataBroker nodeBroker = nodeMountPoint.get().getService(DataBroker.class).get();
-        operate(type, nodeBroker, RETRY_WRITE_MAX, path ,data);
 
-        return ncResult;
+    public <T extends DataObject> T read(DataBroker dataBroker,
+                                         InstanceIdentifier<T> path) {
+
+        return DataGetter.readData(dataBroker,path);
+
+    }
+
+    public <T extends DataObject> T read(String nodeId,
+                                                          InstanceIdentifier<T> path) {
+
+        return DataGetter.readData(nodeId,path,mountService);
+
     }
 
 

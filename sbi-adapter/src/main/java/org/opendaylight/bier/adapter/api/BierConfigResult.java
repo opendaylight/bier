@@ -17,7 +17,8 @@ public class BierConfigResult {
     }
 
     public static final String MOUNT_SERVICE_NULL = "Netconf mount service unavailable";
-    public static final String MOUNT_POINT_FAILUE = "No netconf connetion to the device";
+    public static final String MOUNT_POINT_FAILUE = "No netconf connetion to the device , node id :";
+    public static final String DATA_BROKER_FAILUE = "Get data broker failed , node id :";
     public static final String NETCONF_LOCK_FAILUE = "Device is busy,try again later";
     public static final String NETCONF_EDIT_FAILUE = "Netconf edit config failed with error message:";
     public static final String READ_ROUTING_FAIL = "Netconf read routing node fail";

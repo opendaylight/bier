@@ -135,6 +135,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   </feature>
   <feature name='odl-bier-driver' version='${project.version}' description='OpenDaylight :: bier :: driver'>
     <feature version='${project.version}'>odl-bier-models</feature>
+    <bundle>mvn:org.opendaylight.bier/bier-driver-common/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-driver/{{VERSION}}</bundle>
   </feature>
 

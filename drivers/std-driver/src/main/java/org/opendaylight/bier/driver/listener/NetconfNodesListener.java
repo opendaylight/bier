@@ -15,6 +15,7 @@ import java.util.Map;
 
 
 import org.opendaylight.bier.driver.NetconfDataOperator;
+import org.opendaylight.bier.driver.common.IidConstants;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
@@ -49,7 +50,7 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
     public NetconfNodesListener(final DataBroker dataBroker,final NetconfDataOperator netconfDataOperator) {
         listenerRegistration =
                 dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<Node>(LogicalDatastoreType.OPERATIONAL,
-                        NetconfDataOperator.NETCONF_TOPO_IID.child(Node.class)),this);
+                        IidConstants.NETCONF_TOPO_IID.child(Node.class)),this);
         this.netconfDataOperator = netconfDataOperator;
         LOG.info("Begin to listen to the changes of netconf nodes!");
 
