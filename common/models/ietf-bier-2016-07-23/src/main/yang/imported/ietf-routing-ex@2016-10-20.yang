@@ -1,8 +1,8 @@
-   module ietf-routing {
+   module ietf-routing-ex {
 
      yang-version "1.1";
 
-     namespace "urn:ietf:params:xml:ns:yang:ietf-routing";
+     namespace "urn:ietf:params:xml:ns:yang:ietf-routing-ex";
 
      prefix "rt";
 

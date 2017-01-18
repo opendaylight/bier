@@ -4,7 +4,7 @@
 
      prefix "mpls";
 
-     import ietf-routing {
+     import ietf-routing-ex {
        prefix "rt";
        revision-date 2016-10-20;
      }

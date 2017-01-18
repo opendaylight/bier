@@ -3,9 +3,9 @@
 
     prefix isis;
 
-    import ietf-routing {
-      prefix "rt";
-      revision-date 2016-10-20;
+    import ietf-routing-ex {
+              prefix "rt";
+              revision-date 2016-10-20;
     }
 
     import ietf-inet-types {
