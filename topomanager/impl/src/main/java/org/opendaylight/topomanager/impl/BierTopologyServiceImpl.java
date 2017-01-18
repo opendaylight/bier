@@ -286,7 +286,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
                 }
             }
             if (existFlag) {
-                builder.setConfigureResult(getConfigResult(false,"domain " + domainId + " is exist!"));
+                builder.setConfigureResult(getConfigResult(false,"domain is exist!"));
                 return RpcResultBuilder.success(builder.build()).buildFuture();
             }
 
@@ -344,7 +344,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             }
 
             if (existFlag) {
-                builder.setConfigureResult(getConfigResult(false,"subdomain " + subDomainId + " is  exist!"));
+                builder.setConfigureResult(getConfigResult(false,"subdomain is exist!"));
                 return RpcResultBuilder.success(builder.build()).buildFuture();
             }
 

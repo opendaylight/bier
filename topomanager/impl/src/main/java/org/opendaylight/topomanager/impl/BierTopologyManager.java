@@ -904,6 +904,9 @@ public class BierTopologyManager {
         boolean subDomainExistFlag = false;
         SubDomainId subDomainId  = subDomainList.get(0).getSubDomainId();
         List<BierSubDomain> bierSubDomainList = bierDomain.getBierSubDomain();
+        if (bierSubDomainList == null) {
+            return false;
+        }
         int subDomainSize = bierSubDomainList.size();
         for (int iloop = 0; iloop < subDomainSize; ++iloop) {
             BierSubDomain subDomain = bierSubDomainList.get(iloop);

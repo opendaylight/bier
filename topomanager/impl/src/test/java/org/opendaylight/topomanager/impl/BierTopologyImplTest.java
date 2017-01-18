@@ -177,8 +177,11 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void configDomainTest() throws Exception {
-        ConfigureDomainOutput output = configureDomain();
+        ConfigureDomainOutput output = configureDomain(1);
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        ConfigureDomainOutput output2 = configureDomain(2);
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
         QueryDomainOutput domainOutput = queryDomain("flow:1");
         Assert.assertTrue(domainOutput.getDomain().size() == 2);
@@ -189,8 +192,18 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void configDomainTest2() throws Exception {
+        ConfigureDomainOutput output = configureDomain(1);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        ConfigureDomainOutput output2 = configureDomain(1);
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getConfigureResult().getErrorCause().equals("domain is exist!"));
+    }
+
+    @Test
     public void configSubdomainTest() throws Exception {
-        ConfigureSubdomainOutput output = configureSubdomain();
+        ConfigureSubdomainOutput output = configureSubdomain(1,1);
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         String errorCause = "domain is not exist!";
         Assert.assertTrue(output.getConfigureResult().getErrorCause()
@@ -199,9 +212,12 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void configSubdomainTest2() throws Exception {
-        configureDomain();
-        ConfigureSubdomainOutput output = configureSubdomain();
+        configureDomain(1);
+        ConfigureSubdomainOutput output = configureSubdomain(1,1);
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        ConfigureSubdomainOutput output2 = configureSubdomain(1,2);
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
         QuerySubdomainOutput queryOutput = querySubdomain("flow:1",
                 new DomainId(1));
@@ -213,10 +229,21 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void configSubdomainTest3() throws Exception {
+        configureDomain(1);
+        ConfigureSubdomainOutput output = configureSubdomain(1,1);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        ConfigureSubdomainOutput output2 = configureSubdomain(1,1);
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getConfigureResult().getErrorCause().equals("subdomain is exist!"));
+    }
+
+    @Test
     public void configNodeTest() throws Exception {
-        configureDomain();
-        configureSubdomain();
-        ConfigureNodeOutput output = configureNode();
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode(1,1,"1");
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
         QueryNodeOutput queryOutput = queryNode();
@@ -234,10 +261,35 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void configNodeTest2() throws Exception {
+        ConfigureNodeOutput output = configureNode(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("domain or subdomain is not exist!"));
+    }
+
+    @Test
+    public void configNodeTest3() throws Exception {
+        configureDomain(1);
+        ConfigureNodeOutput output = configureNode(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("domain or subdomain is not exist!"));
+    }
+
+    @Test
+    public void configNodeTest4() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode(1,1,"3");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("node is not exist!"));
+    }
+
+    @Test
     public void modifyNodeDomainTest() throws Exception {
-        configureDomain();
-        configureSubdomain();
-        configureNode();
+        configureDomain(1);
+        configureDomain(2);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
         ConfigureNodeOutput output = modifyNodeDomain();
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
@@ -259,9 +311,10 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void modifyNodeSubDomainTest() throws Exception {
-        configureDomain();
-        configureSubdomain();
-        configureNode();
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureSubdomain(1,2);
+        configureNode(1,1,"1");
         ConfigureNodeOutput output = modifyNodeSubDomain();
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
@@ -283,9 +336,23 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void deleteNodeTest() throws Exception {
-        configureDomain();
-        configureSubdomain();
-        configureNode();
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
+        QuerySubdomainNodeOutput queryOutput = querySubdomainNode(1,1);
+        Assert.assertTrue(queryOutput.getSubdomainNode().size() == 1);
+        Assert.assertTrue(queryOutput.getSubdomainNode().get(0).getNodeId()
+                .equals("1"));
+        Assert.assertTrue(queryOutput.getSubdomainNode().get(0).getBierNodeParams()
+                .getDomain().size() == 1);
+        Assert.assertTrue(queryOutput.getSubdomainNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput.getSubdomainNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().size() == 1);
+        Assert.assertTrue(queryOutput.getSubdomainNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0)
+                .getSubDomainId().getValue().intValue() == 1);
+
         DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
         inputBuilder.setTopologyId("flow:1");
         inputBuilder.setDomainId(new DomainId(1));
@@ -294,13 +361,16 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         RpcResult<DeleteNodeOutput> output = topoImpl.deleteNode(
                 inputBuilder.build()).get();
         Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        QuerySubdomainNodeOutput queryOutput2 = querySubdomainNode(1,1);
+        Assert.assertTrue(queryOutput2.getSubdomainNode().size() == 0);
     }
 
     @Test
     public void deleteNodeTest2() throws Exception {
-        configureDomain();
-        configureSubdomain();
-        configureNode();
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
         DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
         inputBuilder.setTopologyId("flow:1");
         inputBuilder.setDomainId(new DomainId(2));
@@ -314,9 +384,33 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void deleteNodeTest3() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(1));
+        inputBuilder.setSubDomainId(new SubDomainId(1));
+        inputBuilder.setNodeId("3");
+        RpcResult<DeleteNodeOutput> output = topoImpl.deleteNode(
+                inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+    }
+
+    @Test
     public void deleteSubdomainTest() throws Exception {
-        configureDomain();
-        configureSubdomain();
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureSubdomain(1,2);
+        QuerySubdomainOutput queryOutput = querySubdomain("flow:1",
+                new DomainId(1));
+        Assert.assertTrue(queryOutput.getSubdomain().size() == 2);
+        Assert.assertTrue(queryOutput.getSubdomain().get(0).getSubDomainId()
+                .getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput.getSubdomain().get(1).getSubDomainId()
+                .getValue().intValue() == 2);
 
         DeleteSubdomainInputBuilder inputBuilder = new DeleteSubdomainInputBuilder();
         inputBuilder.setTopologyId("flow:1");
@@ -325,12 +419,18 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         RpcResult<DeleteSubdomainOutput> output = topoImpl.deleteSubdomain(
                 inputBuilder.build()).get();
         Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        QuerySubdomainOutput queryOutput2 = querySubdomain("flow:1",
+                new DomainId(1));
+        Assert.assertTrue(queryOutput2.getSubdomain().size() == 1);
+        Assert.assertTrue(queryOutput2.getSubdomain().get(0).getSubDomainId()
+                .getValue().intValue() == 2);
     }
 
     @Test
     public void deleteSubdomainTest2() throws Exception {
-        configureDomain();
-        configureSubdomain();
+        configureDomain(1);
+        configureSubdomain(1,1);
 
         DeleteSubdomainInputBuilder inputBuilder = new DeleteSubdomainInputBuilder();
         inputBuilder.setTopologyId("flow:1");
@@ -344,18 +444,30 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void deleteDomainTest() throws Exception {
-        configureDomain();
+        configureDomain(1);
+        configureDomain(2);
+        QueryDomainOutput domainOutput = queryDomain("flow:1");
+        Assert.assertTrue(domainOutput.getDomain().size() == 2);
+        Assert.assertTrue(domainOutput.getDomain().get(0).getDomainId()
+                .getValue().intValue() == 1);
+        Assert.assertTrue(domainOutput.getDomain().get(1).getDomainId()
+                .getValue().intValue() == 2);
 
         DeleteDomainInputBuilder inputBuilder = new DeleteDomainInputBuilder();
         inputBuilder.setTopologyId("flow:1");
         inputBuilder.setDomainId(new DomainId(1));
         RpcResult<DeleteDomainOutput> output = topoImpl.deleteDomain(inputBuilder.build()).get();
         Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        QueryDomainOutput domainOutput2 = queryDomain("flow:1");
+        Assert.assertTrue(domainOutput2.getDomain().size() == 1);
+        Assert.assertTrue(domainOutput2.getDomain().get(0).getDomainId()
+                .getValue().intValue() == 2);
     }
 
     @Test
     public void deleteDomainTest2() throws Exception {
-        configureDomain();
+        configureDomain(1);
 
         DeleteDomainInputBuilder inputBuilder = new DeleteDomainInputBuilder();
         inputBuilder.setTopologyId("flow:1");
@@ -367,11 +479,11 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void querySubDomainNodeTest() throws Exception {
-        configureDomain();
-        configureSubdomain();
-        configureNode();
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
 
-        QuerySubdomainNodeOutput output = querySubdomainNode();
+        QuerySubdomainNodeOutput output = querySubdomainNode(1,1);
         Assert.assertTrue(output.getSubdomainNode().size() == 1);
         Assert.assertTrue(output.getSubdomainNode().get(0).getNodeId()
                 .equals("1"));
@@ -388,11 +500,11 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void querySubDomainLinkTest() throws Exception {
-        configureDomain();
-        configureSubdomain();
-        configureNode();
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
 
-        QuerySubdomainLinkOutput output = querySubdomainLink();
+        QuerySubdomainLinkOutput output = querySubdomainLink(1,1);
         Assert.assertTrue(output.getSubdomainLink().size() == 0);
     }
 
@@ -407,25 +519,24 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         return output.getResult();
     }
 
-    private ConfigureDomainOutput configureDomain() throws Exception {
+    private ConfigureDomainOutput configureDomain(int domainId) throws Exception {
         ConfigureDomainInputBuilder inputBuilder = new ConfigureDomainInputBuilder();
         inputBuilder.setTopologyId("flow:1");
         List<DomainId> domainIdList = new ArrayList<DomainId>();
-        domainIdList.add(new DomainId(1));
-        domainIdList.add(new DomainId(2));
+        domainIdList.add(new DomainId(domainId));
+        //domainIdList.add(new DomainId(2));
         inputBuilder.setDomain(domainIdList);
         RpcResult<ConfigureDomainOutput> output = topoImpl.configureDomain(
                 inputBuilder.build()).get();
         return output.getResult();
     }
 
-    private ConfigureSubdomainOutput configureSubdomain() throws Exception {
+    private ConfigureSubdomainOutput configureSubdomain(int domainId,int subDomainId) throws Exception {
         ConfigureSubdomainInputBuilder inputBuilder = new ConfigureSubdomainInputBuilder();
         inputBuilder.setTopologyId("flow:1");
-        inputBuilder.setDomainId(new DomainId(1));
+        inputBuilder.setDomainId(new DomainId(domainId));
         List<SubDomainId> subdomainIdList = new ArrayList<SubDomainId>();
-        subdomainIdList.add(new SubDomainId(1));
-        subdomainIdList.add(new SubDomainId(2));
+        subdomainIdList.add(new SubDomainId(subDomainId));
         inputBuilder.setSubDomain(subdomainIdList);
         RpcResult<ConfigureSubdomainOutput> output = topoImpl
                 .configureSubdomain(inputBuilder.build()).get();
@@ -450,13 +561,13 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         return output.getResult();
     }
 
-    private ConfigureNodeOutput configureNode() throws Exception {
+    private ConfigureNodeOutput configureNode(int domainId,int subDomainId,String nodeId) throws Exception {
         ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
         inputBuilder.setTopologyId("flow:1");
-        inputBuilder.setNodeId("1");
+        inputBuilder.setNodeId(nodeId);
         DomainBuilder domainBuilder = new DomainBuilder();
-        domainBuilder.setDomainId(new DomainId(1));
-        domainBuilder.setKey(new DomainKey(new DomainId(1)));
+        domainBuilder.setDomainId(new DomainId(domainId));
+        domainBuilder.setKey(new DomainKey(new DomainId(subDomainId)));
         BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
         // bierBuilder.setBfrId(new BfrId(1));
         // bierBuilder.setBitstringlength(Bsl._64Bit);
@@ -516,21 +627,21 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         return output.getResult();
     }
 
-    private QuerySubdomainNodeOutput querySubdomainNode() throws Exception {
+    private QuerySubdomainNodeOutput querySubdomainNode(int domainId,int subDomainId) throws Exception {
         QuerySubdomainNodeInputBuilder inputBuilder = new QuerySubdomainNodeInputBuilder();
         inputBuilder.setTopologyId("flow:1");
-        inputBuilder.setDomainId(new DomainId(1));
-        inputBuilder.setSubDomainId(new SubDomainId(1));
+        inputBuilder.setDomainId(new DomainId(domainId));
+        inputBuilder.setSubDomainId(new SubDomainId(subDomainId));
         RpcResult<QuerySubdomainNodeOutput> output = topoImpl
                 .querySubdomainNode(inputBuilder.build()).get();
         return output.getResult();
     }
 
-    private QuerySubdomainLinkOutput querySubdomainLink() throws Exception {
+    private QuerySubdomainLinkOutput querySubdomainLink(int domainId,int subDomainId) throws Exception {
         QuerySubdomainLinkInputBuilder inputBuilder = new QuerySubdomainLinkInputBuilder();
         inputBuilder.setTopologyId("flow:1");
-        inputBuilder.setDomainId(new DomainId(1));
-        inputBuilder.setSubDomainId(new SubDomainId(1));
+        inputBuilder.setDomainId(new DomainId(domainId));
+        inputBuilder.setSubDomainId(new SubDomainId(subDomainId));
         RpcResult<QuerySubdomainLinkOutput> output = topoImpl
                 .querySubdomainLink(inputBuilder.build()).get();
         return output.getResult();
