@@ -24,6 +24,7 @@
         <module>drivers</module>
         <module>features</module>
         <module>karaf</module>
+        <module>it</module>
     </modules>
 
     <profiles>
