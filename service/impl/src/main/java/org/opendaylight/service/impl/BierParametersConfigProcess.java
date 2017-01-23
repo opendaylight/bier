@@ -12,8 +12,6 @@ import java.util.List;
 import org.opendaylight.bier.adapter.api.BierConfigResult;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
-import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.ReportMessage;
-import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.ReportMessageBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
@@ -29,9 +27,11 @@ public class BierParametersConfigProcess {
     private static final Logger LOG = LoggerFactory.getLogger(BierParametersConfigProcess.class);
 
     private BierConfigWriter bierConfigWriter;
+    private NotificationProvider notificationProvider;
 
     public BierParametersConfigProcess(BierConfigWriter bierConfig) {
         bierConfigWriter = bierConfig;
+        notificationProvider = new NotificationProvider();
     }
 
     public void processDomain(String nodeId, List<Domain> domainBefore,List<Domain> domainAfter) {
@@ -105,7 +105,7 @@ public class BierParametersConfigProcess {
         BierConfigResult writedDomainResult = bierConfigWriter.writeDomain(
                 BierConfigWriter.ConfigurationType.ADD, nodeId, domain);
         if (!writedDomainResult.isSuccessful()) {
-            notifyFailureReason(writedDomainResult.getFailureReason());
+            notificationProvider.notifyFailureReason(writedDomainResult.getFailureReason());
             return false;
         }
         return true;
@@ -118,7 +118,7 @@ public class BierParametersConfigProcess {
         BierConfigResult writedDomainResult = bierConfigWriter.writeDomain(
                 BierConfigWriter.ConfigurationType.DELETE, nodeId, domain);
         if (!writedDomainResult.isSuccessful()) {
-            notifyFailureReason(writedDomainResult.getFailureReason());
+            notificationProvider.notifyFailureReason(writedDomainResult.getFailureReason());
             return false;
         }
         return true;
@@ -131,7 +131,7 @@ public class BierParametersConfigProcess {
         BierConfigResult writedDomainResult = bierConfigWriter.writeDomain(
                 BierConfigWriter.ConfigurationType.MODIFY, nodeId, domain);
         if (!writedDomainResult.isSuccessful()) {
-            notifyFailureReason(writedDomainResult.getFailureReason());
+            notificationProvider.notifyFailureReason(writedDomainResult.getFailureReason());
             return false;
         }
         return true;
@@ -217,7 +217,7 @@ public class BierParametersConfigProcess {
         BierConfigResult subDomainResult = bierConfigWriter
                 .writeSubdomain(BierConfigWriter.ConfigurationType.ADD,nodeId,domainId,subDomain);
         if (!subDomainResult.isSuccessful()) {
-            notifyFailureReason(subDomainResult.getFailureReason());
+            notificationProvider.notifyFailureReason(subDomainResult.getFailureReason());
             return false;
         }
         return true;
@@ -230,7 +230,7 @@ public class BierParametersConfigProcess {
         BierConfigResult subDomainResult = bierConfigWriter
                 .writeSubdomain(BierConfigWriter.ConfigurationType.DELETE,nodeId,domainId,subDomain);
         if (!subDomainResult.isSuccessful()) {
-            notifyFailureReason(subDomainResult.getFailureReason());
+            notificationProvider.notifyFailureReason(subDomainResult.getFailureReason());
             return false;
         }
         return true;
@@ -243,7 +243,7 @@ public class BierParametersConfigProcess {
         BierConfigResult subDomainResult = bierConfigWriter
                 .writeSubdomain(BierConfigWriter.ConfigurationType.MODIFY,nodeId,domainId,subDomain);
         if (!subDomainResult.isSuccessful()) {
-            notifyFailureReason(subDomainResult.getFailureReason());
+            notificationProvider.notifyFailureReason(subDomainResult.getFailureReason());
             return false;
         }
         return true;
@@ -286,7 +286,7 @@ public class BierParametersConfigProcess {
                     .writeSubdomainIpv4(BierConfigWriter.ConfigurationType.DELETE, nodeId, domainId,
                     subDomainId,ipv4);
             if (!ipv4Result.isSuccessful()) {
-                notifyFailureReason(ipv4Result.getFailureReason());
+                notificationProvider.notifyFailureReason(ipv4Result.getFailureReason());
                 return false;
             }
         }
@@ -304,7 +304,7 @@ public class BierParametersConfigProcess {
                     .writeSubdomainIpv6(BierConfigWriter.ConfigurationType.DELETE, nodeId, domainId,
                         subDomainId,ipv6);
             if (!ipv6Result.isSuccessful()) {
-                notifyFailureReason(ipv6Result.getFailureReason());
+                notificationProvider.notifyFailureReason(ipv6Result.getFailureReason());
                 return false;
             }
         }
@@ -449,23 +449,20 @@ public class BierParametersConfigProcess {
     }
 
     private boolean checkLeafOfDomainChange(Domain before, Domain after) {
-        if (after.getDomainId().equals(before.getDomainId()) && after.getBierGlobal()
-                .getEncapsulationType().equals(before.getBierGlobal().getEncapsulationType())
-                && after.getBierGlobal().getBitstringlength().equals(before.getBierGlobal()
-                .getBitstringlength()) && after.getBierGlobal().getBfrId().equals(before
-                .getBierGlobal().getBfrId()) && after.getBierGlobal().getIpv4BfrPrefix()
-                .equals(before.getBierGlobal().getIpv4BfrPrefix())) {
-            return false;
-        } else {
+        if (checkDomainIdChange(before, after) || checkEncapsulationType(before, after)
+                || checkBitStringLengthChange(before, after) || checkBfrIdChange(before, after)
+                || checkIpv4BfrPrefixChange(before, after) || checkIpv6BfrPrefixChange(before, after)) {
             return true;
+        } else {
+            return false;
         }
     }
 
     private boolean checkSubDomainChange(SubDomain before, SubDomain after) {
 
-        if (!after.getSubDomainId().equals(before.getSubDomainId()) || !after.getIgpType().equals(before.getIgpType())
-                || !after.getMtId().equals(before.getMtId()) || !after.getBfrId().equals(before.getBfrId()) || !after
-                .getBitstringlength().equals(before.getBitstringlength())) {
+        if (checkSubDomainIdChange(before, after) || checkIgpTypeChange(before, after)
+                || checkMtIdChange(before, after) || checkSubDomainBfrIdChange(before, after)
+                || checkSubDomainBitStringLengthChange(before, after)) {
             return true;
         }
         if ((null == before.getAf().getIpv4() && null != after.getAf().getIpv4())
@@ -526,6 +523,157 @@ public class BierParametersConfigProcess {
         return false;
     }
 
+    private boolean checkDomainIdChange(Domain before, Domain after) {
+        if (after.getDomainId().equals(before.getDomainId())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkEncapsulationType(Domain before, Domain after) {
+        if (null != before.getBierGlobal().getEncapsulationType()
+                && null != after.getBierGlobal().getEncapsulationType()) {
+            if (after.getBierGlobal().getEncapsulationType().equals(before.getBierGlobal().getEncapsulationType())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getBierGlobal().getEncapsulationType())
+                && (null == after.getBierGlobal().getEncapsulationType())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkBitStringLengthChange(Domain before, Domain after) {
+        if (null != before.getBierGlobal().getBitstringlength() && null != after.getBierGlobal().getBitstringlength()) {
+            if (after.getBierGlobal().getBitstringlength().equals(before.getBierGlobal().getBitstringlength())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getBierGlobal().getBitstringlength())
+                && (null == after.getBierGlobal().getBitstringlength())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkBfrIdChange(Domain before, Domain after) {
+        if (null != before.getBierGlobal().getBfrId() && null != after.getBierGlobal().getBfrId()) {
+            if (after.getBierGlobal().getBfrId().equals(before.getBierGlobal().getBfrId())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getBierGlobal().getBfrId()) && (null == after.getBierGlobal().getBfrId())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkIpv4BfrPrefixChange(Domain before, Domain after) {
+        if (null != before.getBierGlobal().getIpv4BfrPrefix() && null != after.getBierGlobal().getIpv4BfrPrefix()) {
+            if (after.getBierGlobal().getIpv4BfrPrefix().equals(before.getBierGlobal().getIpv4BfrPrefix())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getBierGlobal().getIpv4BfrPrefix())
+                && (null == after.getBierGlobal().getIpv4BfrPrefix())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkIpv6BfrPrefixChange(Domain before, Domain after) {
+        if (null != before.getBierGlobal().getIpv6BfrPrefix() && null != after.getBierGlobal().getIpv6BfrPrefix()) {
+            if (after.getBierGlobal().getIpv6BfrPrefix().equals(before.getBierGlobal().getIpv6BfrPrefix())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getBierGlobal().getIpv6BfrPrefix())
+                && (null == after.getBierGlobal().getIpv6BfrPrefix())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkSubDomainIdChange(SubDomain before, SubDomain after) {
+        if (after.getSubDomainId().equals(before.getSubDomainId())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkIgpTypeChange(SubDomain before, SubDomain after) {
+        if (null != before.getIgpType() && null != after.getIgpType()) {
+            if (after.getIgpType().equals(before.getIgpType())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getIgpType())
+                && (null == after.getIgpType())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkMtIdChange(SubDomain before, SubDomain after) {
+        if (null != before.getMtId() && null != after.getMtId()) {
+            if (after.getMtId().equals(before.getMtId())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getMtId())
+                && (null == after.getMtId())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkSubDomainBfrIdChange(SubDomain before, SubDomain after) {
+        if (null != before.getBfrId() && null != after.getBfrId()) {
+            if (after.getBfrId().equals(before.getBfrId())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getBfrId())
+                && (null == after.getBfrId())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkSubDomainBitStringLengthChange(SubDomain before, SubDomain after) {
+        if (null != before.getBitstringlength() && null != after.getBitstringlength()) {
+            if (after.getBitstringlength().equals(before.getBitstringlength())) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if ((null == before.getBitstringlength())
+                && (null == after.getBitstringlength())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     private boolean checkAddedSubDomain(List<SubDomain> subDomainlistBefore,
         List<SubDomain> subDomainlistAfter,boolean isDomainParaChange) {
         if (null == subDomainlistBefore && null != subDomainlistAfter && !isDomainParaChange) {
@@ -580,9 +728,4 @@ public class BierParametersConfigProcess {
         return false;
     }
 
-    private void notifyFailureReason(String failureReason) {
-        LOG.info("report failureReason to app");
-        ReportMessage message = new ReportMessageBuilder().setFailureReason(failureReason).build();
-        NotificationProvider.getInstance().notify(message);
-    }
 }
