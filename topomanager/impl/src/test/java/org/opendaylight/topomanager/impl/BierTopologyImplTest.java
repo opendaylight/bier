@@ -29,6 +29,10 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureSub
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureSubdomainOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomainInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv4InputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv4Output;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv6InputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv6Output;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteNodeInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteNodeOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainInputBuilder;
@@ -54,11 +58,18 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopolog
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainKey;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierMplsLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobalBuilder;
-//import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.AfBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4Builder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6Builder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
+//import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.LinkId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
@@ -80,6 +91,7 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
+
 
 
 public class BierTopologyImplTest extends AbstractDataBrokerTest {
@@ -353,14 +365,8 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
                 .getDomain().get(0).getBierGlobal().getSubDomain().get(0)
                 .getSubDomainId().getValue().intValue() == 1);
 
-        DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
-        inputBuilder.setTopologyId("flow:1");
-        inputBuilder.setDomainId(new DomainId(1));
-        inputBuilder.setSubDomainId(new SubDomainId(1));
-        inputBuilder.setNodeId("1");
-        RpcResult<DeleteNodeOutput> output = topoImpl.deleteNode(
-                inputBuilder.build()).get();
-        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+        DeleteNodeOutput output = deleteNode(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
         QuerySubdomainNodeOutput queryOutput2 = querySubdomainNode(1,1);
         Assert.assertTrue(queryOutput2.getSubdomainNode().size() == 0);
@@ -371,15 +377,10 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         configureDomain(1);
         configureSubdomain(1,1);
         configureNode(1,1,"1");
-        DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
-        inputBuilder.setTopologyId("flow:1");
-        inputBuilder.setDomainId(new DomainId(2));
-        inputBuilder.setSubDomainId(new SubDomainId(1));
-        inputBuilder.setNodeId("1");
-        RpcResult<DeleteNodeOutput> output = topoImpl.deleteNode(
-                inputBuilder.build()).get();
-        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
-        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+
+        DeleteNodeOutput output = deleteNode(2,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
                 .equals("node is not belong to domain or subdomain!"));
     }
 
@@ -387,16 +388,169 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void deleteNodeTest3() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
-        inputBuilder.setTopologyId("flow:1");
-        inputBuilder.setDomainId(new DomainId(1));
-        inputBuilder.setSubDomainId(new SubDomainId(1));
-        inputBuilder.setNodeId("3");
-        RpcResult<DeleteNodeOutput> output = topoImpl.deleteNode(
-                inputBuilder.build()).get();
-        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
-        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+
+        DeleteNodeOutput output = deleteNode(1,1,"3");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
                 .equals("node is not exist!"));
+    }
+
+    @Test
+    public void deleteIpv4Test() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
+        QueryNodeOutput queryOutput = queryNode();
+        Assert.assertTrue(queryOutput.getNode().size() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().size() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().size() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0)
+                .getSubDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv4().size() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv4().get(0)
+                .getBitstringlength().intValue() == 64);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv4().get(0)
+                .getBierMplsLabelBase().getValue() == (long)1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv4().get(0)
+                .getBierMplsLabelRangeSize().getValue() == (short)4);
+
+        DeleteIpv4Output output = deleteIpv4(1,1,"1",64,1,4);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        QueryNodeOutput queryOutput2 = queryNode();
+        Assert.assertTrue(queryOutput2.getNode().size() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().size() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().size() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0)
+                .getSubDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv4().size() == 0);
+    }
+
+    @Test
+    public void deleteIpv4Test2() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
+
+        DeleteIpv4Output output = deleteIpv4(1,2,"1",64,1,4);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
+    }
+
+    @Test
+    public void deleteIpv4Test3() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+
+        DeleteIpv4Output output = deleteIpv4(1,1,"3",64,1,4);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("node is not exist!"));
+    }
+
+    @Test
+    public void deleteIpv4Test4() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
+
+        DeleteIpv4Output output = deleteIpv4(1,1,"1",4,1,4);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("ipv4 is not exist!"));
+    }
+
+    @Test
+    public void deleteIpv6Test() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
+        QueryNodeOutput queryOutput = queryNode();
+        Assert.assertTrue(queryOutput.getNode().size() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().size() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().size() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0)
+                .getSubDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv6().size() == 1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv6().get(0)
+                .getBitstringlength().intValue() == 64);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv6().get(0)
+                .getBierMplsLabelBase().getValue() == (long)1);
+        Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv6().get(0)
+                .getBierMplsLabelRangeSize().getValue() == (short)4);
+
+        DeleteIpv6Output output = deleteIpv6(1,1,"1",64,1,4);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        QueryNodeOutput queryOutput2 = queryNode();
+        Assert.assertTrue(queryOutput2.getNode().size() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().size() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().size() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0)
+                .getSubDomainId().getValue().intValue() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierNodeParams()
+                .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv6().size() == 0);
+    }
+
+    @Test
+    public void deleteIpv6Test2() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
+
+        DeleteIpv6Output output = deleteIpv6(1,2,"1",64,1,4);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
+    }
+
+    @Test
+    public void deleteIpv6Test3() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+
+        DeleteIpv6Output output = deleteIpv6(1,1,"3",64,1,4);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("node is not exist!"));
+    }
+
+    @Test
+    public void deleteIpv6Test4() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
+
+        DeleteIpv6Output output = deleteIpv6(1,1,"1",4,1,4);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("ipv6 is not exist!"));
     }
 
     @Test
@@ -568,13 +722,32 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         DomainBuilder domainBuilder = new DomainBuilder();
         domainBuilder.setDomainId(new DomainId(domainId));
         domainBuilder.setKey(new DomainKey(new DomainId(subDomainId)));
-        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
-        // bierBuilder.setBfrId(new BfrId(1));
-        // bierBuilder.setBitstringlength(Bsl._64Bit);
-        List<SubDomain> subDomainList = new ArrayList<SubDomain>();
+
         SubDomainBuilder subDomainBuilder = new SubDomainBuilder();
         subDomainBuilder.setSubDomainId(new SubDomainId(1));
+
+        Ipv4Builder ipv4Builder = new Ipv4Builder();
+        ipv4Builder.setBitstringlength(64);
+        ipv4Builder.setBierMplsLabelBase(new MplsLabel(1L));
+        ipv4Builder.setBierMplsLabelRangeSize(new BierMplsLabelRangeSize((short)4));
+        List<Ipv4> ipv4List = new ArrayList<Ipv4>();
+        ipv4List.add(ipv4Builder.build());
+        AfBuilder afBuilder = new AfBuilder();
+        afBuilder.setIpv4(ipv4List);
+
+        Ipv6Builder ipv6Builder = new Ipv6Builder();
+        ipv6Builder.setBitstringlength(64);
+        ipv6Builder.setBierMplsLabelBase(new MplsLabel(1L));
+        ipv6Builder.setBierMplsLabelRangeSize(new BierMplsLabelRangeSize((short)4));
+        List<Ipv6> ipv6List = new ArrayList<Ipv6>();
+        ipv6List.add(ipv6Builder.build());
+        afBuilder.setIpv6(ipv6List);
+
+        subDomainBuilder.setAf(afBuilder.build());
+        List<SubDomain> subDomainList = new ArrayList<SubDomain>();
         subDomainList.add(subDomainBuilder.build());
+
+        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
         bierBuilder.setSubDomain(subDomainList);
         domainBuilder.setBierGlobal(bierBuilder.build());
         List<Domain> domainList = new ArrayList<Domain>();
@@ -646,6 +819,56 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
                 .querySubdomainLink(inputBuilder.build()).get();
         return output.getResult();
     }
+
+    private DeleteNodeOutput deleteNode(int domainId,int subDomainId,String nodeId) throws Exception {
+        DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(domainId));
+        inputBuilder.setSubDomainId(new SubDomainId(subDomainId));
+        inputBuilder.setNodeId(nodeId);
+        RpcResult<DeleteNodeOutput> output = topoImpl.deleteNode(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private DeleteIpv4Output deleteIpv4(int domainId,int subDomainId,String nodeId,int bitStringLength,
+            int mplsLabelBase,int mplsLabelRangeSize) throws Exception {
+        DeleteIpv4InputBuilder inputBuilder = new DeleteIpv4InputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(domainId));
+        inputBuilder.setSubDomainId(new SubDomainId(subDomainId));
+        inputBuilder.setNodeId(nodeId);
+        org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.delete.ipv4.input.Ipv4Builder ipv4Builder =
+                new org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.delete.ipv4.input.Ipv4Builder();
+        ipv4Builder.setBitstringlength(bitStringLength);
+        ipv4Builder.setBierMplsLabelBase(new MplsLabel((long)mplsLabelBase));
+        ipv4Builder.setBierMplsLabelRangeSize(new BierMplsLabelRangeSize((short)mplsLabelRangeSize));
+        inputBuilder.setIpv4(ipv4Builder.build());
+
+        RpcResult<DeleteIpv4Output> output = topoImpl.deleteIpv4(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private DeleteIpv6Output deleteIpv6(int domainId,int subDomainId,String nodeId,int bitStringLength,
+            int mplsLabelBase,int mplsLabelRangeSize) throws Exception {
+        DeleteIpv6InputBuilder inputBuilder = new DeleteIpv6InputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(domainId));
+        inputBuilder.setSubDomainId(new SubDomainId(subDomainId));
+        inputBuilder.setNodeId(nodeId);
+        org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.delete.ipv6.input.Ipv6Builder ipv6Builder =
+                new org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.delete.ipv6.input.Ipv6Builder();
+        ipv6Builder.setBitstringlength(bitStringLength);
+        ipv6Builder.setBierMplsLabelBase(new MplsLabel((long)mplsLabelBase));
+        ipv6Builder.setBierMplsLabelRangeSize(new BierMplsLabelRangeSize((short)mplsLabelRangeSize));
+        inputBuilder.setIpv6(ipv6Builder.build());
+
+        RpcResult<DeleteIpv6Output> output = topoImpl.deleteIpv6(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
 
     private void initOpenflowTopo(DataBroker dataBroker) {
         Topology topology = constructTopology();

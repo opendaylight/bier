@@ -43,17 +43,20 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BierTopologyManager {
-    private static final Logger LOG =  LoggerFactory.getLogger(BierTopologyManager.class);    // 日志记录
+    private static final Logger LOG =  LoggerFactory.getLogger(BierTopologyManager.class);
     private final DataBroker dataBroker;
     private BierTopologyAdapter topoAdapter = new BierTopologyAdapter();
     public static final String TOPOLOGY_ID = "flow:1";
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(7);          // 操作执行器
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(7);
     private final LogicalDatastoreType datastoreType = LogicalDatastoreType.CONFIGURATION;
 
     public BierTopologyManager(DataBroker dataBroker) {
@@ -99,27 +102,22 @@ public class BierTopologyManager {
     }
 
     public void setTopologyData(final BierTopology bierTopology) {
-        // 参数检查
         if ( null == dataBroker || null == bierTopology ) {
             LOG.error("ZTE:Set Bier Topology input is error!");
             return;
         }
 
-        // 创建执行器，用来执行数据
         BierTopologyProcess<BierTopology> processor =  new BierTopologyProcess<BierTopology>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierTopologyBuilder()).build());
 
         final InstanceIdentifier<BierTopology> path = InstanceIdentifier.create(BierNetworkTopology.class)
                 .child(BierTopology.class, bierTopology.getKey());
-        // 构造一个从数据区读取的操作类
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 transaction.put(datastoreType,path,bierTopology ,true);
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<BierTopology>> readOperation(ReadWriteTransaction transaction) {
@@ -127,7 +125,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierTopology>> future = EXECUTOR.submit(processor);
 
         try {
@@ -144,27 +141,22 @@ public class BierTopologyManager {
             LOG.error("ZTE:Set Bier Topology is faild cause by", e);
         }
 
-        // 数据错误
         LOG.error("ZTE:Set Bier Topology failed!");
         return;
     }
 
     public BierTopology getTopologyData(String topologyId) {
-        // 创建执行器，用来执行数据
         BierTopologyProcess<BierTopology> processor =  new BierTopologyProcess<BierTopology>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierTopologyBuilder()).build());
 
         final InstanceIdentifier<BierTopology> path = InstanceIdentifier.create(BierNetworkTopology.class)
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
-        // 构造一个从数据区读取的操作类
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
               // Auto-generated method stub
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<BierTopology>> readOperation(ReadWriteTransaction transaction) {
@@ -176,12 +168,10 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierTopology>> future = EXECUTOR.submit(processor);
 
         try {
             ListenableFuture<BierTopology> result = future.get();
-            // 获取执行后的结果
             BierTopology topology = result.get();
             if ( null == topology || null == topology.getTopologyId()) {
                 LOG.error("ZTE:get bier topology is faild!");
@@ -198,22 +188,22 @@ public class BierTopologyManager {
     }
 
     public boolean setDomainData(String topologyId,final List<BierDomain> domainList) {
-        // 参数检查
+
         if ( null == dataBroker || null == domainList || domainList.isEmpty() ) {
             LOG.error("ZTE:Set bier domain input is error!");
             return false;
         }
 
-        // 创建执行器，用来执行数据
+
         BierTopologyProcess<BierDomain> processor =  new BierTopologyProcess<BierDomain>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierDomainBuilder()).build());
 
         final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
 
-        // 构造一个从数据区读取的操作类
+
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
+
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 int domainSize = domainList.size();
@@ -224,7 +214,7 @@ public class BierTopologyManager {
                 }
             }
 
-            // 重载读操作函数
+
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<Node>> readOperation(ReadWriteTransaction transaction) {
@@ -232,7 +222,7 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
+
         Future<ListenableFuture<BierDomain>> future = EXECUTOR.submit(processor);
 
         try {
@@ -250,28 +240,27 @@ public class BierTopologyManager {
             LOG.error("ZTE:Set bier domain is faild cause by", e);
         }
 
-        // 数据错误
+
         LOG.error("ZTE:Set bier domain failed!");
         return false;
     }
 
     public BierDomain getDomainData(String topologyId,DomainId domainId) {
-        // 创建执行器，用来执行数据
+
         BierTopologyProcess<BierDomain> processor =  new BierTopologyProcess<BierDomain>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierDomainBuilder()).build());
 
         final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
         final InstanceIdentifier<BierDomain> path = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
-        // 构造一个从数据区读取的操作P
+
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
               // Auto-generated method stub
             }
 
-            // 重载读操作函数
+
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<BierDomain>> readOperation(ReadWriteTransaction transaction) {
@@ -283,7 +272,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierDomain>> future = EXECUTOR.submit(processor);
 
         try {
@@ -305,13 +293,11 @@ public class BierTopologyManager {
 
     public boolean setSubDomainData(String topologyId,DomainId domainId,
             final List<BierSubDomain> subDomainList) {
-        // 参数检查
         if ( null == dataBroker || null == subDomainList || subDomainList.isEmpty() ) {
             LOG.error("ZTE:Set bier sub-domai input is error!");
             return false;
         }
 
-        // 创建执行器，用来执行数据
         BierTopologyProcess<BierSubDomain> processor =  new BierTopologyProcess<BierSubDomain>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierSubDomainBuilder()).build());
 
@@ -319,9 +305,7 @@ public class BierTopologyManager {
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
         final InstanceIdentifier<BierDomain> domainPath = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
 
-        // 构造一个从数据区读取的操作类
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 int subDomainSize = subDomainList.size();
@@ -333,7 +317,6 @@ public class BierTopologyManager {
                 }
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<Node>> readOperation(ReadWriteTransaction transaction) {
@@ -341,7 +324,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierSubDomain>> future = EXECUTOR.submit(processor);
 
         try {
@@ -359,37 +341,29 @@ public class BierTopologyManager {
             LOG.error("ZTE:Set bier sub-domain is faild cause by", e);
         }
 
-        // 数据错误
         LOG.error("ZTE:Set bier sub-domain failed!");
         return false;
     }
 
     public boolean delDomainData(final String topologyId,final DomainId domainId,final List<BierNode> nodeList) {
-        // 参数检查
         if ( null == dataBroker || null == domainId ) {
             LOG.error("ZTE:Del bier domain input is error!");
             return false;
         }
 
-        // 创建执行器，用来执行数据
         BierTopologyProcess<BierDomain> processor =  new BierTopologyProcess<BierDomain>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierDomainBuilder()).build());
         final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
         final InstanceIdentifier<BierDomain> path = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
 
-        // 构造一个从数据区读取的操作类
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 transaction.delete(datastoreType,path);
-
-                //修改影响的节点
                 updateAffectedDomainNode(transaction,topologyId,domainId,nodeList);
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<Node>> readOperation(ReadWriteTransaction transaction) {
@@ -397,7 +371,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierDomain>> future = EXECUTOR.submit(processor);
 
         try {
@@ -415,7 +388,7 @@ public class BierTopologyManager {
             LOG.error("ZTE:Del bier domain is faild cause by", e);
         }
 
-        // 数据错误
+
         LOG.error("ZTE:Del bier domain failed!");
         return false;
     }
@@ -454,13 +427,13 @@ public class BierTopologyManager {
 
     public boolean delSubDomainData(final String topologyId,final DomainId domainId,
             final SubDomainId subDomainId,final List<BierNode> nodeList) {
-        // 参数检查
+
         if ( null == dataBroker || null == domainId ) {
             LOG.error("ZTE:Del bier sub-domain input is error!");
             return false;
         }
 
-        // 创建执行器，用来执行数据
+
         BierTopologyProcess<BierSubDomain> processor =  new BierTopologyProcess<BierSubDomain>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierSubDomainBuilder()).build());
         final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
@@ -468,18 +441,16 @@ public class BierTopologyManager {
         final InstanceIdentifier<BierDomain> domainPath = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
         final InstanceIdentifier<BierSubDomain> path = domainPath.child(BierSubDomain.class,
                 new BierSubDomainKey(subDomainId));
-        // 构造一个从数据区读取的操作类
+
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 transaction.delete(datastoreType,path);
 
-                //修改影响的节点
+
                 updateAffectedSubDomainNode(transaction,topologyId,domainId,subDomainId,nodeList);
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<Node>> readOperation(ReadWriteTransaction transaction) {
@@ -487,7 +458,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierSubDomain>> future = EXECUTOR.submit(processor);
 
         try {
@@ -505,7 +475,6 @@ public class BierTopologyManager {
             LOG.error("ZTE:Del sub-domain is faild cause by", e);
         }
 
-        // 数据错误
         LOG.error("ZTE:Del Optical Node failed!");
         return false;
     }
@@ -564,13 +533,11 @@ public class BierTopologyManager {
     }
 
     public boolean setNodeData(String topologyId, final BierNode node) {
-        // 参数检查
         if ( null == dataBroker || node == null ) {
             LOG.error("ZTE:Set bier node input is error!");
             return false;
         }
 
-        // 创建执行器，用来执行数据
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
 
@@ -578,15 +545,12 @@ public class BierTopologyManager {
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
         final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, node.getKey());
 
-        // 构造一个从数据区读取的操作类
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 transaction.merge(datastoreType,path, node,true);
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<Node>> readOperation(ReadWriteTransaction transaction) {
@@ -594,7 +558,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
 
         try {
@@ -612,28 +575,24 @@ public class BierTopologyManager {
             LOG.error("ZTE:Set bier node is faild cause by", e);
         }
 
-        // 数据错误
         LOG.error("ZTE:Set bier domain failed!");
         return false;
     }
 
     public BierNode getNodeData(String topologyId,String nodeId) {
-        // 创建执行器，用来执行数据
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierNodeBuilder()).build());
 
         final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
         final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(nodeId));
-        // 构造一个从数据区读取的操作P
+
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
               // Auto-generated method stub
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
@@ -643,7 +602,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
 
         try {
@@ -665,16 +623,14 @@ public class BierTopologyManager {
 
     public boolean delNodeFromDomain(String topologyId,final DomainId domainId,
             final SubDomainId subDomainId,final BierNode node) {
-        // 创建执行器，用来执行数据
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
 
         final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
         final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(node.getKey()));
-        // 构造一个从数据区读取的操作P
+
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
@@ -711,7 +667,6 @@ public class BierTopologyManager {
                 // Auto-generated method stub
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
@@ -719,7 +674,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
 
         try {
@@ -737,28 +691,194 @@ public class BierTopologyManager {
             LOG.error("ZTE:Del bier node is faild cause by", e);
         }
 
-        // 数据错误
         LOG.error("ZTE:Del bier Node failed!");
         return false;
     }
 
+    public boolean delIpv4FromNode(String topologyId,final DomainId domainId,final SubDomainId subDomainId,
+            final int bitstringlength, final MplsLabel bierMplsLabelBase,final BierNode node) {
+        BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
+                BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
+
+        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(topologyId));
+        final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(node.getKey()));
+
+        processor.enqueueOperation(new BierTopologyOperation() {
+            @Override
+            public void writeOperation(ReadWriteTransaction transaction) {
+                BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
+                List<Domain> domainList =  node.getBierNodeParams().getDomain();
+                int domainSize = domainList.size();
+                boolean findFlag = false;
+                for (int iloop = 0; iloop < domainSize; ++iloop) {
+                    Domain domain = domainList.get(iloop);
+                    if (!domain.getDomainId().equals(domainId)) {
+                        continue;
+                    }
+                    List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
+                    int subDomainSize = subDomainList.size();
+                    for (int jloop = 0; jloop < subDomainSize; ++jloop) {
+                        SubDomain subDomain = subDomainList.get(jloop);
+                        if (!subDomain.getSubDomainId().equals(subDomainId)) {
+                            continue;
+                        }
+
+                        List<Ipv4> ipv4List = subDomain.getAf().getIpv4();
+                        int ipv4Size = ipv4List.size();
+                        for (int kloop = 0; kloop < ipv4Size; ++kloop) {
+                            Ipv4 ipv4 = ipv4List.get(kloop);
+                            if (ipv4.getBitstringlength().intValue() == bitstringlength
+                                    && ipv4.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
+                                findFlag = true;
+
+                                List<Ipv4> newIpv4List = newNodeBuilder.getBierNodeParams().getDomain()
+                                        .get(iloop).getBierGlobal().getSubDomain().get(jloop).getAf().getIpv4();
+                                newIpv4List.remove(kloop);
+                                break;
+                            }
+                        }
+                        if (findFlag) {
+                            break;
+                        }
+                    }
+                    if (findFlag) {
+                        break;
+                    }
+                }
+
+                transaction.put(datastoreType,path,newNodeBuilder.build());
+                // Auto-generated method stub
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
+                return null;
+            }
+        });
+
+        Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
+
+        try {
+            ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
+            if ( null == result.get() ) {
+                LOG.error("ZTE:Del bier node ipv4 failed!");
+                return false;
+            }
+
+            LOG.info("ZTE:Del bier node ipv4 succeed!");
+            return true;
+        } catch (InterruptedException e) {
+            LOG.error("ZTE:Del bier node ipv4 is Interrupted by", e);
+        } catch (ExecutionException e) {
+            LOG.error("ZTE:Del bier node ipv4 is faild cause by", e);
+        }
+
+        LOG.error("ZTE:Del bier Node ipv4 failed!");
+        return false;
+    }
+
+    public boolean delIpv6FromNode(String topologyId,final DomainId domainId,final SubDomainId subDomainId,
+            final int bitstringlength, final MplsLabel bierMplsLabelBase,final BierNode node) {
+        BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
+                BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
+
+        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(topologyId));
+        final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(node.getKey()));
+
+        processor.enqueueOperation(new BierTopologyOperation() {
+            @Override
+            public void writeOperation(ReadWriteTransaction transaction) {
+                BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
+                List<Domain> domainList =  node.getBierNodeParams().getDomain();
+                int domainSize = domainList.size();
+                boolean findFlag = false;
+                for (int iloop = 0; iloop < domainSize; ++iloop) {
+                    Domain domain = domainList.get(iloop);
+                    if (!domain.getDomainId().equals(domainId)) {
+                        continue;
+                    }
+                    List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
+                    int subDomainSize = subDomainList.size();
+                    for (int jloop = 0; jloop < subDomainSize; ++jloop) {
+                        SubDomain subDomain = subDomainList.get(jloop);
+                        if (!subDomain.getSubDomainId().equals(subDomainId)) {
+                            continue;
+                        }
+
+                        List<Ipv6> ipv6List = subDomain.getAf().getIpv6();
+                        int ipv6Size = ipv6List.size();
+                        for (int kloop = 0; kloop < ipv6Size; ++kloop) {
+                            Ipv6 ipv6 = ipv6List.get(kloop);
+                            if (ipv6.getBitstringlength().intValue() == bitstringlength
+                                    && ipv6.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
+                                findFlag = true;
+
+                                List<Ipv6> newIpv6List = newNodeBuilder.getBierNodeParams().getDomain()
+                                        .get(iloop).getBierGlobal().getSubDomain().get(jloop).getAf().getIpv6();
+                                newIpv6List.remove(kloop);
+                                break;
+                            }
+                        }
+                        if (findFlag) {
+                            break;
+                        }
+                    }
+                    if (findFlag) {
+                        break;
+                    }
+                }
+
+                transaction.put(datastoreType,path,newNodeBuilder.build());
+                // Auto-generated method stub
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
+                return null;
+            }
+        });
+
+        Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
+
+        try {
+            ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
+            if ( null == result.get() ) {
+                LOG.error("ZTE:Del bier node ipv6 failed!");
+                return false;
+            }
+
+            LOG.info("ZTE:Del bier node ipv6 succeed!");
+            return true;
+        } catch (InterruptedException e) {
+            LOG.error("ZTE:Del bier node ipv6 is Interrupted by", e);
+        } catch (ExecutionException e) {
+            LOG.error("ZTE:Del bier node ipv6 is faild cause by", e);
+        }
+
+        LOG.error("ZTE:Del bier Node ipv4 failed!");
+        return false;
+    }
+
     public BierLink getLinkData(String topologyId,String linkId) {
-        // 创建执行器，用来执行数据
         BierTopologyProcess<BierLink> processor =  new BierTopologyProcess<BierLink>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierLinkBuilder()).build());
 
         final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
                 .child(BierTopology.class, new BierTopologyKey(topologyId));
         final InstanceIdentifier<BierLink> path = topoPath.child(BierLink.class, new BierLinkKey(linkId));
-        // 构造一个从数据区读取的操作P
+
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
+
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
               // Auto-generated method stub
             }
 
-            // 重载读操作函数
+
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<BierLink>> readOperation(ReadWriteTransaction transaction) {
@@ -769,7 +889,6 @@ public class BierTopologyManager {
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<BierLink>> future = EXECUTOR.submit(processor);
 
         try {
@@ -962,6 +1081,86 @@ public class BierTopologyManager {
                 BierSubDomain subDomain = subDomainList.get(jloop);
                 if (subDomain.getSubDomainId().equals(subDomainId)) {
                     return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean checkIpv4Exist(String topologyId,DomainId domainId,SubDomainId subDomainId,
+            int bitstringlength, MplsLabel bierMplsLabelBase,List<Domain> domainList) {
+        if (domainList == null || domainList.isEmpty()) {
+            return false;
+        }
+
+        int domainSize = domainList.size();
+        for (int iloop = 0; iloop < domainSize; ++iloop) {
+            Domain domain = domainList.get(iloop);
+            if (!domain.getDomainId().equals(domainId)) {
+                continue;
+            }
+
+            List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
+            if (subDomainList == null || subDomainList.isEmpty()) {
+                return false;
+            }
+
+            int subDomainSize = subDomainList.size();
+            for (int jloop = 0; jloop < subDomainSize; ++jloop) {
+                SubDomain subDomain = subDomainList.get(jloop);
+                if (!subDomain.getSubDomainId().equals(subDomainId)) {
+                    continue;
+                }
+
+                List<Ipv4> ipv4List = subDomain.getAf().getIpv4();
+                int ipv4Size = ipv4List.size();
+                for (int kloop = 0; kloop < ipv4Size; ++kloop) {
+                    Ipv4 ipv4 = ipv4List.get(kloop);
+                    if (ipv4.getBitstringlength().intValue() == bitstringlength
+                            && ipv4.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean checkIpv6Exist(String topologyId,DomainId domainId,SubDomainId subDomainId,
+            int bitstringlength, MplsLabel bierMplsLabelBase,List<Domain> domainList) {
+        if (domainList == null || domainList.isEmpty()) {
+            return false;
+        }
+
+        int domainSize = domainList.size();
+        for (int iloop = 0; iloop < domainSize; ++iloop) {
+            Domain domain = domainList.get(iloop);
+            if (!domain.getDomainId().equals(domainId)) {
+                continue;
+            }
+
+            List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
+            if (subDomainList == null || subDomainList.isEmpty()) {
+                return false;
+            }
+
+            int subDomainSize = subDomainList.size();
+            for (int jloop = 0; jloop < subDomainSize; ++jloop) {
+                SubDomain subDomain = subDomainList.get(jloop);
+                if (!subDomain.getSubDomainId().equals(subDomainId)) {
+                    continue;
+                }
+
+                List<Ipv6> ipv6List = subDomain.getAf().getIpv6();
+                int ipv6Size = ipv6List.size();
+                for (int kloop = 0; kloop < ipv6Size; ++kloop) {
+                    Ipv6 ipv6 = ipv6List.get(kloop);
+                    if (ipv6.getBitstringlength().intValue() == bitstringlength
+                            && ipv6.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
+                        return true;
+                    }
                 }
             }
         }

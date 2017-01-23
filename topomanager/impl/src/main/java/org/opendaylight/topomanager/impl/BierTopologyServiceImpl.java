@@ -28,6 +28,12 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureSub
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomainInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomainOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv4Input;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv4Output;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv4OutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv6Input;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv6Output;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteIpv6OutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteNodeInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteNodeOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteNodeOutputBuilder;
@@ -58,6 +64,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopolog
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChangeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.delete.ipv4.input.Ipv4;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.delete.ipv6.input.Ipv6;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.load.topology.output.Topology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.load.topology.output.TopologyBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.query.domain.output.Domain;
@@ -629,6 +637,97 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         }
         if (!topoManager.delNodeFromDomain(topologyId,domainId,subDomainId,node)) {
             builder.setConfigureResult(getConfigResult(false,"delete node form datastore failed!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        builder.setConfigureResult(getConfigResult(true,""));
+        return RpcResultBuilder.success(builder.build()).buildFuture();
+    }
+
+    public Future<RpcResult<DeleteIpv4Output>> deleteIpv4(DeleteIpv4Input input)  {
+        DeleteIpv4OutputBuilder builder = new  DeleteIpv4OutputBuilder();
+        if ( null == input ) {
+            builder.setConfigureResult(getConfigResult(false,"input is null!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        String topologyId = input.getTopologyId();
+        DomainId domainId = input.getDomainId();
+        SubDomainId subDomainId = input.getSubDomainId();
+        String nodeId = input.getNodeId();
+        Ipv4 ipv4 = input.getIpv4();
+        if (topologyId == null || topologyId.equals("") || domainId == null || subDomainId == null
+                || nodeId == null || nodeId.equals("") || ipv4 == null) {
+            builder.setConfigureResult(getConfigResult(false,"input param is error!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        BierNode node = topoManager.getNodeData(topologyId, nodeId);
+        if (node == null) {
+            builder.setConfigureResult(getConfigResult(false,"node is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        if (!topoManager.checkNodeBelongToDomain(domainId,subDomainId,node)) {
+            builder.setConfigureResult(getConfigResult(false,"node is not belong to domain or subdomain!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        if (!topoManager.checkIpv4Exist(topologyId,domainId,subDomainId,
+                ipv4.getBitstringlength(), ipv4.getBierMplsLabelBase(),node.getBierNodeParams().getDomain())) {
+            builder.setConfigureResult(getConfigResult(false,"ipv4 is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        if (!topoManager.delIpv4FromNode(topologyId,domainId,subDomainId,
+                ipv4.getBitstringlength(), ipv4.getBierMplsLabelBase(),node)) {
+            builder.setConfigureResult(getConfigResult(false,"delete ipv4 from datastore failed!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        builder.setConfigureResult(getConfigResult(true,""));
+        return RpcResultBuilder.success(builder.build()).buildFuture();
+
+    }
+
+    public Future<RpcResult<DeleteIpv6Output>> deleteIpv6(DeleteIpv6Input input) {
+        DeleteIpv6OutputBuilder builder = new  DeleteIpv6OutputBuilder();
+        if ( null == input ) {
+            builder.setConfigureResult(getConfigResult(false,"input is null!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        String topologyId = input.getTopologyId();
+        DomainId domainId = input.getDomainId();
+        SubDomainId subDomainId = input.getSubDomainId();
+        String nodeId = input.getNodeId();
+        Ipv6 ipv6 = input.getIpv6();
+        if (topologyId == null || topologyId.equals("") || domainId == null || subDomainId == null
+                || nodeId == null || nodeId.equals("") || ipv6 == null) {
+            builder.setConfigureResult(getConfigResult(false,"input param is error!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        BierNode node = topoManager.getNodeData(topologyId, nodeId);
+        if (node == null) {
+            builder.setConfigureResult(getConfigResult(false,"node is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        if (!topoManager.checkNodeBelongToDomain(domainId,subDomainId,node)) {
+            builder.setConfigureResult(getConfigResult(false,"node is not belong to domain or subdomain!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        if (!topoManager.checkIpv6Exist(topologyId,domainId,subDomainId,
+                ipv6.getBitstringlength(), ipv6.getBierMplsLabelBase(),node.getBierNodeParams().getDomain())) {
+            builder.setConfigureResult(getConfigResult(false,"ipv6 is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        if (!topoManager.delIpv6FromNode(topologyId,domainId,subDomainId,
+                ipv6.getBitstringlength(), ipv6.getBierMplsLabelBase(),node)) {
+            builder.setConfigureResult(getConfigResult(false,"delete ipv6 from datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 

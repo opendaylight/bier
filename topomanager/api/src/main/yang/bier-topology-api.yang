@@ -275,7 +275,53 @@ module bier-topology-api {
         uses bier-common:configure-result;
 		}	
 	}
-
+	
+	rpc delete-ipv4	{
+	  input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		     leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    leaf node-id {
+			    type string;
+		    }
+		    container ipv4 {
+			    uses bier:bier-mpls-cfg;
+		    }
+		}
+		output {
+        uses bier-common:configure-result;
+		}	
+	}
+	
+	rpc delete-ipv6	{
+	  input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		     leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    leaf node-id {
+			    type string;
+		    }
+		    container ipv6 {
+			    uses bier:bier-mpls-cfg;
+		    }
+		}
+		output {
+        uses bier-common:configure-result;
+		}	
+	}
+	
 	notification topo-change {
         leaf topo-id {
             type string;

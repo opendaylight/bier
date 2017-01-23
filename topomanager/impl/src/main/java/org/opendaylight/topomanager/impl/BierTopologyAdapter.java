@@ -147,21 +147,25 @@ public class BierTopologyAdapter {
 
         List<BierNode> bierNodeList = new ArrayList<BierNode>();
         List<Node> nodeList = topoBuilder.getNode();
-        int nodeSize = nodeList.size();
-        for (int iloop = 0; iloop < nodeSize; ++iloop) {
-            Node node = nodeList.get(iloop);
-            BierNode bierNode = toBierNode(node);
-            bierNodeList.add(bierNode);
+        if (nodeList != null) {
+            int nodeSize = nodeList.size();
+            for (int iloop = 0; iloop < nodeSize; ++iloop) {
+                Node node = nodeList.get(iloop);
+                BierNode bierNode = toBierNode(node);
+                bierNodeList.add(bierNode);
+            }
         }
         bierTopoBuilder.setBierNode(bierNodeList);
 
         List<BierLink> bierLinkList = new ArrayList<BierLink>();
         List<Link> linkList = topoBuilder.getLink();
-        int linkSize = linkList.size();
-        for (int iloop = 0; iloop < linkSize; ++iloop) {
-            Link link = linkList.get(iloop);
-            BierLink bierLink = toBierLink(link);
-            bierLinkList.add(bierLink);
+        if (linkList != null) {
+            int linkSize = linkList.size();
+            for (int iloop = 0; iloop < linkSize; ++iloop) {
+                Link link = linkList.get(iloop);
+                BierLink bierLink = toBierLink(link);
+                bierLinkList.add(bierLink);
+            }
         }
         bierTopoBuilder.setBierLink(bierLinkList);
         return bierTopoBuilder.build();
