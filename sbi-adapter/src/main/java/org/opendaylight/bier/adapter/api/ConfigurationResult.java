@@ -8,11 +8,11 @@
 
 package org.opendaylight.bier.adapter.api;
 
-public class BierConfigResult {
-    public  enum ConfigurationResult {
+public class ConfigurationResult {
+    public  enum Result {
         SUCCESSFUL,
         FAILED;
-        ConfigurationResult(){
+        Result(){
         }
     }
 
@@ -25,21 +25,23 @@ public class BierConfigResult {
     public static final String SUBDOMAINID_NULL = "Subdomain without subdomain id ,node id:";
     public static final String IPV4_BSL_NULL = "Subdomain's ipv4 mpls without bsl ,node id:";
     public static final String IPV4_BSL_INVALID = "Subdomain's ipv4 mpls with invalid bsl ,node id:";
+    public static final String IPV4_RANGESIZE_INVALID = "Subdomain's ipv4 mpls range size should not be smaller "
+            + "than 16,node id:";
     public static final String EGRESS_INFO_NULL = "Multicast info with null egress nodes";
-    private ConfigurationResult cfgResult;
+    private Result cfgResult;
     private String failureReason;
 
-    public BierConfigResult(ConfigurationResult cfgResult, String failureReason) {
+    public ConfigurationResult(Result cfgResult, String failureReason) {
         this.cfgResult = cfgResult;
         this.failureReason = failureReason;
     }
 
-    public BierConfigResult(ConfigurationResult cfgResult) {
+    public ConfigurationResult(Result cfgResult) {
         this.cfgResult = cfgResult;
         this.failureReason = null;
     }
 
-    public void setCfgResult(ConfigurationResult cfgResult) {
+    public void setCfgResult(Result cfgResult) {
         this.cfgResult = cfgResult;
     }
 
@@ -50,7 +52,7 @@ public class BierConfigResult {
 
 
     public boolean isSuccessful() {
-        return (cfgResult == ConfigurationResult.SUCCESSFUL);
+        return (cfgResult == Result.SUCCESSFUL);
     }
 
     public String getFailureReason() {

@@ -13,16 +13,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.chan
 
 
 public interface ChannelConfigWriter {
-    enum ConfigurationType {
-        ADD,
-        MODIFY,
-        DELETE;
 
-        ConfigurationType() {
-        }
-    }
+    ConfigurationResult writeChannel(ConfigurationType type, Channel channel);
 
-    BierConfigResult writeChannel(ConfigurationType type, Channel channel);
-
-    BierConfigResult writeChannelEgressNode(ConfigurationType type, Channel channel);
+    ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel);
 }

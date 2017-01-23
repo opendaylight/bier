@@ -11,7 +11,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
 
 
 import org.opendaylight.bier.driver.NetconfDataOperator;
@@ -30,11 +34,15 @@ import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.netconf.notification._1._0.rev080714.CreateSubscriptionInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.netconf.notification._1._0.rev080714.NotificationsService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.IetfBierListener;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainIdCollision;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeConnectionStatus;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.netconf.node.connection.status.AvailableCapabilities;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
+
+import org.opendaylight.yangtools.yang.common.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +86,24 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
 
     }
 
+
+    private boolean hasNotification(AvailableCapabilities availableCapabilities) {
+
+        List<String> capabilities =
+                availableCapabilities.getAvailableCapability().stream().map(cp ->
+                        cp.getCapability()).collect(Collectors.toList());
+        LOG.info("Capabilities: {}", capabilities);
+
+        if (capabilities.contains(QName.create(SubDomainIdCollision.QNAME, "ietf-bier").toString())) {
+            LOG.info("capabitlities contain notifications {}",
+                    QName.create(SubDomainIdCollision.QNAME, "ietf-bier").toString());
+            return true;
+        }
+        LOG.info("capabitlities do not contain notifications");
+        return false;
+
+    }
+
     private void registerNotificationListener(final NodeId nodeId) {
 
         MountPoint mountPoint = netconfDataOperator.getMountPoint(nodeId.getValue());
@@ -116,7 +142,10 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
                     LOG.info("Netconf node {} was created",rootNode.getDataAfter().getNodeId().getValue());
                     NetconfNode ncNode = rootNode.getDataAfter().getAugmentation(NetconfNode.class);
                     if (ncNode.getConnectionStatus() == NetconfNodeConnectionStatus.ConnectionStatus.Connected) {
-                        registerNotificationListener(rootNode.getDataAfter().getNodeId());
+                        if (hasNotification(ncNode.getAvailableCapabilities())) {
+                            registerNotificationListener(rootNode.getDataAfter().getNodeId());
+                        }
+
                     }
                     break;
                 case SUBTREE_MODIFIED:
@@ -126,7 +155,9 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
                             &&
                             (ncNodeOld.getConnectionStatus() != NetconfNodeConnectionStatus.ConnectionStatus.Connected)
                     ) {
-                        registerNotificationListener(rootNode.getDataAfter().getNodeId());
+                        if (hasNotification(ncNodeNew.getAvailableCapabilities())) {
+                            registerNotificationListener(rootNode.getDataAfter().getNodeId());
+                        }
                     }
 
                     break;

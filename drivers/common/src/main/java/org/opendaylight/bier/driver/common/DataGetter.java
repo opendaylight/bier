@@ -8,7 +8,7 @@
 package org.opendaylight.bier.driver.common;
 
 import com.google.common.base.Optional;
-import org.opendaylight.bier.adapter.api.BierConfigResult;
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
@@ -28,10 +28,10 @@ public class DataGetter {
     private static final Logger LOG = LoggerFactory.getLogger(DataGetter.class);
 
 
-    public static MountPoint getMountPoint(String nodeId, BierConfigResult result,MountPointService mountService) {
+    public static MountPoint getMountPoint(String nodeId, ConfigurationResult result,MountPointService mountService) {
         if (mountService == null) {
             LOG.error(result.MOUNT_SERVICE_NULL);
-            result.setCfgResult(BierConfigResult.ConfigurationResult.FAILED);
+            result.setCfgResult(ConfigurationResult.Result.FAILED);
             result.setFailureReason(result.MOUNT_SERVICE_NULL);
             return null;
         }
@@ -40,9 +40,9 @@ public class DataGetter {
 
 
         if (!nodeMountPoint.isPresent()) {
-            LOG.error(BierConfigResult.MOUNT_POINT_FAILUE + nodeId);
-            result.setCfgResult(BierConfigResult.ConfigurationResult.FAILED);
-            result.setFailureReason(BierConfigResult.MOUNT_POINT_FAILUE + nodeId);
+            LOG.error(ConfigurationResult.MOUNT_POINT_FAILUE + nodeId);
+            result.setCfgResult(ConfigurationResult.Result.FAILED);
+            result.setFailureReason(ConfigurationResult.MOUNT_POINT_FAILUE + nodeId);
             return null;
         }
 
@@ -53,7 +53,7 @@ public class DataGetter {
 
 
 
-    public static DataBroker getDataBroker(String nodeId, BierConfigResult result,MountPointService mountService) {
+    public static DataBroker getDataBroker(String nodeId, ConfigurationResult result,MountPointService mountService) {
 
         MountPoint mountPoint = getMountPoint(nodeId,result,mountService);
 
@@ -65,9 +65,9 @@ public class DataGetter {
         Optional<DataBroker> nodeBroker =  mountPoint.getService(DataBroker.class);
 
         if (!nodeBroker.isPresent()) {
-            LOG.error(BierConfigResult.DATA_BROKER_FAILUE + nodeId);
-            result.setCfgResult(BierConfigResult.ConfigurationResult.FAILED);
-            result.setFailureReason(BierConfigResult.DATA_BROKER_FAILUE + nodeId);
+            LOG.error(ConfigurationResult.DATA_BROKER_FAILUE + nodeId);
+            result.setCfgResult(ConfigurationResult.Result.FAILED);
+            result.setFailureReason(ConfigurationResult.DATA_BROKER_FAILUE + nodeId);
             return null;
 
         }
@@ -102,7 +102,7 @@ public class DataGetter {
 
 
 
-        BierConfigResult ncResult = new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+        ConfigurationResult ncResult = new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         final DataBroker nodeBroker = DataGetter.getDataBroker(nodeId, ncResult, mountService);
         if (nodeBroker == null) {
             return null;

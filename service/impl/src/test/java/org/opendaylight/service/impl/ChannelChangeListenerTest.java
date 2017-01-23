@@ -14,8 +14,9 @@ import java.util.concurrent.ExecutionException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.bier.adapter.api.BierConfigResult;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
+import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification.ModificationType;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
@@ -176,13 +177,13 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
         private List<Channel> channelEgressDelList = new ArrayList<>();
 
         @Override
-        public BierConfigResult writeChannel(ConfigurationType type, Channel channel) {
+        public ConfigurationResult writeChannel(ConfigurationType type, Channel channel) {
             switch (type) {
                 case ADD:
                     if (null != channel) {
                         channelList.add(channel);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 case MODIFY:
@@ -190,40 +191,40 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
                         deleteChannelFromList(channel.getName());
                         channelList.add(channel);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 case DELETE:
                     if (null != channel && null != getChannelFromList(channel.getName())) {
                         deleteChannelFromList(channel.getName());
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 default:
                     throw new IllegalArgumentException("Type is not matched");
             }
-            return new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+            return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         }
 
         @Override
-        public BierConfigResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
+        public ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
             switch (type) {
                 case ADD:
-                    return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                    return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                 case MODIFY:
-                    return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                    return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                 case DELETE:
                     if (null != channel) {
                         channelEgressDelList.add(channel);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 default:
                     throw new IllegalArgumentException("Type is not matched");
             }
-            return new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+            return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         }
 
         public Channel getChannelFromList(String name) {

@@ -25,7 +25,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-import org.opendaylight.bier.adapter.api.BierConfigWriter;
+
+import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 
 import org.opendaylight.bier.driver.configuration.node.BierConfigDataBuilder;
@@ -108,7 +109,7 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteDomainAdd() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeDomain(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
                 bierConfigDataBuilder.buildDomain());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
@@ -120,9 +121,9 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteDomainModify() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeDomain(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
                 bierConfigDataBuilder.buildDomain());
-        bierConfigWriter.writeDomain(BierConfigWriter.ConfigurationType.MODIFY, NODE_ID,
+        bierConfigWriter.writeDomain(ConfigurationType.MODIFY, NODE_ID,
                 bierConfigDataBuilder.buildDomainModify());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
@@ -134,9 +135,9 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteDomainDelete() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeDomain(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
                 bierConfigDataBuilder.buildDomain());
-        bierConfigWriter.writeDomain(BierConfigWriter.ConfigurationType.DELETE, NODE_ID,
+        bierConfigWriter.writeDomain(ConfigurationType.DELETE, NODE_ID,
                 null);
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
@@ -148,7 +149,7 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteSubdomainAdd() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeSubdomain(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeSubdomain(ConfigurationType.ADD, NODE_ID,
                 null,bierConfigDataBuilder.buildSubDomainSingle());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
@@ -163,9 +164,9 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteSubdomainModify() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeSubdomain(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeSubdomain(ConfigurationType.ADD, NODE_ID,
                 null,bierConfigDataBuilder.buildSubDomainSingle());
-        bierConfigWriter.writeSubdomain(BierConfigWriter.ConfigurationType.MODIFY, NODE_ID,
+        bierConfigWriter.writeSubdomain(ConfigurationType.MODIFY, NODE_ID,
                 null,bierConfigDataBuilder.buildSubDomainSingleModify());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
@@ -180,9 +181,9 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteSubdomainDelete() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeDomain(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
                 bierConfigDataBuilder.buildDomain());
-        bierConfigWriter.writeSubdomain(BierConfigWriter.ConfigurationType.DELETE,
+        bierConfigWriter.writeSubdomain(ConfigurationType.DELETE,
                 NODE_ID,null,
                 bierConfigDataBuilder.buildSubDomainDelete());
         SubDomain subDomianActual = netconfDataOperator.read(dataBroker,
@@ -202,7 +203,7 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         Ipv4 ipv4Expected = bierConfigDataBuilder.buildIpv4SingleAdd();
-        bierConfigWriter.writeSubdomainIpv4(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv4(ConfigurationType.ADD, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,ipv4Expected);
         Ipv4 ipv4Actual = netconfDataOperator.read(dataBroker,
                 buildIpv4IId(BierConfigDataBuilder.SUBDOMAINID,ipv4Expected));
@@ -214,10 +215,10 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteSubdomainIpv4Modify() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeSubdomainIpv4(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv4(ConfigurationType.ADD, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleAdd());
         Ipv4 ipv4Expected = bierConfigDataBuilder.buildIpv4SingleModify();
-        bierConfigWriter.writeSubdomainIpv4(BierConfigWriter.ConfigurationType.MODIFY, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv4(ConfigurationType.MODIFY, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,ipv4Expected);
         Ipv4 ipv4Actual = netconfDataOperator.read(dataBroker,
                 buildIpv4IId(BierConfigDataBuilder.SUBDOMAINID,ipv4Expected));
@@ -228,9 +229,9 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteSubdomainIpv4Delete() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeSubdomainIpv4(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv4(ConfigurationType.ADD, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleAdd());
-        bierConfigWriter.writeSubdomainIpv4(BierConfigWriter.ConfigurationType.DELETE, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv4(ConfigurationType.DELETE, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleDelete());
         Ipv4 ipv4Actual = netconfDataOperator.read(dataBroker,
                 buildIpv4IId(BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleDelete()));
@@ -249,7 +250,7 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         Ipv6 ipv6Expected = bierConfigDataBuilder.buildIpv6SingleAdd();
-        bierConfigWriter.writeSubdomainIpv6(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv6(ConfigurationType.ADD, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,ipv6Expected);
         Ipv6 ipv6Actual = netconfDataOperator.read(dataBroker,
                 buildIpv6IId(BierConfigDataBuilder.SUBDOMAINID,ipv6Expected));
@@ -261,10 +262,10 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteSubdomainIpv6Modify() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeSubdomainIpv6(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv6(ConfigurationType.ADD, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleAdd());
         Ipv6 ipv6Expected = bierConfigDataBuilder.buildIpv6SingleModify();
-        bierConfigWriter.writeSubdomainIpv6(BierConfigWriter.ConfigurationType.MODIFY, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv6(ConfigurationType.MODIFY, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,ipv6Expected);
         Ipv6 ipv6Actual = netconfDataOperator.read(dataBroker,
                 buildIpv6IId(BierConfigDataBuilder.SUBDOMAINID,ipv6Expected));
@@ -275,9 +276,9 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
     public void testWriteSubdomainIpv6Delete() throws Exception {
         buildMock();
         buildInstance();
-        bierConfigWriter.writeSubdomainIpv6(BierConfigWriter.ConfigurationType.ADD, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv6(ConfigurationType.ADD, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleAdd());
-        bierConfigWriter.writeSubdomainIpv6(BierConfigWriter.ConfigurationType.DELETE, NODE_ID,
+        bierConfigWriter.writeSubdomainIpv6(ConfigurationType.DELETE, NODE_ID,
                 null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleDelete());
         Ipv6 ipv6Actual = netconfDataOperator.read(dataBroker,
                 buildIpv6IId(BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleDelete()));

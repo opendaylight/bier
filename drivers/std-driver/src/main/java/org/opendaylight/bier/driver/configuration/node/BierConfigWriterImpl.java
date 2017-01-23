@@ -7,9 +7,10 @@
  */
 package org.opendaylight.bier.driver.configuration.node;
 
-import  org.opendaylight.bier.adapter.api.BierConfigResult;
-import  org.opendaylight.bier.adapter.api.BierConfigResult.ConfigurationResult;
-import  org.opendaylight.bier.adapter.api.BierConfigWriter;
+
+import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
+import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
@@ -35,7 +36,8 @@ import org.slf4j.LoggerFactory;
 public class BierConfigWriterImpl implements BierConfigWriter {
 
     private static final Logger LOG = LoggerFactory.getLogger(BierConfigWriterImpl.class);
-    private static final BierConfigResult RESULT_SUCCESS = new BierConfigResult(ConfigurationResult.SUCCESSFUL);
+    private static final ConfigurationResult RESULT_SUCCESS =
+            new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
 
     private NetconfDataOperator netconfDataOperator ;
 
@@ -44,7 +46,7 @@ public class BierConfigWriterImpl implements BierConfigWriter {
     }
 
 
-    public BierConfigResult writeDomain(ConfigurationType type, String nodeId, Domain domain) {
+    public ConfigurationResult writeDomain(ConfigurationType type, String nodeId, Domain domain) {
         LOG.info("configurations write to node {}: bier configuration - bier global domain {}",
                 nodeId,domain);
 
@@ -75,7 +77,7 @@ public class BierConfigWriterImpl implements BierConfigWriter {
 
     }
 
-    public BierConfigResult writeSubdomain(ConfigurationType type, String nodeId,
+    public ConfigurationResult writeSubdomain(ConfigurationType type, String nodeId,
                                            DomainId domainId, SubDomain subDomain) {
         //Subdomain info is related to NodeID and DomainID.
         // Now domain id is ignored for ietf-bier.yang doesn't support multiple domains.
@@ -105,7 +107,7 @@ public class BierConfigWriterImpl implements BierConfigWriter {
     }
 
 
-    public BierConfigResult writeSubdomainIpv4(ConfigurationType type, String nodeId,
+    public ConfigurationResult writeSubdomainIpv4(ConfigurationType type, String nodeId,
                                                DomainId domainId, SubDomainId subDomainId,
                                                Ipv4 ipv4) {
         LOG.info("delete  : sub-domain-id {} ipv4 {} node {}",
@@ -135,7 +137,7 @@ public class BierConfigWriterImpl implements BierConfigWriter {
 
     }
 
-    public BierConfigResult writeSubdomainIpv6(ConfigurationType type, String nodeId,
+    public ConfigurationResult writeSubdomainIpv6(ConfigurationType type, String nodeId,
                                                DomainId domainId, SubDomainId subDomainId,
                                                Ipv6 ipv6) {
         LOG.info("delete  : sub-domain-id {} ipv6 {} node {}", subDomainId,ipv6,nodeId);

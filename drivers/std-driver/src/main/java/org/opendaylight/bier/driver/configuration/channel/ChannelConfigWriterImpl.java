@@ -10,8 +10,9 @@ package org.opendaylight.bier.driver.configuration.channel;
 import com.google.common.base.Preconditions;
 import java.util.List;
 
-import org.opendaylight.bier.adapter.api.BierConfigResult;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
+import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
@@ -37,8 +38,8 @@ import org.slf4j.LoggerFactory;
 public class ChannelConfigWriterImpl implements ChannelConfigWriter {
 
     private static final Logger LOG = LoggerFactory.getLogger(ChannelConfigWriterImpl.class);
-    private static final BierConfigResult RESULT_SUCCESS =
-            new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+    private static final ConfigurationResult RESULT_SUCCESS =
+            new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
 
     private NetconfDataOperator netconfDataOperator ;
     private ChannelDataBuilder channelDataBuilder = new ChannelDataBuilder();
@@ -60,7 +61,7 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
 
     }
 
-    public BierConfigResult writeChannel(ConfigurationType type, Channel channel) {
+    public ConfigurationResult writeChannel(ConfigurationType type, Channel channel) {
 
         if (type == ConfigurationType.DELETE) {
             LOG.info("delete channel {} in node {} ",channel,channel.getIngressNode());
@@ -79,9 +80,9 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
                 );
     }
 
-    public BierConfigResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
+    public ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
 
-        BierConfigResult bierConfigResult ;
+        ConfigurationResult configurationResult;
 
         List<EgressNode> egressNodeList = channel.getEgressNode();
         for (EgressNode egressNode:egressNodeList) {
@@ -98,7 +99,7 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
             if (type == ConfigurationType.DELETE) {
                 LOG.info("delete  {} of channel {} in node {} ",
                         egressNode,channel.getKey(),channel.getIngressNode());
-                bierConfigResult = netconfDataOperator.write(
+                configurationResult = netconfDataOperator.write(
                         NetconfDataOperator.OperateType.DELETE,
                         channel.getIngressNode(),
                         egressNodesIId,
@@ -106,18 +107,18 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
             } else {
                 LOG.info("config  {} of channel {} to node {} ",
                         egressNode,channel.getKey(),channel.getIngressNode());
-                bierConfigResult = netconfDataOperator.write(
+                configurationResult = netconfDataOperator.write(
                         NetconfDataOperator.OperateType.MERGE,
                         channel.getIngressNode(),
                         egressNodesIId,
                         new EgressNodesBuilder().setEgressNode(bfrId).build());
             }
-            if (!bierConfigResult.isSuccessful()) {
-                return bierConfigResult;
+            if (!configurationResult.isSuccessful()) {
+                return configurationResult;
             }
         }
-        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED,
-                BierConfigResult.EGRESS_INFO_NULL);
+        return new ConfigurationResult(ConfigurationResult.Result.FAILED,
+                ConfigurationResult.EGRESS_INFO_NULL);
     }
 
 }

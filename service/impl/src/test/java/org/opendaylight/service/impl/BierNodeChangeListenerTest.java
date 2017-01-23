@@ -14,8 +14,9 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.opendaylight.bier.adapter.api.BierConfigResult;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
+import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
@@ -634,68 +635,68 @@ public class BierNodeChangeListenerTest {
         private List<Ipv6> ipv6ProcessList = new ArrayList<>();
 
         @Override
-        public BierConfigResult writeDomain(ConfigurationType type, String nodeId, Domain domain) {
+        public ConfigurationResult writeDomain(ConfigurationType type, String nodeId, Domain domain) {
             switch (type) {
                 case ADD:
                     if (nodeId.equals("0001")) {
                         domainProcessList.add(domain);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 case MODIFY:
                     if (nodeId.equals("0001")) {
                         domainProcessList.add(domain);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 case DELETE:
                     if (nodeId.equals("0001")) {
                         domainProcessList.add(domain);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 default:
                     throw new IllegalArgumentException("Type is not matched");
             }
-            return new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+            return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         }
 
         @Override
-        public BierConfigResult writeSubdomain(ConfigurationType type, String nodeId, DomainId domainId,
+        public ConfigurationResult writeSubdomain(ConfigurationType type, String nodeId, DomainId domainId,
                                                SubDomain subDomain) {
             switch (type) {
                 case ADD:
                     if (nodeId.equals("0001") && domainId.equals(new DomainId(0001))) {
                         subDomainProcessList.add(subDomain);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 case MODIFY:
                     if (nodeId.equals("0001") && domainId.equals(new DomainId(0001))) {
                         subDomainProcessList.add(subDomain);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 case DELETE:
                     if (nodeId.equals("0001") && domainId.equals(new DomainId(0001))) {
                         subDomainProcessList.add(subDomain);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 default:
                     throw new IllegalArgumentException("Type is not matched");
             }
-            return new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+            return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         }
 
         @Override
-        public BierConfigResult writeSubdomainIpv4(ConfigurationType type, String nodeId, DomainId domainId,
+        public ConfigurationResult writeSubdomainIpv4(ConfigurationType type, String nodeId, DomainId domainId,
                                                    SubDomainId subDomainId, Ipv4 ipv4) {
             switch (type) {
                 case ADD:
@@ -707,17 +708,17 @@ public class BierNodeChangeListenerTest {
                             && subDomainId.equals(new SubDomainId(0001))) {
                         ipv4ProcessList.add(ipv4);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 default:
                     throw new IllegalArgumentException("Type is not matched");
             }
-            return new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+            return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         }
 
         @Override
-        public BierConfigResult writeSubdomainIpv6(ConfigurationType type, String nodeId, DomainId domainId,
+        public ConfigurationResult writeSubdomainIpv6(ConfigurationType type, String nodeId, DomainId domainId,
                                                    SubDomainId subDomainId, Ipv6 ipv6) {
             switch (type) {
                 case ADD:
@@ -729,13 +730,13 @@ public class BierNodeChangeListenerTest {
                             && subDomainId.equals(new SubDomainId(0001))) {
                         ipv6ProcessList.add(ipv6);
                     } else {
-                        return new BierConfigResult(BierConfigResult.ConfigurationResult.FAILED);
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                     }
                     break;
                 default:
                     throw new IllegalArgumentException("Type is not matched");
             }
-            return new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+            return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         }
 
         private List<Domain> getDomainProcessList() {

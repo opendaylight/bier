@@ -15,26 +15,20 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6;
 
 public interface BierConfigWriter {
-    enum ConfigurationType {
-        ADD,
-        MODIFY,
-        DELETE;
 
-        ConfigurationType() {
-        }
-    }
 
-    BierConfigResult writeDomain(ConfigurationType type, String nodeId, Domain domain);
 
-    BierConfigResult writeSubdomain(ConfigurationType type, String nodeId,
+    ConfigurationResult writeDomain(ConfigurationType type, String nodeId, Domain domain);
+
+    ConfigurationResult writeSubdomain(ConfigurationType type, String nodeId,
                                            DomainId domainId, SubDomain subDomain);
 
 
-    BierConfigResult writeSubdomainIpv4(ConfigurationType type, String nodeId,
+    ConfigurationResult writeSubdomainIpv4(ConfigurationType type, String nodeId,
                        DomainId domainId, SubDomainId subDomainId,
                        Ipv4 ipv4);
 
-    BierConfigResult writeSubdomainIpv6(ConfigurationType type, String nodeId,
+    ConfigurationResult writeSubdomainIpv6(ConfigurationType type, String nodeId,
                        DomainId domainId, SubDomainId subDomainId,
                        Ipv6 ipv6);
 

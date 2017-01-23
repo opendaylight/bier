@@ -9,8 +9,10 @@ package org.opendaylight.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.opendaylight.bier.adapter.api.BierConfigResult;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
+import org.opendaylight.bier.adapter.api.ConfigurationType;
+
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
@@ -102,8 +104,8 @@ public class BierParametersConfigProcess {
         if (null == nodeId || null == domain) {
             return false;
         }
-        BierConfigResult writedDomainResult = bierConfigWriter.writeDomain(
-                BierConfigWriter.ConfigurationType.ADD, nodeId, domain);
+        ConfigurationResult writedDomainResult = bierConfigWriter.writeDomain(
+                ConfigurationType.ADD, nodeId, domain);
         if (!writedDomainResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(writedDomainResult.getFailureReason());
             return false;
@@ -115,8 +117,8 @@ public class BierParametersConfigProcess {
         if (null == nodeId || null == domain) {
             return false;
         }
-        BierConfigResult writedDomainResult = bierConfigWriter.writeDomain(
-                BierConfigWriter.ConfigurationType.DELETE, nodeId, domain);
+        ConfigurationResult writedDomainResult = bierConfigWriter.writeDomain(
+                ConfigurationType.DELETE, nodeId, domain);
         if (!writedDomainResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(writedDomainResult.getFailureReason());
             return false;
@@ -128,8 +130,8 @@ public class BierParametersConfigProcess {
         if (null == nodeId || null == domain) {
             return false;
         }
-        BierConfigResult writedDomainResult = bierConfigWriter.writeDomain(
-                BierConfigWriter.ConfigurationType.MODIFY, nodeId, domain);
+        ConfigurationResult writedDomainResult = bierConfigWriter.writeDomain(
+                ConfigurationType.MODIFY, nodeId, domain);
         if (!writedDomainResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(writedDomainResult.getFailureReason());
             return false;
@@ -214,8 +216,8 @@ public class BierParametersConfigProcess {
         if (null == nodeId || null == domainId || null == subDomain) {
             return false;
         }
-        BierConfigResult subDomainResult = bierConfigWriter
-                .writeSubdomain(BierConfigWriter.ConfigurationType.ADD,nodeId,domainId,subDomain);
+        ConfigurationResult subDomainResult = bierConfigWriter
+                .writeSubdomain(ConfigurationType.ADD,nodeId,domainId,subDomain);
         if (!subDomainResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(subDomainResult.getFailureReason());
             return false;
@@ -227,8 +229,8 @@ public class BierParametersConfigProcess {
         if (null == nodeId || null == domainId || null == subDomain) {
             return false;
         }
-        BierConfigResult subDomainResult = bierConfigWriter
-                .writeSubdomain(BierConfigWriter.ConfigurationType.DELETE,nodeId,domainId,subDomain);
+        ConfigurationResult subDomainResult = bierConfigWriter
+                .writeSubdomain(ConfigurationType.DELETE,nodeId,domainId,subDomain);
         if (!subDomainResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(subDomainResult.getFailureReason());
             return false;
@@ -240,8 +242,8 @@ public class BierParametersConfigProcess {
         if (null == nodeId || null == domainId || null == subDomain) {
             return false;
         }
-        BierConfigResult subDomainResult = bierConfigWriter
-                .writeSubdomain(BierConfigWriter.ConfigurationType.MODIFY,nodeId,domainId,subDomain);
+        ConfigurationResult subDomainResult = bierConfigWriter
+                .writeSubdomain(ConfigurationType.MODIFY,nodeId,domainId,subDomain);
         if (!subDomainResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(subDomainResult.getFailureReason());
             return false;
@@ -282,8 +284,8 @@ public class BierParametersConfigProcess {
             return false;
         }
         for (Ipv4 ipv4 : ipv4Change) {
-            BierConfigResult ipv4Result = bierConfigWriter
-                    .writeSubdomainIpv4(BierConfigWriter.ConfigurationType.DELETE, nodeId, domainId,
+            ConfigurationResult ipv4Result = bierConfigWriter
+                    .writeSubdomainIpv4(ConfigurationType.DELETE, nodeId, domainId,
                     subDomainId,ipv4);
             if (!ipv4Result.isSuccessful()) {
                 notificationProvider.notifyFailureReason(ipv4Result.getFailureReason());
@@ -300,8 +302,8 @@ public class BierParametersConfigProcess {
             return false;
         }
         for (Ipv6 ipv6 : ipv6Change) {
-            BierConfigResult ipv6Result = bierConfigWriter
-                    .writeSubdomainIpv6(BierConfigWriter.ConfigurationType.DELETE, nodeId, domainId,
+            ConfigurationResult ipv6Result = bierConfigWriter
+                    .writeSubdomainIpv6(ConfigurationType.DELETE, nodeId, domainId,
                         subDomainId,ipv6);
             if (!ipv6Result.isSuccessful()) {
                 notificationProvider.notifyFailureReason(ipv6Result.getFailureReason());

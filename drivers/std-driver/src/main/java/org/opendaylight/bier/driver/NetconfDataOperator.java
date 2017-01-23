@@ -10,7 +10,7 @@ package org.opendaylight.bier.driver;
 import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import org.opendaylight.bier.adapter.api.BierConfigResult;
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.driver.common.DataGetter;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -70,7 +70,7 @@ public class NetconfDataOperator implements BindingAwareConsumer {
     }
 
     public MountPoint getMountPoint(String nodeID) {
-        BierConfigResult result = new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+        ConfigurationResult result = new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         return DataGetter.getMountPoint(nodeID,result,mountService);
 
     }
@@ -78,12 +78,12 @@ public class NetconfDataOperator implements BindingAwareConsumer {
 
 
 
-    public <T extends DataObject> BierConfigResult operate(OperateType type,
+    public <T extends DataObject> ConfigurationResult operate(OperateType type,
                                                        DataBroker dataBroker,
                                                        final int tries,
                                                        InstanceIdentifier<T> path, T data) {
 
-        BierConfigResult ncResult = new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+        ConfigurationResult ncResult = new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
 
         final WriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
         switch (type) {
@@ -115,11 +115,11 @@ public class NetconfDataOperator implements BindingAwareConsumer {
                         LOG.info("Got OptimisticLockFailedException - trying again");
                         operate(type, dataBroker, tries - 1, path ,data);
                     } else {
-                        ncResult.setFailureReason(BierConfigResult.NETCONF_LOCK_FAILUE);
+                        ncResult.setFailureReason(ConfigurationResult.NETCONF_LOCK_FAILUE);
                     }
 
                 } else {
-                    ncResult.setFailureReason(BierConfigResult.NETCONF_EDIT_FAILUE + throwable.getMessage());
+                    ncResult.setFailureReason(ConfigurationResult.NETCONF_EDIT_FAILUE + throwable.getMessage());
                 }
 
             }
@@ -132,11 +132,11 @@ public class NetconfDataOperator implements BindingAwareConsumer {
 
 
 
-    public <T extends DataObject>  BierConfigResult write(OperateType type,
+    public <T extends DataObject> ConfigurationResult write(OperateType type,
                                                                  String nodeId,
                                                                  InstanceIdentifier<T> path, T data) {
 
-        BierConfigResult ncResult = new BierConfigResult(BierConfigResult.ConfigurationResult.SUCCESSFUL);
+        ConfigurationResult ncResult = new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
         final DataBroker nodeBroker = DataGetter.getDataBroker(nodeId, ncResult, mountService);
         if (nodeBroker == null) {
             return ncResult;

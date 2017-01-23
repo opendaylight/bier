@@ -8,7 +8,7 @@
 package org.opendaylight.bier.driver;
 
 import org.opendaylight.bier.adapter.api.BierConfigReader;
-import  org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.driver.configuration.channel.ChannelConfigWriterImpl;
 import org.opendaylight.bier.driver.configuration.node.BierConfigReaderImpl;

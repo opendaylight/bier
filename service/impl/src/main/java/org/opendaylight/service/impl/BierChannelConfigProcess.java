@@ -10,8 +10,9 @@ package org.opendaylight.service.impl;
 import com.google.common.base.Optional;
 import java.util.ArrayList;
 import java.util.List;
-import org.opendaylight.bier.adapter.api.BierConfigResult;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
+import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -57,8 +58,8 @@ public class BierChannelConfigProcess {
             return;
         }
         Channel channelBfr = addBfrIdToChannel(channel,channel.getEgressNode());
-        BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
-                ChannelConfigWriter.ConfigurationType.ADD, channelBfr);
+        ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
+                ConfigurationType.ADD, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
             return;
@@ -75,8 +76,8 @@ public class BierChannelConfigProcess {
             return;
         }
         Channel channelBfr = addBfrIdToChannel(channel,channel.getEgressNode());
-        BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
-                ChannelConfigWriter.ConfigurationType.DELETE, channelBfr);
+        ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
+                ConfigurationType.DELETE, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
             return;
@@ -93,8 +94,8 @@ public class BierChannelConfigProcess {
         } else {
             LOG.info("Deploy Channel!");
             Channel channel = addBfrIdToChannel(after,after.getEgressNode());
-            BierConfigResult writedChannelResult = bierConfigWriter.writeChannel(
-                    ChannelConfigWriter.ConfigurationType.MODIFY, channel);
+            ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
+                    ConfigurationType.MODIFY, channel);
             if (!writedChannelResult.isSuccessful()) {
                 notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
                 return;
@@ -113,8 +114,8 @@ public class BierChannelConfigProcess {
             return;
         }
         Channel channelBfr = addBfrIdToChannel(channel,egressNodeList);
-        BierConfigResult writedChannelResult = bierConfigWriter.writeChannelEgressNode(
-               ChannelConfigWriter.ConfigurationType.DELETE, channelBfr);
+        ConfigurationResult writedChannelResult = bierConfigWriter.writeChannelEgressNode(
+               ConfigurationType.DELETE, channelBfr);
         if (!writedChannelResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
             return;
