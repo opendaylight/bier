@@ -39,10 +39,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-bier-service-rest</feature>
         <feature version='${project.version}'>odl-bier-service-ui</feature>
         <feature version='${project.version}'>odl-bier-service-cli</feature>
+        <feature version='${project.version}'>odl-bier-test</feature>
 
 
-  </feature>
-
+  </feature>   
   <feature name='odl-bier-models' version='${project.version}' description='OpenDaylight :: bier :: models'>
     <feature version="${mdsal.model.version}">odl-mdsal-models</feature>
     <bundle>mvn:org.opendaylight.bier/ietf-bier-2016-07-23/{{VERSION}}</bundle>
@@ -135,6 +135,21 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version='${project.version}'>odl-bier-models</feature>
     <bundle>mvn:org.opendaylight.bier/bier-driver-common/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-driver/{{VERSION}}</bundle>
+  </feature>
+  <feature name='odl-bier-test-driver-impl' version='${project.version}' description='OpenDaylight :: test :: driver :: impl'>
+    <bundle>mvn:org.opendaylight.bier/bier-driver-common/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/test-driver-impl/{{VERSION}}</bundle>
+  </feature>
+  <feature name='odl-bier-test-driver-api' version='${project.version}' description='OpenDaylight :: test :: driver :: api'>
+    <feature version='${project.version}'>odl-bier-models</feature>
+    <bundle>mvn:org.opendaylight.bier/test-driver-api/{{VERSION}}</bundle>
+  </feature>
+  <feature name='odl-bier-test-driver' version='${project.version}' description='OpenDaylight :: bier :: test :: driver'>
+    <feature version="${project.version}">odl-bier-test-driver-impl</feature>
+    <feature version="${project.version}">odl-bier-test-driver-api</feature>
+  </feature>
+  <feature name='odl-bier-test' version='${project.version}' description='OpenDaylight :: bier :: test'>
+    <feature version='${project.version}'>odl-bier-test-driver</feature>
   </feature>
 
 

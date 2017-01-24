@@ -1,0 +1,223 @@
+module test-driver {
+	namespace "urn:bier:test:driver";
+	prefix "test-driver";
+
+    import ietf-bier {
+        prefix bier;
+    }
+    import  bier-channel {
+        prefix bier-channel;
+    }
+    import bier-common {
+        prefix bier-common;
+    }
+	organization "zte";
+	revision 2016-12-19 {
+    description "Initial revision.";
+  }
+
+    identity bier-encapsulation-mpls {
+         base bier:bier-encapsulation;
+         description
+           "This identity represents MPLS encapsulation for bier.";
+    }
+
+    typedef config-type {
+        type enumeration {
+            enum ADD {
+                value 1;
+                description
+                    "add configuration";
+            }
+            enum MODIFY{
+                value 2;
+                description
+                     "modify configuration";
+            }
+            enum DELETE{
+                 value 3;
+                 description
+                     "delete configuration";
+            }
+        }
+        description
+                   "Configuration type";
+    }
+
+  	
+    rpc set-domain-config {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+             leaf write-type {
+                 mandatory true;
+                 type config-type;
+             }
+             leaf domain-id{
+                  type uint16;
+             }
+
+             uses bier:bier-global-cfg;
+
+        }
+        output {
+           uses bier-common:configure-result;
+        }
+
+    }
+    rpc set-subdomain-config {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+             leaf write-type {
+                 mandatory true;
+                 type config-type;
+             }
+             leaf domain-id{
+                  type uint16;
+             }
+
+             uses bier:bier-subdomain;
+
+        }
+        output {
+           uses bier-common:configure-result;
+        }
+
+    }
+    rpc set-ipv4-config {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+             leaf write-type {
+                 mandatory true;
+                 type config-type;
+             }
+             leaf domain-id{
+                  type uint16;
+             }
+             leaf sub-domain-id{
+                  type uint16;
+             }
+             uses bier:bier-mpls-cfg;
+
+        }
+        output {
+           uses bier-common:configure-result;
+        }
+
+    }
+    rpc read-bier-global {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+
+
+        }
+        output {
+
+             uses bier:bier-global-cfg;
+        }
+
+    }
+
+    rpc check-bier-global {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+
+
+        }
+        output {
+
+             uses bier-common:configure-result;
+        }
+
+    }
+
+    rpc set-channel {
+        input {
+
+            leaf write-type {
+                mandatory true;
+                type config-type;
+            }
+
+        uses bier-channel:channel;
+
+        leaf ingress-node {
+            type string;
+        }
+        leaf ingress-bfr-id {
+            type bier:bfr-id;
+        }
+        list egress-node {
+            key "node-id";
+            leaf node-id {
+              type string;
+            }
+            leaf egress-bfr-id {
+                type bier:bfr-id;
+            }
+          }
+
+        }
+        output {
+           uses bier-common:configure-result;
+        }
+
+
+	}
+
+
+    rpc set-egress-node {
+        input {
+
+            leaf write-type {
+                mandatory true;
+                type config-type;
+            }
+
+            uses bier-channel:channel;
+            leaf ingress-node {
+                type string;
+            }
+            leaf ingress-bfr-id {
+                type bier:bfr-id;
+            }
+            leaf egress-node {
+              type string;
+            }
+            leaf egress-bfr-id {
+                type bier:bfr-id;
+            }
+
+        }
+        output {
+           uses bier-common:configure-result;
+        }
+
+
+	}
+
+}				

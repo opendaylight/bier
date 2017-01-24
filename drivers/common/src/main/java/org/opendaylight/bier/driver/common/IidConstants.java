@@ -7,6 +7,10 @@
  */
 package org.opendaylight.bier.driver.common;
 
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
+
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
@@ -20,4 +24,11 @@ public class IidConstants {
                     .create(NetworkTopology.class)
                     .child(Topology.class,
                             new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName())));
+
+    public static final InstanceIdentifier<BierTopology> BIER_TOPO_IID =
+            InstanceIdentifier
+                    .create(BierNetworkTopology.class)
+                    .child(BierTopology.class, new BierTopologyKey("flow:1"));
+
+
 }

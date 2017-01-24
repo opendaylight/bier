@@ -203,6 +203,16 @@
       <artifactId>bier-driver</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>test-driver-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>test-driver-impl</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
   </dependencies>
 

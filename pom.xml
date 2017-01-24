@@ -22,6 +22,7 @@
         <module>sbi-adapter</module>
         <module>service</module>
         <module>drivers</module>
+        <module>test</module>
         <module>features</module>
         <module>karaf</module>
         <module>it</module>
