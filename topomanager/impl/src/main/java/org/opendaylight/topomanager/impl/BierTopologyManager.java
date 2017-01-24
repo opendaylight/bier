@@ -128,7 +128,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierTopology>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierTopology> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierTopology> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Set Bier Topology failed!");
                 return;
@@ -162,7 +162,7 @@ public class BierTopologyManager {
             public ListenableFuture<Optional<BierTopology>> readOperation(ReadWriteTransaction transaction) {
 
                 ListenableFuture<Optional<BierTopology>> listenableFuture =
-                        transaction.read(datastoreType, path);  // 读取数据
+                        transaction.read(datastoreType, path);
 
                 return listenableFuture;
             }
@@ -226,7 +226,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierDomain>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierDomain> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierDomain> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Set bier domain failed!");
                 return false;
@@ -260,13 +260,12 @@ public class BierTopologyManager {
               // Auto-generated method stub
             }
 
-
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<BierDomain>> readOperation(ReadWriteTransaction transaction) {
 
                 ListenableFuture<Optional<BierDomain>> listenableFuture =
-                        transaction.read(datastoreType, path);  // 读取数据
+                        transaction.read(datastoreType, path);
 
                 return listenableFuture;
             }
@@ -275,7 +274,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierDomain>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierDomain> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierDomain> result = future.get();
             BierDomain domain = result.get();
             if ( null == domain || null == domain.getDomainId()) {
                 LOG.error("ZTE:get bier domain is faild!");
@@ -327,7 +326,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierSubDomain>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierSubDomain> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierSubDomain> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Set bier sub-domain failed!");
                 return false;
@@ -374,7 +373,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierDomain>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierDomain> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierDomain> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Del bier domain failed!");
                 return false;
@@ -420,7 +419,6 @@ public class BierTopologyManager {
         for (int iloop = 0; iloop < domainNodeSize; ++iloop) {
             BierNode domainNode = domainNodeList.get(iloop);
             final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, domainNode.getKey());
-            //transaction.delete(datastoreType,path);
             transaction.put(datastoreType,path,domainNode);
         }
     }
@@ -461,7 +459,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierSubDomain>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierSubDomain> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierSubDomain> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Del sub-domain failed!");
                 return false;
@@ -561,7 +559,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierNode> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Set bier node failed!");
                 return false;
@@ -597,7 +595,7 @@ public class BierTopologyManager {
             @Override
             public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
                 ListenableFuture<Optional<BierNode>> listenableFuture =
-                        transaction.read(datastoreType, path);// 读取数据
+                        transaction.read(datastoreType, path);
                 return listenableFuture;
             }
         });
@@ -605,7 +603,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierNode> result = future.get();
             BierNode node = result.get();
             if ( null == node || null == node.getNodeId()) {
                 LOG.error("ZTE:get bier node is faild!");
@@ -677,7 +675,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierNode> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Del bier node failed!");
                 return false;
@@ -761,7 +759,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierNode> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Del bier node ipv4 failed!");
                 return false;
@@ -845,7 +843,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierNode> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierNode> result = future.get();
             if ( null == result.get() ) {
                 LOG.error("ZTE:Del bier node ipv6 failed!");
                 return false;
@@ -883,8 +881,7 @@ public class BierTopologyManager {
             @Override
             public ListenableFuture<Optional<BierLink>> readOperation(ReadWriteTransaction transaction) {
                 ListenableFuture<Optional<BierLink>> listenableFuture = transaction
-                        .read(datastoreType, path);  // 读取数据
-
+                        .read(datastoreType, path);
                 return listenableFuture;
             }
         });
@@ -892,7 +889,7 @@ public class BierTopologyManager {
         Future<ListenableFuture<BierLink>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierLink> result = future.get();         // 获取执行后的结果
+            ListenableFuture<BierLink> result = future.get();
             BierLink link = result.get();
             if ( null == link || null == link.getLinkId()) {
                 LOG.error("ZTE:get bier link is faild!");

@@ -67,7 +67,7 @@ public class BierLinkChangeListenerImpl
 
     public void processRemovedLink(final DataTreeModification<Link> modification) {
         final Link link = modification.getRootNode().getDataBefore();
-        final String linkId = link.getLinkId().getValue();
+        final String linkId = BIER_TOPOLOGY_ADAPTER.toBierId(link.getLinkId().getValue());
         BierTopologyProcess<BierLink> processor =  new BierTopologyProcess<BierLink>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE, (new BierLinkBuilder()).build());
         InstanceIdentifier<BierLink> iiToTopologyRemovedLink = provideIIToTopologyLink(linkId);
@@ -93,7 +93,7 @@ public class BierLinkChangeListenerImpl
     public void processAddedLink(final DataTreeModification<Link> modification) {
         final Link link = modification.getRootNode().getDataAfter();
         BierLink bierLink = BIER_TOPOLOGY_ADAPTER.toBierLink(link);
-        final String linkIdInTopology = link.getLinkId().getValue();
+        final String linkIdInTopology = bierLink.getLinkId();
         if (linkIdInTopology != null) {
             final InstanceIdentifier<BierLink> iiToTopologyLink = provideIIToTopologyLink(linkIdInTopology);
             sendToTransactionChain(bierLink, iiToTopologyLink);

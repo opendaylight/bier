@@ -58,8 +58,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BierTopologyAdapter {
-    private static final Logger LOG =  LoggerFactory.getLogger(BierTopologyAdapter.class);    // 日志记录
-    private final ExecutorService executor = Executors.newFixedThreadPool(7);          // 操作执行器
+    private static final Logger LOG =  LoggerFactory.getLogger(BierTopologyAdapter.class);
+    private final ExecutorService executor = Executors.newFixedThreadPool(7);
 
     public BierTopologyAdapter() {
     }
@@ -89,7 +89,6 @@ public class BierTopologyAdapter {
     }
 
     public Topology getInitTopology(DataBroker dataBroker,String topologyId) {
-        // 创建执行器，用来执行数据
         BierTopologyProcess<Topology> processor =  new BierTopologyProcess<Topology>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new TopologyBuilder()).build());
 
@@ -98,31 +97,28 @@ public class BierTopologyAdapter {
         if (!isTopologyExist(dataBroker,path)) {
             return null;
         }
-        // 构造一个从数据区读取的操作类
+
         processor.enqueueOperation(new BierTopologyOperation() {
-            // 重载空的写操作函数
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
               // Auto-generated method stub
             }
 
-            // 重载读操作函数
             @SuppressWarnings("unchecked")
             @Override
             public ListenableFuture<Optional<Topology>> readOperation(ReadWriteTransaction transaction) {
 
                 ListenableFuture<Optional<Topology>> listenableFuture =
-                        transaction.read(LogicalDatastoreType.OPERATIONAL, path);  // 读取数据
+                        transaction.read(LogicalDatastoreType.OPERATIONAL, path);
 
                 return listenableFuture;
             }
         });
 
-        // 启动一个执行器执行该操作
         Future<ListenableFuture<Topology>> future = executor.submit(processor);
 
         try {
-            ListenableFuture<Topology> result = future.get();         // 获取执行后的结果
+            ListenableFuture<Topology> result = future.get();
             Topology topology = result.get();
             if ( null == topology || null == topology.getTopologyId()) {
                 LOG.error("ZTE:get topology is faild!");
@@ -175,7 +171,7 @@ public class BierTopologyAdapter {
         NodeBuilder nodeBuilder = new NodeBuilder(node);
         BierNodeBuilder bierNodeBuilder = new BierNodeBuilder();
         String nodeId = nodeBuilder.getNodeId().getValue();
-        String bierNodeId = toBierNodeId(nodeId);
+        String bierNodeId = toBierId(nodeId);
         bierNodeBuilder.setNodeId(bierNodeId);
         BierNodeKey bierNodeKey = new BierNodeKey(bierNodeId);
         bierNodeBuilder.setKey(bierNodeKey);
@@ -203,22 +199,23 @@ public class BierTopologyAdapter {
         return bierNodeBuilder.build();
     }
 
-    public String toBierNodeId(String nodeId) {
-        String bierNodeId = nodeId;
-        int index = nodeId.indexOf(":");
+    public String toBierId(String id) {
+        String bierId = id;
+        int index = id.indexOf("openflow:");
         if (index != -1) {
-            bierNodeId = nodeId.substring(index + 1);
+            bierId = id.substring(index + 9);
         }
 
-        return bierNodeId;
+        return bierId;
     }
 
     public BierTerminationPoint toBierTp(TerminationPoint tp) {
         TerminationPointBuilder tpBuilder = new TerminationPointBuilder(tp);
 
         BierTerminationPointBuilder bierTpBuilder = new BierTerminationPointBuilder();
-        bierTpBuilder.setTpId(tpBuilder.getTpId().getValue());
-        BierTerminationPointKey bierTpKey = new BierTerminationPointKey(tpBuilder.getTpId().getValue());
+        String tpId = toBierId(tpBuilder.getTpId().getValue());
+        bierTpBuilder.setTpId(tpId);
+        BierTerminationPointKey bierTpKey = new BierTerminationPointKey(tpId);
         bierTpBuilder.setKey(bierTpKey);
 
         return bierTpBuilder.build();
@@ -228,24 +225,25 @@ public class BierTopologyAdapter {
         LinkBuilder linkBuilder = new LinkBuilder(link);
 
         BierLinkBuilder bierLinkBuilder = new BierLinkBuilder();
-        bierLinkBuilder.setLinkId(linkBuilder.getLinkId().getValue());
-        BierLinkKey bierLinkKey = new BierLinkKey(linkBuilder.getLinkId().getValue());
+        String linkId = toBierId(linkBuilder.getLinkId().getValue());
+        bierLinkBuilder.setLinkId(linkId);
+        BierLinkKey bierLinkKey = new BierLinkKey(linkId);
         bierLinkBuilder.setKey(bierLinkKey);
 
         Source source = linkBuilder.getSource();
         SourceBuilder sourceBuilder = new SourceBuilder(source);
         LinkSourceBuilder bierSource = new LinkSourceBuilder();
         String sourceNodeId = sourceBuilder.getSourceNode().getValue();
-        bierSource.setSourceNode(toBierNodeId(sourceNodeId));
-        bierSource.setSourceTp(sourceBuilder.getSourceTp().getValue());
+        bierSource.setSourceNode(toBierId(sourceNodeId));
+        bierSource.setSourceTp(toBierId(sourceBuilder.getSourceTp().getValue()));
         bierLinkBuilder.setLinkSource(bierSource.build());
 
         Destination dest = linkBuilder.getDestination();
         DestinationBuilder destBuilder = new DestinationBuilder(dest);
         LinkDestBuilder bierDest = new LinkDestBuilder();
         String destNodeId = destBuilder.getDestNode().getValue();
-        bierDest.setDestNode(toBierNodeId(destNodeId));
-        bierDest.setDestTp(destBuilder.getDestTp().getValue());
+        bierDest.setDestNode(toBierId(destNodeId));
+        bierDest.setDestTp(toBierId(destBuilder.getDestTp().getValue()));
         bierLinkBuilder.setLinkDest(bierDest.build());
 
         return bierLinkBuilder.build();

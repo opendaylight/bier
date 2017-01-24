@@ -401,7 +401,6 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         nodeParamsBuilder.setDomain(input.getDomain());
         nodeBuilder.setBierNodeParams(nodeParamsBuilder.build());
 
-        //可能是新增或者修改节点的bier配置，需要先比较
         if (!topoManager.setNodeData(topologyId, nodeBuilder.build())) {
             builder.setConfigureResult(getConfigResult(false,"write node to datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
@@ -548,7 +547,6 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        //删除域，并将属于该域的节点的域配置信息删除
         BierTopology  topo = topoManager.getTopologyData(topologyId);
         if (topo == null) {
             return returnRpcErr("topo is not exist!");
@@ -586,7 +584,6 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        //删除子域，并将属于该子域的节点的子域配置信息删除
         BierTopology  topo = topoManager.getTopologyData(topologyId);
         if (topo == null) {
             return returnRpcErr("topo is not exist!");

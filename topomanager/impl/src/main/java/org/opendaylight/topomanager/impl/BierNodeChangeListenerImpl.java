@@ -68,7 +68,7 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE, (new BierNodeBuilder()).build());
         InstanceIdentifier<BierNode> iiToTopologyRemovedNode =
-                provideIIToTopologyNode(BIER_TOPOLOGY_ADAPTER.toBierNodeId(nodeId));
+                provideIIToTopologyNode(BIER_TOPOLOGY_ADAPTER.toBierId(nodeId));
         if (iiToTopologyRemovedNode != null) {
             processor.enqueueOperation(new BierTopologyOperation() {
                 @Override
@@ -94,7 +94,7 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
         final String nodeIdInTopology = node.getNodeId().getValue();
         if (nodeIdInTopology != null) {
             final InstanceIdentifier<BierNode> iiToTopologyNode =
-                    provideIIToTopologyNode(BIER_TOPOLOGY_ADAPTER.toBierNodeId(nodeIdInTopology));
+                    provideIIToTopologyNode(BIER_TOPOLOGY_ADAPTER.toBierId(nodeIdInTopology));
             sendToTransactionChain(bierNode, iiToTopologyNode);
             notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         } else {

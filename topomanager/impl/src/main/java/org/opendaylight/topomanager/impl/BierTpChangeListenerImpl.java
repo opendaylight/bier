@@ -71,7 +71,7 @@ public class BierTpChangeListenerImpl
 
     private void processRemovedTerminationPoints(final DataTreeModification<TerminationPoint> modification) {
         final TerminationPoint tp = modification.getRootNode().getDataBefore();
-        final String tpId = tp.getTpId().getValue();
+        final String tpId = BIER_TOPOLOGY_ADAPTER.toBierId(tp.getTpId().getValue());
         final BierTopologyProcess<BierTerminationPoint> processor =
                 new BierTopologyProcess<BierTerminationPoint>(dataBroker,
                         BierTopologyProcess.FLAG_WRITE, (new BierTerminationPointBuilder()).build());
@@ -104,7 +104,7 @@ public class BierTpChangeListenerImpl
     private void processAddedTerminationPoints(final DataTreeModification<TerminationPoint> modification) {
         final TerminationPoint tp = modification.getRootNode().getDataAfter();
         BierTerminationPoint bierTp = BIER_TOPOLOGY_ADAPTER.toBierTp(tp);
-        final String tpIdInTopology = tp.getTpId().getValue();
+        final String tpIdInTopology = bierTp.getTpId();
         if (tpIdInTopology != null) {
             final InstanceIdentifier<BierTerminationPoint> iiToTopologytp = provideIIToTopologyTp(tpIdInTopology);
             sendToTransactionChain(bierTp, iiToTopologytp);
