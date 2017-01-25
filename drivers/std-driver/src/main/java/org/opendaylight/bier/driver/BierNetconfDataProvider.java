@@ -9,7 +9,9 @@ package org.opendaylight.bier.driver;
 
 import org.opendaylight.bier.adapter.api.BierConfigReader;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.ChannelConfigReader;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
+import org.opendaylight.bier.driver.configuration.channel.ChannelConfigReaderImpl;
 import org.opendaylight.bier.driver.configuration.channel.ChannelConfigWriterImpl;
 import org.opendaylight.bier.driver.configuration.node.BierConfigReaderImpl;
 import org.opendaylight.bier.driver.configuration.node.BierConfigWriterImpl;
@@ -32,6 +34,8 @@ public class BierNetconfDataProvider {
     private ServiceRegistration<BierConfigWriter> registrationBierConfig;
     private ServiceRegistration<BierConfigReader> registrationBierReader;
     private ServiceRegistration<ChannelConfigWriter> registrationChannelConfig;
+    private ServiceRegistration<ChannelConfigReader> registrationChannelReader;
+
     private NetconfNodesListener netconfNodesListener;
 
     public BierNetconfDataProvider(final DataBroker dataBroker) {
@@ -57,6 +61,9 @@ public class BierNetconfDataProvider {
         registrationChannelConfig = context.registerService(ChannelConfigWriter.class, channelConfigImpl, null);
         BierConfigReaderImpl bierReaderImpl = new BierConfigReaderImpl(netconfDataOperator);
         registrationBierReader = context.registerService(BierConfigReader.class, bierReaderImpl, null);
+        ChannelConfigReaderImpl channelConfigReader = new ChannelConfigReaderImpl(netconfDataOperator);
+        registrationChannelReader = context.registerService(ChannelConfigReader.class, channelConfigReader, null);
+
         netconfNodesListener = new NetconfNodesListener(dataBroker,netconfDataOperator);
     }
 

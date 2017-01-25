@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 
 import org.opendaylight.bier.adapter.api.BierConfigReader;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.ChannelConfigReader;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
@@ -30,7 +31,9 @@ import org.opendaylight.bier.driver.common.IidConstants;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelKey;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
@@ -41,6 +44,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckBierGlob
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckBierGlobalOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckBierGlobalOutputBuilder;
 
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckChannelOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckChannelOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.ConfigType;
 
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.ReadBierGlobalInput;
@@ -65,9 +71,6 @@ import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetIpv4Config
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigOutputBuilder;
-
-
-
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.TestDriverService;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
@@ -82,8 +85,6 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.AfBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4Builder;
-
-
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -99,6 +100,7 @@ public class TestDriverProvider implements TestDriverService {
     private final DataBroker dataBroker;
     private BindingAwareBroker.RpcRegistration<TestDriverService> rpcReg;
     private ChannelConfigWriter channelConfigWrite;
+    private ChannelConfigReader channelConfigReader;
 
 
 
@@ -122,6 +124,11 @@ public class TestDriverProvider implements TestDriverService {
     public void setChannelConfigWriter(ChannelConfigWriter channelConfigWriter) {
         this.channelConfigWrite = channelConfigWriter;
     }
+
+    public void setChannelConfigReader(ChannelConfigReader channelConfigReader) {
+        this.channelConfigReader = channelConfigReader;
+    }
+
 
 
     /**
@@ -466,6 +473,75 @@ public class TestDriverProvider implements TestDriverService {
         return RpcResultBuilder.success(output).buildFuture();
 
     }
+
+    private List<BfrId> getContollerBrfIdList(CheckChannelInput input) {
+
+        InstanceIdentifier<Channel> multicastInfoIid =
+                IidConstants.BIER_CHANNEL_IID.child(Channel.class, new ChannelKey(input.getName()));
+        Channel channel = DataGetter.readData(dataBroker, multicastInfoIid);
+        List<EgressNode> egressNodeList = channel.getEgressNode();
+        if ((egressNodeList == null) || (egressNodeList.isEmpty())) {
+            return null;
+        }
+        return Lists.transform(egressNodeList,
+                new Function<EgressNode, BfrId>() {
+                    @java.lang.Override
+                    public BfrId apply(EgressNode input) {
+                        return input.getEgressBfrId();
+                    }
+
+                });
+
+    }
+
+    private List<BfrId> getDeviceBrfIdList(CheckChannelInput input) {
+        return channelConfigReader.readChannel(new ChannelBuilder()
+                .setSrcIp(input.getSrcIp())
+                .setSourceWildcard(input.getSourceWildcard())
+                .setDstGroup(input.getDstGroup())
+                .setGroupWildcard(input.getGroupWildcard())
+                .setSubDomainId(input.getSubDomainId())
+                .setName(input.getName())
+                .setDomainId(input.getDomainId())
+                .setIngressNode(input.getNodeName())
+                .build());
+    }
+
+    @Override
+    public Future<RpcResult<CheckChannelOutput>> checkChannel(CheckChannelInput input) {
+        List<BfrId> controllerEgress = getContollerBrfIdList(input);
+        List<BfrId> deviceEgress = getDeviceBrfIdList(input);
+        boolean isEqual = false;
+        String detail = "";
+
+        if ((controllerEgress == null) && (deviceEgress != null)) {
+            isEqual = false;
+            detail = "controllerEgress is null while deviceEgress is not null.";
+        } else if ((controllerEgress == null ) && (deviceEgress == null)) {
+            isEqual = true;
+            detail = "Both controllerEgress and deviceEgress are null";
+        } else if ((controllerEgress != null) && (deviceEgress == null)) {
+            isEqual = false;
+            detail = "controllerEgress is not null while deviceEgress is  null.";
+        } else {
+            isEqual = controllerEgress.equals(deviceEgress);
+            if (!isEqual) {
+                detail = "\n controller egress : " + controllerEgress.toString()
+                        + "\n device egress : " + deviceEgress.toString();
+            }
+        }
+
+        CheckChannelOutput output = new CheckChannelOutputBuilder()
+                .setConfigureResult(new ConfigureResultBuilder()
+                        .setResult(isEqual ? ConfigureResult.Result.SUCCESS : ConfigureResult.Result.FAILURE)
+                        .setErrorCause(detail)
+                        .build())
+                .build();
+        return RpcResultBuilder.success(output).buildFuture();
+
+
+    }
+
 
 
 }

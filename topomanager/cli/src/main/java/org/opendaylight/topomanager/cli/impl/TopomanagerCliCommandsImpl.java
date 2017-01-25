@@ -8,9 +8,9 @@
 package org.opendaylight.topomanager.cli.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.topomanager.cli.api.TopomanagerCliCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.opendaylight.topomanager.cli.api.TopomanagerCliCommands;
 
 public class TopomanagerCliCommandsImpl implements TopomanagerCliCommands {
 

@@ -15,6 +15,7 @@ import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 
+import org.opendaylight.bier.driver.common.IidBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 
 
@@ -56,7 +57,7 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
                         channel.getGroupWildcard(),
                         channel.getSrcIp(),
                         channel.getSourceWildcard(),
-                        ChannelDataBuilder.DEFAULT_VPN_ID));
+                        IidBuilder.DEFAULT_VPN_ID));
 
 
     }
@@ -83,8 +84,12 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
     public ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
 
         ConfigurationResult configurationResult;
-
+        boolean egressNull = true;
         List<EgressNode> egressNodeList = channel.getEgressNode();
+        if ((egressNodeList == null) || egressNodeList.isEmpty()) {
+            return new ConfigurationResult(ConfigurationResult.Result.FAILED,
+                    ConfigurationResult.EGRESS_INFO_NULL);
+        }
         for (EgressNode egressNode:egressNodeList) {
             Preconditions.checkNotNull(egressNode.getEgressBfrId(),"channel egress node invalid");
             BfrId bfrId = new BfrId(egressNode.getEgressBfrId().getValue());
@@ -117,8 +122,7 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
                 return configurationResult;
             }
         }
-        return new ConfigurationResult(ConfigurationResult.Result.FAILED,
-                ConfigurationResult.EGRESS_INFO_NULL);
+        return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
     }
 
 }

@@ -28,7 +28,6 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.GetChannelInp
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.GetChannelInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.GetChannelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.GetChannelOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelInput;

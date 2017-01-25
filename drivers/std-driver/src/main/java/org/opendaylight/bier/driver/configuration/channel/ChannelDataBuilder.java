@@ -12,6 +12,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import org.opendaylight.bier.driver.common.IidBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 
 
@@ -29,7 +30,6 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.i
 
 public class ChannelDataBuilder {
 
-    public static final java.lang.Long DEFAULT_VPN_ID = new java.lang.Long(0);
 
     public PureMulticast build(Channel channel) {
 
@@ -66,7 +66,7 @@ public class ChannelDataBuilder {
                 .setGroupWildcard(channel.getGroupWildcard())
                 .setSourceAddress(channel.getSrcIp())
                 .setSourceWildcard(channel.getSourceWildcard())
-                .setVpnId(DEFAULT_VPN_ID)
+                .setVpnId(IidBuilder.DEFAULT_VPN_ID)
                 .setMulticastOverlay(new MulticastOverlayBuilder()
                         .setBierInformation(bierInformationBuilder.build())
                         .build())

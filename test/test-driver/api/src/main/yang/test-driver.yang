@@ -220,4 +220,21 @@ module test-driver {
 
 	}
 
+    rpc check-channel {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+             uses bier-channel:channel;
+        }
+        output {
+
+             uses bier-common:configure-result;
+        }
+
+    }
+
 }				

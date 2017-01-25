@@ -38,6 +38,12 @@
       <artifactId>bier-adapter</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.opendaylight.bier</groupId>
+      <artifactId>ietf-multicast-information-2016-10-28</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
   </dependencies>
 
 </project>
