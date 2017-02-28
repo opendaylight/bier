@@ -101,7 +101,7 @@ public class BierTopologyAdapter {
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
-              // Auto-generated method stub
+                // Auto-generated method stub
             }
 
             @SuppressWarnings("unchecked")
@@ -248,4 +248,5 @@ public class BierTopologyAdapter {
 
         return bierLinkBuilder.build();
     }
+
 }

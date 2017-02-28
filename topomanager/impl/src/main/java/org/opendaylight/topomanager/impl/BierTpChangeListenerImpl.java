@@ -77,6 +77,7 @@ public class BierTpChangeListenerImpl
                         BierTopologyProcess.FLAG_WRITE, (new BierTerminationPointBuilder()).build());
         InstanceIdentifier<BierTerminationPoint> iiToTopologyRemovedtp = provideIIToTopologyTp(tpId);
         if (iiToTopologyRemovedtp != null) {
+
             processor.enqueueOperation(new BierTopologyOperation() {
                 @Override
                 public void writeOperation(final ReadWriteTransaction transaction) {
@@ -90,11 +91,11 @@ public class BierTpChangeListenerImpl
                 }
             });
             executor.submit(processor);
+            notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         } else {
             LOG.debug("Instance identifier to "
                     + "inventory wasn't translated to topology while deleting termination point.");
         }
-
     }
 
     private void processUpdatedTerminationPoints(final DataTreeModification<TerminationPoint> modification) {

@@ -85,6 +85,7 @@ public class BierLinkChangeListenerImpl
             });
             executor.submit(processor);
             notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
+
         } else {
             LOG.debug("Instance identifier to inventory wasn't translated to topology while deleting link.");
         }

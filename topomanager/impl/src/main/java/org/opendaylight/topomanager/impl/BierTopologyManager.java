@@ -148,9 +148,7 @@ public class BierTopologyManager {
     public BierTopology getTopologyData(String topologyId) {
         BierTopologyProcess<BierTopology> processor =  new BierTopologyProcess<BierTopology>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierTopologyBuilder()).build());
-
-        final InstanceIdentifier<BierTopology> path = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
+        final InstanceIdentifier<BierTopology> path = getTopoPath(topologyId);
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
@@ -187,33 +185,26 @@ public class BierTopologyManager {
         return null;
     }
 
-    public boolean setDomainData(String topologyId,final List<BierDomain> domainList) {
+    public boolean setDomainData(final String topologyId,final List<BierDomain> domainList) {
 
         if ( null == dataBroker || null == domainList || domainList.isEmpty() ) {
             LOG.error("ZTE:Set bier domain input is error!");
             return false;
         }
 
-
         BierTopologyProcess<BierDomain> processor =  new BierTopologyProcess<BierDomain>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierDomainBuilder()).build());
 
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-
-
         processor.enqueueOperation(new BierTopologyOperation() {
-
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 int domainSize = domainList.size();
                 for (int iloop = 0; iloop < domainSize; ++iloop) {
                     BierDomain domain = domainList.get(iloop);
-                    final InstanceIdentifier<BierDomain> path = topoPath.child(BierDomain.class,domain.getKey());
+                    final InstanceIdentifier<BierDomain> path = getDomainPath(topologyId,domain.getDomainId());
                     transaction.put(datastoreType,path, domain,true);
                 }
             }
-
 
             @SuppressWarnings("unchecked")
             @Override
@@ -221,7 +212,6 @@ public class BierTopologyManager {
                 return null;
             }
         });
-
 
         Future<ListenableFuture<BierDomain>> future = EXECUTOR.submit(processor);
 
@@ -250,9 +240,7 @@ public class BierTopologyManager {
         BierTopologyProcess<BierDomain> processor =  new BierTopologyProcess<BierDomain>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierDomainBuilder()).build());
 
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierDomain> path = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
+        final InstanceIdentifier<BierDomain> path = getDomainPath(topologyId,domainId);
 
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
@@ -290,7 +278,7 @@ public class BierTopologyManager {
         return null;
     }
 
-    public boolean setSubDomainData(String topologyId,DomainId domainId,
+    public boolean setSubDomainData(final String topologyId,final DomainId domainId,
             final List<BierSubDomain> subDomainList) {
         if ( null == dataBroker || null == subDomainList || subDomainList.isEmpty() ) {
             LOG.error("ZTE:Set bier sub-domai input is error!");
@@ -300,18 +288,14 @@ public class BierTopologyManager {
         BierTopologyProcess<BierSubDomain> processor =  new BierTopologyProcess<BierSubDomain>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierSubDomainBuilder()).build());
 
-        InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierDomain> domainPath = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
-
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 int subDomainSize = subDomainList.size();
                 for (int iloop = 0; iloop < subDomainSize; ++iloop) {
                     BierSubDomain subDomain = subDomainList.get(iloop);
-                    final InstanceIdentifier<BierSubDomain> path
-                            = domainPath.child(BierSubDomain.class, subDomain.getKey());
+                    final InstanceIdentifier<BierSubDomain> path = getSubDomainPath(topologyId,domainId,
+                            subDomain.getSubDomainId());
                     transaction.put(datastoreType,path, subDomain,true);
                 }
             }
@@ -352,9 +336,7 @@ public class BierTopologyManager {
 
         BierTopologyProcess<BierDomain> processor =  new BierTopologyProcess<BierDomain>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierDomainBuilder()).build());
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierDomain> path = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
+        final InstanceIdentifier<BierDomain> path = getDomainPath(topologyId,domainId);
 
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
@@ -394,32 +376,17 @@ public class BierTopologyManager {
 
     public void updateAffectedDomainNode(ReadWriteTransaction transaction,String topologyId,
             DomainId domainId,List<BierNode> nodeList) {
-        List<BierNode> domainNodeList = new ArrayList<BierNode>();
         int nodeSize = nodeList.size();
         for (int iloop = 0; iloop < nodeSize; ++iloop) {
             BierNode node = nodeList.get(iloop);
-            List<Domain> domainList =  node.getBierNodeParams().getDomain();
-            int domainSize = domainList.size();
-            for (int jloop = 0; jloop < domainSize; ++jloop) {
-                Domain domain = domainList.get(jloop);
-                if (domain.getDomainId().equals(domainId)) {
-                    BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
-                    List<Domain> newDomainList = newNodeBuilder.getBierNodeParams().getDomain();
-                    newDomainList.remove(jloop);
-                    domainNodeList.add(newNodeBuilder.build());
-                    break;
-                }
+            int domainIndex = getDomainIndex(domainId,node);
+            if (domainIndex != -1) {
+                BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
+                List<Domain> newDomainList = newNodeBuilder.getBierNodeParams().getDomain();
+                newDomainList.remove(domainIndex);
+                InstanceIdentifier<BierNode> path = getNodePath(topologyId,node.getNodeId());
+                transaction.put(datastoreType,path,node);
             }
-        }
-
-        InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-
-        int domainNodeSize = domainNodeList.size();
-        for (int iloop = 0; iloop < domainNodeSize; ++iloop) {
-            BierNode domainNode = domainNodeList.get(iloop);
-            final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, domainNode.getKey());
-            transaction.put(datastoreType,path,domainNode);
         }
     }
 
@@ -434,17 +401,12 @@ public class BierTopologyManager {
 
         BierTopologyProcess<BierSubDomain> processor =  new BierTopologyProcess<BierSubDomain>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierSubDomainBuilder()).build());
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierDomain> domainPath = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
-        final InstanceIdentifier<BierSubDomain> path = domainPath.child(BierSubDomain.class,
-                new BierSubDomainKey(subDomainId));
+        final InstanceIdentifier<BierSubDomain> path = getSubDomainPath(topologyId,domainId,subDomainId);
 
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 transaction.delete(datastoreType,path);
-
 
                 updateAffectedSubDomainNode(transaction,topologyId,domainId,subDomainId,nodeList);
             }
@@ -486,47 +448,22 @@ public class BierTopologyManager {
         int nodeSize = nodeList.size();
         for (int iloop = 0; iloop < nodeSize; ++iloop) {
             BierNode node = nodeList.get(iloop);
-            List<Domain> domainList =  node.getBierNodeParams().getDomain();
-            boolean findFlag = false;
-            int domainSize = domainList.size();
-            for (int jloop = 0; jloop < domainSize; ++jloop) {
-                Domain domain = domainList.get(jloop);
-                if (!domainId.equals(domain.getDomainId())) {
-                    continue;
-                }
-                List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
-                int subDomainSize = subDomainList.size();
-                for (int kloop = 0; kloop < subDomainSize; ++kloop) {
-                    SubDomain subDomain = subDomainList.get(kloop);
-                    if (subDomain.getSubDomainId().equals(subDomainId)) {
-                        BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
-                        List<SubDomain> newSubDomainList = newNodeBuilder.getBierNodeParams()
-                                .getDomain().get(jloop).getBierGlobal().getSubDomain();
-                        newSubDomainList.remove(kloop);
-                        findFlag = true;
-                        if (newSubDomainList.isEmpty()) {
-                            List<Domain> newDomainList = newNodeBuilder.getBierNodeParams()
-                                    .getDomain();
-                            newDomainList.remove(jloop);
-                        }
-                        subDomainNodeList.add(newNodeBuilder.build());
-                        break;
+            BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
+            int domainIndex = getDomainIndex(domainId,node);
+            if (domainIndex != -1) {
+                int subDomainIndex = getSubDomainIndex(domainId,subDomainId,node);
+                if (subDomainIndex != -1) {
+                    List<SubDomain> newSubDomainList = newNodeBuilder.getBierNodeParams().getDomain()
+                            .get(domainIndex).getBierGlobal().getSubDomain();
+                    newSubDomainList.remove(subDomainIndex);
+                    if (newSubDomainList.isEmpty()) {
+                        List<Domain> newDomainList = newNodeBuilder.getBierNodeParams().getDomain();
+                        newDomainList.remove(domainIndex);
                     }
-                }
-                if (findFlag) {
-                    break;
+                    InstanceIdentifier<BierNode> path = getNodePath(topologyId,node.getNodeId());
+                    transaction.put(datastoreType,path,newNodeBuilder.build());
                 }
             }
-        }
-
-        InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-
-        int subDomainNodeSize = subDomainNodeList.size();
-        for (int iloop = 0; iloop < subDomainNodeSize; ++iloop) {
-            BierNode subDomainNode = subDomainNodeList.get(iloop);
-            final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, subDomainNode.getKey());
-            transaction.put(datastoreType,path,subDomainNode);
         }
     }
 
@@ -538,10 +475,7 @@ public class BierTopologyManager {
 
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
-
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, node.getKey());
+        final InstanceIdentifier<BierNode> path = getNodePath(topologyId,node.getNodeId());
 
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
@@ -580,10 +514,7 @@ public class BierTopologyManager {
     public BierNode getNodeData(String topologyId,String nodeId) {
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierNodeBuilder()).build());
-
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(nodeId));
+        final InstanceIdentifier<BierNode> path = getNodePath(topologyId,nodeId);
 
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
@@ -623,46 +554,22 @@ public class BierTopologyManager {
             final SubDomainId subDomainId,final BierNode node) {
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
-
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(node.getKey()));
+        final InstanceIdentifier<BierNode> path = getNodePath(topologyId,node.getNodeId());
 
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
-                List<Domain> domainList =  node.getBierNodeParams().getDomain();
-                int domainSize = domainList.size();
-                boolean findFlag = false;
-                for (int jloop = 0; jloop < domainSize; ++jloop) {
-                    Domain domain = domainList.get(jloop);
-                    if (!domain.getDomainId().equals(domainId)) {
-                        continue;
-                    }
-                    List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
-                    int subDomainSize = subDomainList.size();
-                    for (int kloop = 0; kloop < subDomainSize; ++kloop) {
-                        SubDomain subDomain = subDomainList.get(kloop);
-                        if (subDomain.getSubDomainId().equals(subDomainId)) {
-                            List<SubDomain> newSubDomainList = newNodeBuilder.getBierNodeParams().getDomain()
-                                    .get(jloop).getBierGlobal().getSubDomain();
-                            newSubDomainList.remove(kloop);
-                            findFlag = true;
-                            if (newSubDomainList.isEmpty()) {
-                                List<Domain> newDomainList = newNodeBuilder.getBierNodeParams().getDomain();
-                                newDomainList.remove(jloop);
-                            }
-                            break;
-                        }
-                    }
-                    if (findFlag) {
-                        break;
-                    }
+                int domainIndex = getDomainIndex(domainId,node);
+                int subDomainIndex = getSubDomainIndex(domainId,subDomainId,node);
+                List<SubDomain> newSubDomainList = newNodeBuilder.getBierNodeParams().getDomain()
+                        .get(domainIndex).getBierGlobal().getSubDomain();
+                newSubDomainList.remove(subDomainIndex);
+                if (newSubDomainList.isEmpty()) {
+                    List<Domain> newDomainList = newNodeBuilder.getBierNodeParams().getDomain();
+                    newDomainList.remove(domainIndex);
                 }
-
                 transaction.put(datastoreType,path,newNodeBuilder.build());
-                // Auto-generated method stub
             }
 
             @SuppressWarnings("unchecked")
@@ -695,142 +602,43 @@ public class BierTopologyManager {
 
     public boolean delIpv4FromNode(String topologyId,final DomainId domainId,final SubDomainId subDomainId,
             final int bitstringlength, final MplsLabel bierMplsLabelBase,final BierNode node) {
-        BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
-                BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
-
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(node.getKey()));
-
-        processor.enqueueOperation(new BierTopologyOperation() {
-            @Override
-            public void writeOperation(ReadWriteTransaction transaction) {
-                BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
-                List<Domain> domainList =  node.getBierNodeParams().getDomain();
-                int domainSize = domainList.size();
-                boolean findFlag = false;
-                for (int iloop = 0; iloop < domainSize; ++iloop) {
-                    Domain domain = domainList.get(iloop);
-                    if (!domain.getDomainId().equals(domainId)) {
-                        continue;
-                    }
-                    List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
-                    int subDomainSize = subDomainList.size();
-                    for (int jloop = 0; jloop < subDomainSize; ++jloop) {
-                        SubDomain subDomain = subDomainList.get(jloop);
-                        if (!subDomain.getSubDomainId().equals(subDomainId)) {
-                            continue;
-                        }
-
-                        List<Ipv4> ipv4List = subDomain.getAf().getIpv4();
-                        int ipv4Size = ipv4List.size();
-                        for (int kloop = 0; kloop < ipv4Size; ++kloop) {
-                            Ipv4 ipv4 = ipv4List.get(kloop);
-                            if (ipv4.getBitstringlength().intValue() == bitstringlength
-                                    && ipv4.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
-                                findFlag = true;
-
-                                List<Ipv4> newIpv4List = newNodeBuilder.getBierNodeParams().getDomain()
-                                        .get(iloop).getBierGlobal().getSubDomain().get(jloop).getAf().getIpv4();
-                                newIpv4List.remove(kloop);
-                                break;
-                            }
-                        }
-                        if (findFlag) {
-                            break;
-                        }
-                    }
-                    if (findFlag) {
-                        break;
-                    }
-                }
-
-                transaction.put(datastoreType,path,newNodeBuilder.build());
-                // Auto-generated method stub
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
-                return null;
-            }
-        });
-
-        Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
-
-        try {
-            ListenableFuture<BierNode> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Del bier node ipv4 failed!");
-                return false;
-            }
-
-            LOG.info("ZTE:Del bier node ipv4 succeed!");
-            return true;
-        } catch (InterruptedException e) {
-            LOG.error("ZTE:Del bier node ipv4 is Interrupted by", e);
-        } catch (ExecutionException e) {
-            LOG.error("ZTE:Del bier node ipv4 is faild cause by", e);
-        }
-
-        LOG.error("ZTE:Del bier Node ipv4 failed!");
-        return false;
+        final String type = "ipv4";
+        return delIpFromNode(topologyId,domainId,subDomainId,
+                bitstringlength, bierMplsLabelBase,node,type);
     }
 
     public boolean delIpv6FromNode(String topologyId,final DomainId domainId,final SubDomainId subDomainId,
             final int bitstringlength, final MplsLabel bierMplsLabelBase,final BierNode node) {
+        final String type = "ipv6";
+        return delIpFromNode(topologyId,domainId,subDomainId,
+                bitstringlength, bierMplsLabelBase,node,type);
+    }
+
+    public boolean delIpFromNode(String topologyId,final DomainId domainId,final SubDomainId subDomainId,
+            final int bitstringlength, final MplsLabel bierMplsLabelBase,final BierNode node,final String type) {
         BierTopologyProcess<BierNode> processor =  new BierTopologyProcess<BierNode>(dataBroker,
                 BierTopologyProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
 
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
-        final InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(node.getKey()));
+        final InstanceIdentifier<BierNode> path = getNodePath(topologyId,node.getNodeId());
 
         processor.enqueueOperation(new BierTopologyOperation() {
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
                 BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
-                List<Domain> domainList =  node.getBierNodeParams().getDomain();
-                int domainSize = domainList.size();
-                boolean findFlag = false;
-                for (int iloop = 0; iloop < domainSize; ++iloop) {
-                    Domain domain = domainList.get(iloop);
-                    if (!domain.getDomainId().equals(domainId)) {
-                        continue;
-                    }
-                    List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
-                    int subDomainSize = subDomainList.size();
-                    for (int jloop = 0; jloop < subDomainSize; ++jloop) {
-                        SubDomain subDomain = subDomainList.get(jloop);
-                        if (!subDomain.getSubDomainId().equals(subDomainId)) {
-                            continue;
-                        }
-
-                        List<Ipv6> ipv6List = subDomain.getAf().getIpv6();
-                        int ipv6Size = ipv6List.size();
-                        for (int kloop = 0; kloop < ipv6Size; ++kloop) {
-                            Ipv6 ipv6 = ipv6List.get(kloop);
-                            if (ipv6.getBitstringlength().intValue() == bitstringlength
-                                    && ipv6.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
-                                findFlag = true;
-
-                                List<Ipv6> newIpv6List = newNodeBuilder.getBierNodeParams().getDomain()
-                                        .get(iloop).getBierGlobal().getSubDomain().get(jloop).getAf().getIpv6();
-                                newIpv6List.remove(kloop);
-                                break;
-                            }
-                        }
-                        if (findFlag) {
-                            break;
-                        }
-                    }
-                    if (findFlag) {
-                        break;
-                    }
+                int domainIndex = getDomainIndex(domainId,node);
+                int subDomainIndex = getSubDomainIndex(domainId,subDomainId,node);
+                int ipIndex = getIpIndex(domainId,subDomainId,bitstringlength,bierMplsLabelBase,node,type);
+                if (type.equals("ipv4")) {
+                    List<Ipv4> newIpv4List = newNodeBuilder.getBierNodeParams().getDomain()
+                            .get(domainIndex).getBierGlobal().getSubDomain().get(subDomainIndex).getAf().getIpv4();
+                    newIpv4List.remove(ipIndex);
+                } else if (type.equals("ipv6")) {
+                    List<Ipv6> newIpv6List = newNodeBuilder.getBierNodeParams().getDomain()
+                            .get(domainIndex).getBierGlobal().getSubDomain().get(subDomainIndex).getAf().getIpv6();
+                    newIpv6List.remove(ipIndex);
                 }
 
                 transaction.put(datastoreType,path,newNodeBuilder.build());
-                // Auto-generated method stub
             }
 
             @SuppressWarnings("unchecked")
@@ -865,8 +673,7 @@ public class BierTopologyManager {
         BierTopologyProcess<BierLink> processor =  new BierTopologyProcess<BierLink>(dataBroker,
                 BierTopologyProcess.FLAG_READ,(new BierLinkBuilder()).build());
 
-        final InstanceIdentifier<BierTopology> topoPath = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topologyId));
+        final InstanceIdentifier<BierTopology> topoPath = getTopoPath(topologyId);
         final InstanceIdentifier<BierLink> path = topoPath.child(BierLink.class, new BierLinkKey(linkId));
 
         processor.enqueueOperation(new BierTopologyOperation() {
@@ -1086,108 +893,138 @@ public class BierTopologyManager {
     }
 
     public boolean checkIpv4Exist(String topologyId,DomainId domainId,SubDomainId subDomainId,
-            int bitstringlength, MplsLabel bierMplsLabelBase,List<Domain> domainList) {
-        if (domainList == null || domainList.isEmpty()) {
+            int bitstringlength, MplsLabel bierMplsLabelBase,BierNode node) {
+        if (-1 == getIpIndex(domainId,subDomainId,bitstringlength,bierMplsLabelBase,node,"ipv4")) {
             return false;
         }
-
-        int domainSize = domainList.size();
-        for (int iloop = 0; iloop < domainSize; ++iloop) {
-            Domain domain = domainList.get(iloop);
-            if (!domain.getDomainId().equals(domainId)) {
-                continue;
-            }
-
-            List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
-            if (subDomainList == null || subDomainList.isEmpty()) {
-                return false;
-            }
-
-            int subDomainSize = subDomainList.size();
-            for (int jloop = 0; jloop < subDomainSize; ++jloop) {
-                SubDomain subDomain = subDomainList.get(jloop);
-                if (!subDomain.getSubDomainId().equals(subDomainId)) {
-                    continue;
-                }
-
-                List<Ipv4> ipv4List = subDomain.getAf().getIpv4();
-                int ipv4Size = ipv4List.size();
-                for (int kloop = 0; kloop < ipv4Size; ++kloop) {
-                    Ipv4 ipv4 = ipv4List.get(kloop);
-                    if (ipv4.getBitstringlength().intValue() == bitstringlength
-                            && ipv4.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return true;
     }
 
     public boolean checkIpv6Exist(String topologyId,DomainId domainId,SubDomainId subDomainId,
-            int bitstringlength, MplsLabel bierMplsLabelBase,List<Domain> domainList) {
-        if (domainList == null || domainList.isEmpty()) {
+            int bitstringlength, MplsLabel bierMplsLabelBase,BierNode node) {
+        if (-1 == getIpIndex(domainId,subDomainId,bitstringlength,bierMplsLabelBase,node,"ipv6")) {
             return false;
         }
-
-        int domainSize = domainList.size();
-        for (int iloop = 0; iloop < domainSize; ++iloop) {
-            Domain domain = domainList.get(iloop);
-            if (!domain.getDomainId().equals(domainId)) {
-                continue;
-            }
-
-            List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
-            if (subDomainList == null || subDomainList.isEmpty()) {
-                return false;
-            }
-
-            int subDomainSize = subDomainList.size();
-            for (int jloop = 0; jloop < subDomainSize; ++jloop) {
-                SubDomain subDomain = subDomainList.get(jloop);
-                if (!subDomain.getSubDomainId().equals(subDomainId)) {
-                    continue;
-                }
-
-                List<Ipv6> ipv6List = subDomain.getAf().getIpv6();
-                int ipv6Size = ipv6List.size();
-                for (int kloop = 0; kloop < ipv6Size; ++kloop) {
-                    Ipv6 ipv6 = ipv6List.get(kloop);
-                    if (ipv6.getBitstringlength().intValue() == bitstringlength
-                            && ipv6.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return true;
     }
 
     public boolean checkNodeBelongToDomain(DomainId domainId,SubDomainId subDomainId,BierNode node) {
-        List<Domain> domainList =  node.getBierNodeParams().getDomain();
-        if (domainList == null) {
+        if (getSubDomainIndex(domainId,subDomainId,node) == -1) {
             return false;
         }
+
+        return true;
+    }
+
+    public int getDomainIndex(DomainId domainId,BierNode node) {
+        List<Domain> domainList =  node.getBierNodeParams().getDomain();
+        if (domainList == null) {
+            return -1;
+        }
         int domainSize = domainList.size();
-        for (int jloop = 0; jloop < domainSize; ++jloop) {
-            Domain domain = domainList.get(jloop);
-            if (!domain.getDomainId().equals(domainId)) {
-                continue;
+        for (int iloop = 0; iloop < domainSize; ++iloop) {
+            Domain domain = domainList.get(iloop);
+            if (domain.getDomainId().equals(domainId)) {
+                return iloop;
             }
-            List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
-            if (subDomainList == null) {
-                return false;
+        }
+
+        return -1;
+    }
+
+    public int getSubDomainIndex(DomainId domainId,SubDomainId subDomainId,BierNode node) {
+        int domainIndex = getDomainIndex(domainId,node);
+        if (domainIndex == -1) {
+            return -1;
+        }
+
+        Domain domain = node.getBierNodeParams().getDomain().get(domainIndex);
+        List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
+        if (subDomainList == null) {
+            return -1;
+        }
+        int subDomainSize = subDomainList.size();
+        for (int iloop = 0; iloop < subDomainSize; ++iloop) {
+            SubDomain subDomain = subDomainList.get(iloop);
+            if (subDomain.getSubDomainId().equals(subDomainId)) {
+                return iloop;
             }
-            int subDomainSize = subDomainList.size();
-            for (int kloop = 0; kloop < subDomainSize; ++kloop) {
-                SubDomain subDomain = subDomainList.get(kloop);
-                if (subDomain.getSubDomainId().equals(subDomainId)) {
-                    return true;
+        }
+
+        return -1;
+    }
+
+    public int getIpIndex(DomainId domainId,SubDomainId subDomainId,int bitstringlength,
+            MplsLabel bierMplsLabelBase,BierNode node,String type) {
+        int domainIndex = getDomainIndex(domainId,node);
+        if (domainIndex == -1) {
+            return -1;
+        }
+        int subDomainIndex = getSubDomainIndex(domainId,subDomainId,node);
+        if (subDomainIndex == -1) {
+            return -1;
+        }
+
+        SubDomain subDomain = node.getBierNodeParams().getDomain().get(domainIndex).getBierGlobal()
+                .getSubDomain().get(subDomainIndex);
+
+        if (type.equals("ipv4")) {
+            List<Ipv4> ipv4List = subDomain.getAf().getIpv4();
+            int ipv4Size = ipv4List.size();
+            for (int iloop = 0; iloop < ipv4Size; ++iloop) {
+                Ipv4 ipv4 = ipv4List.get(iloop);
+                if (ipv4.getBitstringlength().intValue() == bitstringlength
+                        && ipv4.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
+                    return iloop;
+                }
+            }
+        } else if (type.equals("ipv6")) {
+            List<Ipv6> ipv6List = subDomain.getAf().getIpv6();
+            int ipv6Size = ipv6List.size();
+            for (int iloop = 0; iloop < ipv6Size; ++iloop) {
+                Ipv6 ipv6 = ipv6List.get(iloop);
+                if (ipv6.getBitstringlength().intValue() == bitstringlength
+                        && ipv6.getBierMplsLabelBase().equals(bierMplsLabelBase)) {
+                    return iloop;
                 }
             }
         }
-        return false;
+
+        return -1;
+    }
+
+    public InstanceIdentifier<BierTopology> getTopoPath(String topologyId) {
+        return InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(topologyId));
+    }
+
+    public InstanceIdentifier<BierNode> getNodePath(String topologyId,String nodeId) {
+        InstanceIdentifier<BierTopology> topoPath = getTopoPath(topologyId);
+        InstanceIdentifier<BierNode> path = topoPath.child(BierNode.class, new BierNodeKey(nodeId));
+        return path;
+    }
+
+    public InstanceIdentifier<BierDomain> getDomainPath(String topologyId,DomainId domainId) {
+        InstanceIdentifier<BierTopology> topoPath = getTopoPath(topologyId);
+        InstanceIdentifier<BierDomain> path = topoPath.child(BierDomain.class, new BierDomainKey(domainId));
+        return path;
+    }
+
+    public InstanceIdentifier<BierSubDomain> getSubDomainPath(String topologyId,DomainId domainId,
+            SubDomainId subDomainId) {
+        InstanceIdentifier<BierDomain> domainPath = getDomainPath(topologyId,domainId);
+        InstanceIdentifier<BierSubDomain> path = domainPath.child(BierSubDomain.class,
+                new BierSubDomainKey(subDomainId));
+        return path;
+    }
+
+    public  List<String> nodesOnline(String queryId) {
+        final BierTopology topoOnline = topoAdapter.getBierTopology(dataBroker, queryId);
+        final List<BierNode> bierNode = topoOnline.getBierNode();
+        List<String> bierNodeId = new ArrayList<String>();
+        for (int loopi = 0 ; loopi < bierNode.size() ; loopi++) {
+            bierNodeId.add(bierNode.get(loopi).getNodeId());
+        }
+        return bierNodeId;
     }
 }
