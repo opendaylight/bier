@@ -18,6 +18,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 <groupId>org.opendaylight.bier</groupId>
 <artifactId>bier-models</artifactId>
 <version>0.1.0-SNAPSHOT</version>
+<!-- <name> formatting is used by autorelease to parse and notify projects on
+     build failure. Please do not modify this unless you have a good reason. -->
+<name>ODL :: bier :: ${project.artifactId}</name>
+
 <modules>
     <module>ietf-bier-2016-07-23</module>
     <module>ietf-multicast-information-2016-10-28</module>
@@ -37,4 +41,3 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 </dependencies>
 <packaging>pom</packaging>
 </project>
-
