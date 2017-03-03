@@ -65,7 +65,7 @@ public class NetconfStateChangeListener implements DataTreeChangeListener<Node> 
                     }
                     break;
                 case DELETE:
-                    LOG.info("Node {} was deleted",rootNode.getDataAfter().getNodeId().getValue());
+                    LOG.info("Node {} was deleted",rootNode.getDataBefore().getNodeId().getValue());
                     break;
                 default:
                     break;

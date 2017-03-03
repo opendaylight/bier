@@ -200,13 +200,17 @@ public class BierParametersConfigProcess {
                 return false;
             }
             if (checkSubDomainChange(before, subDomainlistAfter.get(i))) {
+                LOG.info("process modify single subdomain");
                 if (!processModifiedSingleSubDomain(nodeId, domainId, subDomainlistAfter.get(i))) {
                     return false;
                 }
             }
-            if (!processDeletedIpv4Ipv6(nodeId, domainId,
+            if (null != before.getAf() && null != subDomainlistAfter.get(i).getAf()) {
+                LOG.info("process delete ipv4ipv6");
+                if (!processDeletedIpv4Ipv6(nodeId, domainId,
                         before, subDomainlistAfter.get(i))) {
-                return false;
+                    return false;
+                }
             }
         }
         return true;
@@ -242,6 +246,7 @@ public class BierParametersConfigProcess {
         if (null == nodeId || null == domainId || null == subDomain) {
             return false;
         }
+        LOG.info("send modify subdomain to netconf");
         ConfigurationResult subDomainResult = bierConfigWriter
                 .writeSubdomain(ConfigurationType.MODIFY,nodeId,domainId,subDomain);
         if (!subDomainResult.isSuccessful()) {
@@ -467,34 +472,48 @@ public class BierParametersConfigProcess {
                 || checkSubDomainBitStringLengthChange(before, after)) {
             return true;
         }
-        if ((null == before.getAf().getIpv4() && null != after.getAf().getIpv4())
-                || (null == before.getAf().getIpv6() && null != after.getAf().getIpv6())) {
-            return true;
-        }
-        if (null != before.getAf().getIpv4() && null != after.getAf().getIpv4()) {
-            if (before.getAf().getIpv4().size() < after.getAf().getIpv4().size()) {
+        if (null != before.getAf() && null != after.getAf()) {
+            if ((null == before.getAf().getIpv4() && null != after.getAf().getIpv4())
+                    || (null == before.getAf().getIpv6() && null != after.getAf().getIpv6())) {
                 return true;
             }
-            if (before.getAf().getIpv4().size() == after.getAf().getIpv4().size()) {
-                for (int i = 0; i < before.getAf().getIpv4().size(); i++) {
-                    if (!before.getAf().getIpv4().get(i).equals(after.getAf().getIpv4().get(i))) {
-                        return true;
+            if (null != before.getAf().getIpv4() && null != after.getAf().getIpv4()) {
+                if (before.getAf().getIpv4().size() < after.getAf().getIpv4().size()) {
+                    return true;
+                }
+                if (before.getAf().getIpv4().size() == after.getAf().getIpv4().size()) {
+                    for (int i = 0; i < before.getAf().getIpv4().size(); i++) {
+                        if (!before.getAf().getIpv4().get(i).equals(after.getAf().getIpv4().get(i))) {
+                            return true;
+                        }
                     }
                 }
             }
-        }
-        if (null != before.getAf().getIpv6() && null != after.getAf().getIpv6()) {
-            if (before.getAf().getIpv6().size() < after.getAf().getIpv6().size()) {
-                return true;
-            }
-            if (before.getAf().getIpv6().size() == after.getAf().getIpv6().size()) {
-                for (int i = 0; i < before.getAf().getIpv6().size(); i++) {
-                    if (!before.getAf().getIpv6().get(i).equals(after.getAf().getIpv6().get(i))) {
-                        return true;
+            if (null != before.getAf().getIpv6() && null != after.getAf().getIpv6()) {
+                if (before.getAf().getIpv6().size() < after.getAf().getIpv6().size()) {
+                    return true;
+                }
+                if (before.getAf().getIpv6().size() == after.getAf().getIpv6().size()) {
+                    for (int i = 0; i < before.getAf().getIpv6().size(); i++) {
+                        if (!before.getAf().getIpv6().get(i).equals(after.getAf().getIpv6().get(i))) {
+                            return true;
+                        }
                     }
                 }
             }
+        } else if (null == before.getAf() || null == after.getAf()) {
+            if (null == before.getAf() && null != after.getAf()) {
+                LOG.info("add af");
+                return true;
+            } else if (null != before.getAf() && null == after.getAf()) {
+                LOG.info("delete af");
+                return true;
+            } else {
+                LOG.info("no content in af,only contain af change");
+                return true;
+            }
         }
+        LOG.info("no change");
         return false;
     }
 
