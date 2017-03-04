@@ -226,9 +226,14 @@ module test-driver {
                  mandatory true;
                  type string;
                  description
-                     "Name of the mounted node to be displayed";
+                     "Name of the mounted node to be checked";
              }
-             uses bier-channel:channel;
+             leaf channel-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of channel to be checked";
+             }
         }
         output {
 

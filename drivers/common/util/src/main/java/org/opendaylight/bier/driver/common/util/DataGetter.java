@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.bier.driver.common;
+package org.opendaylight.bier.driver.common.util;
 
 import com.google.common.base.Optional;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
@@ -46,7 +46,7 @@ public class DataGetter {
             return null;
         }
 
-
+        result.setCfgResult(ConfigurationResult.Result.SUCCESSFUL);
         return nodeMountPoint.get();
 
     }
@@ -71,6 +71,7 @@ public class DataGetter {
             return null;
 
         }
+        result.setCfgResult(ConfigurationResult.Result.SUCCESSFUL);
         return nodeBroker.get();
 
     }

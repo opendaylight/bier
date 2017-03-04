@@ -1,0 +1,15 @@
+module driver-reporter {
+    yang-version 1;
+    namespace "urn:bier:driver:reporter";
+    prefix "driver-reporter";
+
+    revision "2017-02-13" {
+        description "Initial revision of driver reporter";
+    }
+
+    notification driver-failure {
+        leaf failure-message {
+            type string;
+        }
+    }
+}

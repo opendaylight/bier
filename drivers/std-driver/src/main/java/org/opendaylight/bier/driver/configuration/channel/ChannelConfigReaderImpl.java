@@ -13,7 +13,7 @@ import java.util.List;
 
 import org.opendaylight.bier.adapter.api.ChannelConfigReader;
 import org.opendaylight.bier.driver.NetconfDataOperator;
-import org.opendaylight.bier.driver.common.IidBuilder;
+import org.opendaylight.bier.driver.common.util.IidBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 
 

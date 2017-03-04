@@ -12,6 +12,7 @@ package test.org.opendaylight.bier.driver.configuration.node;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -25,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 
@@ -34,7 +35,7 @@ import org.opendaylight.bier.driver.configuration.node.BierConfigWriterImpl;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
 
@@ -55,7 +56,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 
 
-public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
+public class BierConfigWriterImplTest extends AbstractConcurrentDataBrokerTest {
     private MountPoint mountPoint;
     private DataBroker dataBroker ;
     private BindingAwareBroker bindingAwareBroker;
@@ -69,6 +70,8 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
 
     private static final String NODE_ID = "nodeId";
     private BierConfigDataBuilder bierConfigDataBuilder;
+    private ConfigurationResult result =
+            new ConfigurationResult(ConfigurationResult.Result.FAILED);
 
     @Before
     public void before() throws Exception {
@@ -110,7 +113,8 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
-                bierConfigDataBuilder.buildDomain());
+                bierConfigDataBuilder.buildDomain(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
         BierGlobal bierGlobalExpected = bierConfigDataBuilder.buildBierGlobal();
@@ -122,9 +126,11 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
-                bierConfigDataBuilder.buildDomain());
+                bierConfigDataBuilder.buildDomain(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         bierConfigWriter.writeDomain(ConfigurationType.MODIFY, NODE_ID,
-                bierConfigDataBuilder.buildDomainModify());
+                bierConfigDataBuilder.buildDomainModify(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
         BierGlobal bierGlobalExpected = bierConfigDataBuilder.buildBierGlobalModify();
@@ -136,9 +142,11 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
-                bierConfigDataBuilder.buildDomain());
+                bierConfigDataBuilder.buildDomain(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         bierConfigWriter.writeDomain(ConfigurationType.DELETE, NODE_ID,
-                null);
+                null,result).checkedGet();
+        assertTrue(result.isSuccessful());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
         assertNull(bierGlobalActual);
@@ -150,7 +158,8 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeSubdomain(ConfigurationType.ADD, NODE_ID,
-                null,bierConfigDataBuilder.buildSubDomainSingle());
+                null,bierConfigDataBuilder.buildSubDomainSingle(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
         ArrayList<SubDomain> subDomainExpected = new ArrayList<SubDomain>();
@@ -165,9 +174,11 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeSubdomain(ConfigurationType.ADD, NODE_ID,
-                null,bierConfigDataBuilder.buildSubDomainSingle());
+                null,bierConfigDataBuilder.buildSubDomainSingle(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         bierConfigWriter.writeSubdomain(ConfigurationType.MODIFY, NODE_ID,
-                null,bierConfigDataBuilder.buildSubDomainSingleModify());
+                null,bierConfigDataBuilder.buildSubDomainSingleModify(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         BierGlobal bierGlobalActual = netconfDataOperator.read(dataBroker,
                 netconfDataOperator.BIER_GLOBAL_IID);
         ArrayList<SubDomain> subDomainExpected = new ArrayList<SubDomain>();
@@ -182,10 +193,12 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
-                bierConfigDataBuilder.buildDomain());
+                bierConfigDataBuilder.buildDomain(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         bierConfigWriter.writeSubdomain(ConfigurationType.DELETE,
                 NODE_ID,null,
-                bierConfigDataBuilder.buildSubDomainDelete());
+                bierConfigDataBuilder.buildSubDomainDelete(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         SubDomain subDomianActual = netconfDataOperator.read(dataBroker,
                 bierConfigWriter.getSubDomainIId(BierConfigDataBuilder.SUBDOMAINID));
         assertNull(subDomianActual);
@@ -204,7 +217,8 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildInstance();
         Ipv4 ipv4Expected = bierConfigDataBuilder.buildIpv4SingleAdd();
         bierConfigWriter.writeSubdomainIpv4(ConfigurationType.ADD, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,ipv4Expected);
+                null,BierConfigDataBuilder.SUBDOMAINID,ipv4Expected,result).checkedGet();
+        assertTrue(result.isSuccessful());
         Ipv4 ipv4Actual = netconfDataOperator.read(dataBroker,
                 buildIpv4IId(BierConfigDataBuilder.SUBDOMAINID,ipv4Expected));
         assertEquals(ipv4Actual,ipv4Expected);
@@ -216,10 +230,12 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeSubdomainIpv4(ConfigurationType.ADD, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleAdd());
+                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleAdd(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         Ipv4 ipv4Expected = bierConfigDataBuilder.buildIpv4SingleModify();
         bierConfigWriter.writeSubdomainIpv4(ConfigurationType.MODIFY, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,ipv4Expected);
+                null,BierConfigDataBuilder.SUBDOMAINID,ipv4Expected,result).checkedGet();
+        assertTrue(result.isSuccessful());
         Ipv4 ipv4Actual = netconfDataOperator.read(dataBroker,
                 buildIpv4IId(BierConfigDataBuilder.SUBDOMAINID,ipv4Expected));
         assertEquals(ipv4Actual,ipv4Expected);
@@ -230,9 +246,12 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeSubdomainIpv4(ConfigurationType.ADD, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleAdd());
+                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleAdd(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         bierConfigWriter.writeSubdomainIpv4(ConfigurationType.DELETE, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleDelete());
+                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleDelete(),result)
+                .checkedGet();
+        assertTrue(result.isSuccessful());
         Ipv4 ipv4Actual = netconfDataOperator.read(dataBroker,
                 buildIpv4IId(BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv4SingleDelete()));
         assertNull(ipv4Actual);
@@ -251,7 +270,8 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildInstance();
         Ipv6 ipv6Expected = bierConfigDataBuilder.buildIpv6SingleAdd();
         bierConfigWriter.writeSubdomainIpv6(ConfigurationType.ADD, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,ipv6Expected);
+                null,BierConfigDataBuilder.SUBDOMAINID,ipv6Expected,result).checkedGet();
+        assertTrue(result.isSuccessful());
         Ipv6 ipv6Actual = netconfDataOperator.read(dataBroker,
                 buildIpv6IId(BierConfigDataBuilder.SUBDOMAINID,ipv6Expected));
         assertEquals(ipv6Actual,ipv6Expected);
@@ -263,10 +283,12 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeSubdomainIpv6(ConfigurationType.ADD, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleAdd());
+                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleAdd(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         Ipv6 ipv6Expected = bierConfigDataBuilder.buildIpv6SingleModify();
         bierConfigWriter.writeSubdomainIpv6(ConfigurationType.MODIFY, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,ipv6Expected);
+                null,BierConfigDataBuilder.SUBDOMAINID,ipv6Expected,result).checkedGet();
+        assertTrue(result.isSuccessful());
         Ipv6 ipv6Actual = netconfDataOperator.read(dataBroker,
                 buildIpv6IId(BierConfigDataBuilder.SUBDOMAINID,ipv6Expected));
         assertEquals(ipv6Actual,ipv6Expected);
@@ -277,9 +299,12 @@ public class BierConfigWriterImplTest extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         bierConfigWriter.writeSubdomainIpv6(ConfigurationType.ADD, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleAdd());
+                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleAdd(),result).checkedGet();
+        assertTrue(result.isSuccessful());
         bierConfigWriter.writeSubdomainIpv6(ConfigurationType.DELETE, NODE_ID,
-                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleDelete());
+                null,BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleDelete(),result)
+                .checkedGet();
+        assertTrue(result.isSuccessful());
         Ipv6 ipv6Actual = netconfDataOperator.read(dataBroker,
                 buildIpv6IId(BierConfigDataBuilder.SUBDOMAINID,bierConfigDataBuilder.buildIpv6SingleDelete()));
         assertNull(ipv6Actual);

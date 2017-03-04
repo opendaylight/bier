@@ -8,14 +8,18 @@
 package org.opendaylight.bier.driver.configuration.channel;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.CheckedFuture;
 import java.util.List;
+
 
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 
-import org.opendaylight.bier.driver.common.IidBuilder;
+import org.opendaylight.bier.driver.common.util.DataWriter;
+import org.opendaylight.bier.driver.common.util.IidBuilder;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 
 
@@ -32,6 +36,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.i
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.PureMulticastKey;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.pure.multicast.MulticastOverlay;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.overlay.BierInformation;
+
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +44,6 @@ import org.slf4j.LoggerFactory;
 public class ChannelConfigWriterImpl implements ChannelConfigWriter {
 
     private static final Logger LOG = LoggerFactory.getLogger(ChannelConfigWriterImpl.class);
-    private static final ConfigurationResult RESULT_SUCCESS =
-            new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
 
     private NetconfDataOperator netconfDataOperator ;
     private ChannelDataBuilder channelDataBuilder = new ChannelDataBuilder();
@@ -62,34 +65,48 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
 
     }
 
-    public ConfigurationResult writeChannel(ConfigurationType type, Channel channel) {
+
+
+
+    public CheckedFuture<Void, TransactionCommitFailedException>
+        writeChannel(ConfigurationType type,Channel channel,ConfigurationResult result) {
 
         if (type == ConfigurationType.DELETE) {
             LOG.info("delete channel {} in node {} ",channel,channel.getIngressNode());
             return netconfDataOperator.write(
-                    NetconfDataOperator.OperateType.DELETE,
+                    DataWriter.OperateType.DELETE,
                     channel.getIngressNode(),
                     buildPureMulticastIId(channel),
-                    null);
+                    null,
+                    result);
         }
         LOG.info("channel config to node {} :: {}",channel.getIngressNode(),channel);
         return netconfDataOperator.write(
-                NetconfDataOperator.OperateType.MERGE,
+                DataWriter.OperateType.MERGE,
                 channel.getIngressNode(),
                 buildPureMulticastIId(channel),
-                channelDataBuilder.build(channel)
-                );
+                channelDataBuilder.build(channel),
+                result
+        );
     }
 
-    public ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
+    public ConfigurationResult writeChannel(ConfigurationType type, Channel channel) {
+        ConfigurationResult result =
+                new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
+        writeChannel(type,channel,result);
+        return result;
 
-        ConfigurationResult configurationResult;
-        boolean egressNull = true;
+    }
+
+    public CheckedFuture<Void, TransactionCommitFailedException>
+        writeChannelEgressNode(ConfigurationType type,Channel channel,ConfigurationResult result) {
         List<EgressNode> egressNodeList = channel.getEgressNode();
         if ((egressNodeList == null) || egressNodeList.isEmpty()) {
-            return new ConfigurationResult(ConfigurationResult.Result.FAILED,
-                    ConfigurationResult.EGRESS_INFO_NULL);
+            result.setCfgResult(ConfigurationResult.Result.FAILED);
+            result.setFailureReason(ConfigurationResult.EGRESS_INFO_NULL);
+            return null;
         }
+        CheckedFuture<Void, TransactionCommitFailedException> checkedFuture = null;
         for (EgressNode egressNode:egressNodeList) {
             Preconditions.checkNotNull(egressNode.getEgressBfrId(),"channel egress node invalid");
             BfrId bfrId = new BfrId(egressNode.getEgressBfrId().getValue());
@@ -104,26 +121,39 @@ public class ChannelConfigWriterImpl implements ChannelConfigWriter {
             if (type == ConfigurationType.DELETE) {
                 LOG.info("delete  {} of channel {} in node {} ",
                         egressNode,channel.getKey(),channel.getIngressNode());
-                configurationResult = netconfDataOperator.write(
-                        NetconfDataOperator.OperateType.DELETE,
+                checkedFuture = netconfDataOperator.write(
+                        DataWriter.OperateType.DELETE,
                         channel.getIngressNode(),
                         egressNodesIId,
-                        null);
+                        null,
+                        result);
             } else {
                 LOG.info("config  {} of channel {} to node {} ",
                         egressNode,channel.getKey(),channel.getIngressNode());
-                configurationResult = netconfDataOperator.write(
-                        NetconfDataOperator.OperateType.MERGE,
+                checkedFuture = netconfDataOperator.write(
+                        DataWriter.OperateType.MERGE,
                         channel.getIngressNode(),
                         egressNodesIId,
-                        new EgressNodesBuilder().setEgressNode(bfrId).build());
+                        new EgressNodesBuilder().setEgressNode(bfrId).build(),
+                        result);
             }
-            if (!configurationResult.isSuccessful()) {
-                return configurationResult;
+            if (!result.isSuccessful()) {
+                return checkedFuture;
             }
         }
-        return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
+        return checkedFuture;
     }
+
+
+
+
+    public ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
+        ConfigurationResult result =
+                new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
+        writeChannelEgressNode(type, channel, result);
+        return result;
+    }
+
 
 }
 

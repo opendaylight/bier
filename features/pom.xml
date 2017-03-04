@@ -195,12 +195,17 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>bier-driver-common</artifactId>
+      <artifactId>bier-driver-common-reporter-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>bier-driver</artifactId>
+      <artifactId>bier-driver-common-reporter-impl</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>bier-std-driver</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -213,7 +218,11 @@
       <artifactId>test-driver-impl</artifactId>
       <version>${project.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>bier-driver-common-util</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

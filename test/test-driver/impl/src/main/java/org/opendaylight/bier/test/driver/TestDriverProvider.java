@@ -26,8 +26,8 @@ import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 
 
-import org.opendaylight.bier.driver.common.DataGetter;
-import org.opendaylight.bier.driver.common.IidConstants;
+import org.opendaylight.bier.driver.common.util.DataGetter;
+import org.opendaylight.bier.driver.common.util.IidConstants;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
@@ -474,11 +474,16 @@ public class TestDriverProvider implements TestDriverService {
 
     }
 
-    private List<BfrId> getContollerBrfIdList(CheckChannelInput input) {
+
+    private Channel getChannelByName(String channelName) {
 
         InstanceIdentifier<Channel> multicastInfoIid =
-                IidConstants.BIER_CHANNEL_IID.child(Channel.class, new ChannelKey(input.getName()));
-        Channel channel = DataGetter.readData(dataBroker, multicastInfoIid);
+                IidConstants.BIER_CHANNEL_IID.child(Channel.class, new ChannelKey(channelName));
+        return DataGetter.readData(dataBroker, multicastInfoIid);
+    }
+
+    private List<BfrId> getContollerBrfIdList(Channel channel) {
+
         List<EgressNode> egressNodeList = channel.getEgressNode();
         if ((egressNodeList == null) || (egressNodeList.isEmpty())) {
             return null;
@@ -494,23 +499,15 @@ public class TestDriverProvider implements TestDriverService {
 
     }
 
-    private List<BfrId> getDeviceBrfIdList(CheckChannelInput input) {
-        return channelConfigReader.readChannel(new ChannelBuilder()
-                .setSrcIp(input.getSrcIp())
-                .setSourceWildcard(input.getSourceWildcard())
-                .setDstGroup(input.getDstGroup())
-                .setGroupWildcard(input.getGroupWildcard())
-                .setSubDomainId(input.getSubDomainId())
-                .setName(input.getName())
-                .setDomainId(input.getDomainId())
-                .setIngressNode(input.getNodeName())
-                .build());
+    private List<BfrId> getDeviceBrfIdList(Channel channel) {
+        return channelConfigReader.readChannel(channel);
     }
 
     @Override
     public Future<RpcResult<CheckChannelOutput>> checkChannel(CheckChannelInput input) {
-        List<BfrId> controllerEgress = getContollerBrfIdList(input);
-        List<BfrId> deviceEgress = getDeviceBrfIdList(input);
+        Channel channel = getChannelByName(input.getChannelName());
+        List<BfrId> controllerEgress = getContollerBrfIdList(channel);
+        List<BfrId> deviceEgress = getDeviceBrfIdList(channel);
         boolean isEqual = false;
         String detail = "";
 
@@ -524,7 +521,7 @@ public class TestDriverProvider implements TestDriverService {
             isEqual = false;
             detail = "controllerEgress is not null while deviceEgress is  null.";
         } else {
-            isEqual = controllerEgress.equals(deviceEgress);
+            isEqual = controllerEgress.containsAll(deviceEgress) & (deviceEgress.containsAll(controllerEgress));
             if (!isEqual) {
                 detail = "\n controller egress : " + controllerEgress.toString()
                         + "\n device egress : " + deviceEgress.toString();

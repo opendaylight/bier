@@ -25,6 +25,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 import org.opendaylight.bier.driver.configuration.channel.ChannelConfigWriterImpl;
@@ -34,7 +35,7 @@ import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 
 
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
 
@@ -65,7 +66,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 
 
-public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
+public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTest {
 
     private MountPoint mountPoint;
     private DataBroker dataBroker ;
@@ -79,6 +80,9 @@ public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
     private Optional<DataBroker> optionalDataBrokerObject;
     private ChannelConfigWriterImpl channelConfigWriter ;
     private NetconfDataOperator netconfDataOperator;
+    private ConfigurationResult result =
+            new ConfigurationResult(ConfigurationResult.Result.FAILED);
+
 
     //data
     private static final String NODE_ID = "nodeId";
@@ -183,7 +187,10 @@ public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         Channel channel = buildChannelAddData();
-        channelConfigWriter.writeChannel(ConfigurationType.ADD,channel);
+        channelConfigWriter.writeChannel(ConfigurationType.ADD,channel,result).checkedGet();
+        assertTrue(result.isSuccessful());
+        // "checkedGet" must be invoked to waits for the result of configuration,
+        // or the result of "read" below may be null.
         PureMulticast pureMulticast = netconfDataOperator.read(dataBroker,
                 channelConfigWriter.buildPureMulticastIId(channel));
         assertEquals(pureMulticast.getMulticastOverlay().getBierInformation().getIngressNode().getValue(),
@@ -197,9 +204,11 @@ public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         Channel channel = buildChannelAddData();
-        channelConfigWriter.writeChannel(ConfigurationType.ADD,channel);
+        channelConfigWriter.writeChannel(ConfigurationType.ADD,channel,result).checkedGet();
+        assertTrue(result.isSuccessful());
         Channel modifiedChannel = buildChannelModifyData();
-        channelConfigWriter.writeChannel(ConfigurationType.MODIFY,modifiedChannel);
+        channelConfigWriter.writeChannel(ConfigurationType.MODIFY,modifiedChannel,result).checkedGet();
+        assertTrue(result.isSuccessful());
 
         PureMulticast pureMulticast = netconfDataOperator.read(dataBroker,
                 channelConfigWriter.buildPureMulticastIId(channel));
@@ -210,7 +219,6 @@ public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
         egressNodeListExpected.addAll(modifiedChannel.getEgressNode());
         assertTrue(compareEgressNodesEqual(egressNodeListExpected,
                 pureMulticast.getMulticastOverlay().getBierInformation().getEgressNodes()));
-
     }
 
     @Test
@@ -218,8 +226,10 @@ public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         Channel channel = buildChannelAddData();
-        channelConfigWriter.writeChannel(ConfigurationType.ADD,channel);
-        channelConfigWriter.writeChannel(ConfigurationType.DELETE,channel);
+        channelConfigWriter.writeChannel(ConfigurationType.ADD,channel,result).checkedGet();
+        assertTrue(result.isSuccessful());
+        channelConfigWriter.writeChannel(ConfigurationType.DELETE,channel,result).checkedGet();
+        assertTrue(result.isSuccessful());
         PureMulticast pureMulticast = netconfDataOperator.read(dataBroker,
                 channelConfigWriter.buildPureMulticastIId(channel));
         assertNull(pureMulticast);
@@ -232,7 +242,8 @@ public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         Channel channel = buildChannelAddData();
-        channelConfigWriter.writeChannelEgressNode(ConfigurationType.ADD,channel);
+        channelConfigWriter.writeChannelEgressNode(ConfigurationType.ADD,channel,result).checkedGet();
+        assertTrue(result.isSuccessful());
 
         for (EgressNode egressNode:channel.getEgressNode()) {
 
@@ -256,9 +267,11 @@ public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         Channel channel = buildChannelAddData();
-        channelConfigWriter.writeChannelEgressNode(ConfigurationType.ADD,channel);
+        channelConfigWriter.writeChannelEgressNode(ConfigurationType.ADD,channel,result).checkedGet();
+        assertTrue(result.isSuccessful());
         Channel modifiedChannel = buildChannelModifyData();
-        channelConfigWriter.writeChannelEgressNode(ConfigurationType.MODIFY,modifiedChannel);
+        channelConfigWriter.writeChannelEgressNode(ConfigurationType.MODIFY,modifiedChannel,result).checkedGet();
+        assertTrue(result.isSuccessful());
 
         PureMulticast pureMulticast = netconfDataOperator.read(dataBroker,
                 channelConfigWriter.buildPureMulticastIId(channel));
@@ -287,7 +300,11 @@ public class ChannelConfigWriterImplTest  extends AbstractDataBrokerTest {
         buildMock();
         buildInstance();
         Channel channel = buildChannelAddData();
-        channelConfigWriter.writeChannel(ConfigurationType.DELETE,channel);
+        channelConfigWriter.writeChannel(ConfigurationType.ADD, channel,result).checkedGet();
+        assertTrue(result.isSuccessful());
+
+        channelConfigWriter.writeChannelEgressNode(ConfigurationType.DELETE, channel,result).checkedGet();
+        assertTrue(result.isSuccessful());
 
         for (EgressNode egressNode:channel.getEgressNode()) {
 

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 
 import org.opendaylight.bier.driver.NetconfDataOperator;
-import org.opendaylight.bier.driver.common.IidConstants;
+import org.opendaylight.bier.driver.common.util.IidConstants;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
@@ -162,7 +162,7 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
 
                     break;
                 case DELETE:
-                    LOG.info("Netconf node {} was deleted",rootNode.getDataAfter().getNodeId().getValue());
+                    LOG.info("Netconf node {} was deleted",rootNode.getDataBefore().getNodeId().getValue());
                     break;
                 default:
                     break;

@@ -12,7 +12,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-import org.opendaylight.bier.driver.common.IidBuilder;
+import org.opendaylight.bier.driver.common.util.IidBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 
 

@@ -33,7 +33,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-bier-channel-ui</feature>
         <feature version='${project.version}'>odl-bier-channel-cli</feature>
         <feature version='${project.version}'>odl-bier-adapter</feature>
-        <feature version='${project.version}'>odl-bier-driver</feature>
+        <feature version='${project.version}'>odl-bier-std-driver</feature>
         <feature version='${project.version}'>odl-bier-service-api</feature>
         <feature version='${project.version}'>odl-bier-service</feature>
         <feature version='${project.version}'>odl-bier-service-rest</feature>
@@ -51,7 +51,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <bundle>mvn:org.opendaylight.bier/bier-topology-model/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-channel-model/{{VERSION}}</bundle>
   </feature>
-
   <feature name='odl-bier-topomanager-api' version='${project.version}' description='OpenDaylight :: bier :: topomanager :: api'>
     <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
     <bundle>mvn:org.opendaylight.bier/topomanager-api/{{VERSION}}</bundle>
@@ -131,13 +130,19 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version='${netconf.version}'>odl-netconf-topology</feature>
     <bundle>mvn:org.opendaylight.bier/bier-adapter/{{VERSION}}</bundle>
   </feature>
-  <feature name='odl-bier-driver' version='${project.version}' description='OpenDaylight :: bier :: driver'>
+
+  <feature name='odl-bier-driver-common' version='${project.version}' description='OpenDaylight :: bier :: driver::common'>
+    <bundle>mvn:org.opendaylight.bier/bier-driver-common-reporter-api/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/bier-driver-common-reporter-impl/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/bier-driver-common-util/{{VERSION}}</bundle>
+  </feature>
+  <feature name='odl-bier-std-driver' version='${project.version}' description='OpenDaylight :: bier :: std :: driver'>
     <feature version='${project.version}'>odl-bier-models</feature>
-    <bundle>mvn:org.opendaylight.bier/bier-driver-common/{{VERSION}}</bundle>
-    <bundle>mvn:org.opendaylight.bier/bier-driver/{{VERSION}}</bundle>
+    <feature version='${project.version}'>odl-bier-driver-common</feature>
+    <bundle>mvn:org.opendaylight.bier/bier-std-driver/{{VERSION}}</bundle>
   </feature>
   <feature name='odl-bier-test-driver-impl' version='${project.version}' description='OpenDaylight :: test :: driver :: impl'>
-    <bundle>mvn:org.opendaylight.bier/bier-driver-common/{{VERSION}}</bundle>
+    <feature version='${project.version}'>odl-bier-driver-common</feature>
     <bundle>mvn:org.opendaylight.bier/test-driver-impl/{{VERSION}}</bundle>
   </feature>
   <feature name='odl-bier-test-driver-api' version='${project.version}' description='OpenDaylight :: test :: driver :: api'>

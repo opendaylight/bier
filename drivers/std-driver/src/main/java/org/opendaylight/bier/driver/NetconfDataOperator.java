@@ -8,17 +8,16 @@
 package org.opendaylight.bier.driver;
 
 import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
+
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
-import org.opendaylight.bier.driver.common.DataGetter;
+import org.opendaylight.bier.driver.common.util.DataGetter;
+
+import org.opendaylight.bier.driver.common.util.DataWriter;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
-import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.OptimisticLockFailedException;
+
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
@@ -46,15 +45,7 @@ public class NetconfDataOperator implements BindingAwareConsumer {
             ROUTING_IID.augmentation(BierConfiguration.class)
                     .child(Bier.class).child(BierGlobal.class);
 
-    public enum OperateType {
-        CREATE,
-        REPLACE,
-        MERGE,
-        DELETE;
 
-        OperateType() {
-        }
-    }
 
 
 
@@ -75,77 +66,22 @@ public class NetconfDataOperator implements BindingAwareConsumer {
 
     }
 
-
-
-
-    public <T extends DataObject> ConfigurationResult operate(OperateType type,
-                                                       DataBroker dataBroker,
-                                                       final int tries,
-                                                       InstanceIdentifier<T> path, T data) {
-
-        ConfigurationResult ncResult = new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
-
-        final WriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
-        switch (type) {
-            case CREATE:
-            case REPLACE:
-                writeTransaction.put(LogicalDatastoreType.CONFIGURATION,path,data,true);
-                break;
-            case MERGE:
-                writeTransaction.merge(LogicalDatastoreType.CONFIGURATION,path,data,true);
-                break;
-            case DELETE:
-                writeTransaction.delete(LogicalDatastoreType.CONFIGURATION, path);
-                break;
-            default:
-                break;
-
-        }
-
-        final CheckedFuture<Void, TransactionCommitFailedException> submitResult = writeTransaction.submit();
-        Futures.addCallback(submitResult, new FutureCallback<Void>() {
-            @Override
-            public void onSuccess(final Void result) {
-            }
-
-            @Override
-            public void onFailure(final Throwable throwable) {
-                if (throwable instanceof OptimisticLockFailedException) {
-                    if ((tries - 1) > 0) {
-                        LOG.info("Got OptimisticLockFailedException - trying again");
-                        operate(type, dataBroker, tries - 1, path ,data);
-                    } else {
-                        ncResult.setFailureReason(ConfigurationResult.NETCONF_LOCK_FAILUE);
-                    }
-
-                } else {
-                    ncResult.setFailureReason(ConfigurationResult.NETCONF_EDIT_FAILUE + throwable.getMessage());
-                }
-
-            }
-        });
-
-        return ncResult;
-
-    }
-
-
-
-
-    public <T extends DataObject> ConfigurationResult write(OperateType type,
+    public <T extends DataObject> CheckedFuture<Void, TransactionCommitFailedException> write(
+                                                                 DataWriter.OperateType type,
                                                                  String nodeId,
-                                                                 InstanceIdentifier<T> path, T data) {
-
-        ConfigurationResult ncResult = new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
-        final DataBroker nodeBroker = DataGetter.getDataBroker(nodeId, ncResult, mountService);
+                                                                 InstanceIdentifier<T> path,
+                                                                 T data,
+                                                                 ConfigurationResult result) {
+        final DataBroker nodeBroker = DataGetter.getDataBroker(nodeId, result, mountService);
         if (nodeBroker == null) {
-            return ncResult;
+            return null;
         }
 
-        return operate(type, nodeBroker, RETRY_WRITE_MAX, path ,data);
+        result.setCfgResult(ConfigurationResult.Result.SUCCESSFUL);
+
+        return DataWriter.operate(type, nodeBroker, RETRY_WRITE_MAX, path, data);
 
     }
-
 
 
     public <T extends DataObject> T read(DataBroker dataBroker,
