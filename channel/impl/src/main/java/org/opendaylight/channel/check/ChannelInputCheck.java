@@ -8,6 +8,9 @@
 package org.opendaylight.channel.check;
 
 import org.opendaylight.channel.util.ChannelDBUtil;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
+import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 
 public class ChannelInputCheck implements InputCheck {
@@ -29,7 +32,9 @@ public class ChannelInputCheck implements InputCheck {
     public static final String CHANNEL_DEPLOYED = "The Channel has deployed,can not modify";
     public static final String NOT_MULTICAST_IP = " is not multicast ipaddress!";
     public static final String IS_ILLEGAL = " is illegal!";
-    public static final String WILDCARD_IS_INVALID = "wildcard is invalid!";
+    public static final String WILDCARD_IS_INVALID = "wildcard is invalid!it must be in the range [1,32].";
+    public static final String INGRESS_NOT_IN_SUBDOMIN = "ingress-node is not in this sub-domain!";
+    public static final String EGRESS_NOT_IN_SUBDOMIN = "egress-node is not in this sub-domain!";
 
     private static final Integer MULTICAST_IPV4_1ST_SEGMENT_MIN = 224;
     private static final Integer MULTICAST_IPV4_1ST_SEGMENT_MAX = 239;
@@ -77,5 +82,13 @@ public class ChannelInputCheck implements InputCheck {
 
     public boolean hasChannelDeployed(String name, String topologyId) {
         return channelDBUtil.hasChannelDeplyed(name,topologyId);
+    }
+
+    public Channel getChannel(String topologyId, String channelName) {
+        return channelDBUtil.readChannel(channelName,topologyId).get();
+    }
+
+    public boolean nodeInSubdomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId) {
+        return channelDBUtil.isBierNodeInSubDomain(topologyId,node,domainId,subDomainId);
     }
 }

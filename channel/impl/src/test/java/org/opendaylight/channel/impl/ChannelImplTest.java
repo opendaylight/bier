@@ -17,7 +17,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.channel.util.ChannelDBContext;
 import org.opendaylight.channel.util.ChannelDBUtil;
+import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelOutput;
@@ -45,9 +47,22 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.ChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParamsBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobalBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
 
@@ -60,11 +75,59 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         context = new ChannelDBContext(getDataBroker());
         channelImpl = new ChannelImpl(context);
         channelImpl.start();
+        configBierNetworkTopology();
     }
 
     @After
     public void tearDown() throws Exception {
 
+    }
+
+    private void configBierNetworkTopology() {
+        List<BierNode> bierNodeList = new ArrayList<>();
+        BierNode bierNode1 = buildBierNodeInfo("node1",1,11);
+        BierNode bierNode2 = buildBierNodeInfo("node2",1,11);
+        BierNode bierNode3 = buildBierNodeInfo("node3",1,11);
+        BierNode bierNode4 = buildBierNodeInfo("node4",1,11);
+        BierNode bierNode5 = buildBierNodeInfo("node5",1,11);
+        bierNodeList.add(bierNode1);
+        bierNodeList.add(bierNode2);
+        bierNodeList.add(bierNode3);
+        bierNodeList.add(bierNode4);
+        bierNodeList.add(bierNode5);
+        BierTopology bierTopology = new BierTopologyBuilder()
+                .setTopologyId("flow:1")
+                .setBierNode(bierNodeList)
+                .build();
+
+        WriteTransaction wtx = context.newWriteOnlyTransaction();
+        wtx.put(LogicalDatastoreType.CONFIGURATION,buildBierTopologyPath(),bierTopology);
+        wtx.submit();
+    }
+
+    private BierNode buildBierNodeInfo(String node, Integer domainId, Integer subDomainID) {
+        List<Domain> domainList = new ArrayList<>();
+        List<SubDomain> subDomainList = new ArrayList<>();
+        subDomainList.add(new SubDomainBuilder()
+                .setSubDomainId(new SubDomainId(subDomainID))
+                .build());
+
+        domainList.add(new DomainBuilder()
+                .setDomainId(new DomainId(domainId))
+                .setBierGlobal(new BierGlobalBuilder().setSubDomain(subDomainList).build())
+                .build());
+
+        return new BierNodeBuilder()
+                .setNodeId(node)
+                .setBierNodeParams(new BierNodeParamsBuilder()
+                        .setDomain(domainList)
+                        .build())
+                .build();
+    }
+
+    private InstanceIdentifier<BierTopology> buildBierTopologyPath() {
+        return InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey("flow:1"));
     }
 
     @Test
@@ -86,6 +149,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         Assert.assertTrue(removeResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         QueryChannelOutput actulChannel = queryChannel("channel-1");
         Assert.assertTrue(actulChannel.getChannel().isEmpty());
+        removeResult = removeChannel("channel-1");
+        Assert.assertTrue(removeResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
     }
 
     @Test
@@ -208,7 +273,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
 
         result = addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)33);
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
-        Assert.assertEquals("wildcard is invalid!",result.getResult().getConfigureResult().getErrorCause());
+        Assert.assertEquals("wildcard is invalid!it must be in the range [1,32].",
+                result.getResult().getConfigureResult().getErrorCause());
 
         result = addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
@@ -241,7 +307,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
 
         modifyResult = modifyChannel("channel-1",null,null,null,null,(short)35,null);
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
-        Assert.assertEquals("wildcard is invalid!", modifyResult.getResult().getConfigureResult().getErrorCause());
+        Assert.assertEquals("wildcard is invalid!it must be in the range [1,32].",
+                modifyResult.getResult().getConfigureResult().getErrorCause());
 
         deployChannel("channel-1");
         modifyResult = modifyChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",null,null);
@@ -262,6 +329,19 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("channel-name is null!",deployResult.getResult().getConfigureResult().getErrorCause());
 
+        List<EgressNode> egressNodes = new ArrayList<>();
+        egressNodes.add(new EgressNodeBuilder().setNodeId("node2").build());
+        egressNodes.add(new EgressNodeBuilder().setNodeId("node3").build());
+        deployResult = deployChannelWithBfr("channel-1","node6",egressNodes);
+        Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertEquals("ingress-node is not in this sub-domain!",
+                deployResult.getResult().getConfigureResult().getErrorCause());
+
+        egressNodes.add(new EgressNodeBuilder().setNodeId("node7").build());
+        deployResult = deployChannelWithBfr("channel-1","node2",egressNodes);
+        Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertEquals("egress-node is not in this sub-domain!",
+                deployResult.getResult().getConfigureResult().getErrorCause());
     }
 
 
@@ -370,6 +450,17 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         DeployChannelInput input = new DeployChannelInputBuilder()
                 .setChannelName(channelName)
                 .setIngressNode("node1")
+                .setEgressNode(egressNodes)
+                .build();
+        return channelImpl.deployChannel(input).get();
+    }
+
+    private RpcResult<DeployChannelOutput> deployChannelWithBfr(String channelName, String ingressNode,
+                                                                List<EgressNode> egressNodes)
+            throws ExecutionException, InterruptedException {
+        DeployChannelInput input = new DeployChannelInputBuilder()
+                .setChannelName(channelName)
+                .setIngressNode(ingressNode)
                 .setEgressNode(egressNodes)
                 .build();
         return channelImpl.deployChannel(input).get();

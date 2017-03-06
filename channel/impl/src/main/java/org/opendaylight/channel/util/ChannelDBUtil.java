@@ -29,6 +29,19 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.chan
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelKey;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParams;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainKey;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomainKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 import org.slf4j.Logger;
@@ -67,7 +80,7 @@ public class ChannelDBUtil {
         ReadOnlyTransaction rtx = context.newReadOnlyTransaction();
         try {
             return rtx.read(LogicalDatastoreType.CONFIGURATION,
-                    buildChannelPath(name,topologyId)).get();
+                    buildChannelPath(name,buildTopoId(topologyId))).get();
 
         } catch (ExecutionException | InterruptedException e) {
             LOG.warn("Channel:occur exception when read databroker {}", e);
@@ -100,6 +113,29 @@ public class ChannelDBUtil {
             return null;
 
         }
+    }
+
+    private Optional<SubDomain> readBierNodeSubDomain(String topologyId, String node, DomainId domainId,
+                                                      SubDomainId subDomainId) {
+        ReadOnlyTransaction rtx = context.newReadOnlyTransaction();
+        try {
+            return rtx.read(LogicalDatastoreType.CONFIGURATION,
+                    buildBierNodeSubDomainPath(topologyId,node,domainId,subDomainId)).get();
+        } catch (ExecutionException | InterruptedException e) {
+            LOG.warn("Channel:occur exception when read databroker {}", e);
+            return null;
+        }
+    }
+
+    private InstanceIdentifier<SubDomain> buildBierNodeSubDomainPath(String topologyId, String node,
+                                                                      DomainId domainId, SubDomainId subDomainId) {
+        return InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(topologyId))
+                .child(BierNode.class, new BierNodeKey(node))
+                .child(BierNodeParams.class)
+                .child(Domain.class, new DomainKey(domainId))
+                .child(BierGlobal.class)
+                .child(SubDomain.class, new SubDomainKey(subDomainId));
     }
 
     private InstanceIdentifier<Channel> buildChannelPath(String name, String topologyId) {
@@ -245,6 +281,15 @@ public class ChannelDBUtil {
             return true;
         }
         return false;
+    }
+
+    public boolean isBierNodeInSubDomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId) {
+        Optional<SubDomain> bierNodeSubDomain = readBierNodeSubDomain(buildTopoId(topologyId),
+                node, domainId, subDomainId);
+        if (bierNodeSubDomain == null || !bierNodeSubDomain.isPresent()) {
+            return false;
+        }
+        return true;
     }
 
 }
