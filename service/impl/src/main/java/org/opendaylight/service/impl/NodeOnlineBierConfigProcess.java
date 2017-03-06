@@ -47,15 +47,16 @@ public class NodeOnlineBierConfigProcess {
     public void queryBierConfigAndSendForNodeOnline(String nodeId) {
         BierNode bierNode = queryBierNodeById(nodeId);
         if (null != bierNode) {
+            LOG.info("process send bier config");
             bierNodeChangeListener.processAddedNode(bierNode);
+            LOG.info("process send channel");
             processSendChannelContainThisNode(nodeId);
-        } else {
-            LOG.info("BierNode is null");
         }
     }
 
     private BierNode queryBierNodeById(String nodeId) {
         if (null == nodeId) {
+            LOG.info("nodeId is null");
             return null;
         }
         final InstanceIdentifier<BierNode> path = InstanceIdentifier.create(BierNetworkTopology.class)
@@ -68,13 +69,16 @@ public class NodeOnlineBierConfigProcess {
             bierNode = tx.read(LogicalDatastoreType.CONFIGURATION, path).checkedGet();
             if (bierNode.isPresent()) {
                 node = bierNode.get();
+                LOG.info("get bierNode from bier topology success, info is {}",node);
             }
         } catch (ReadFailedException e) {
             LOG.error("Get bierNode from bier topology is null");
         }
-        if (null != node.getBierNodeParams()) {
+        if (0 != node.getBierNodeParams().getDomain().size()) {
+            LOG.info("Node has bier config");
             return node;
         } else {
+            LOG.info("Node has no bier config");
             return null;
         }
     }
@@ -89,13 +93,19 @@ public class NodeOnlineBierConfigProcess {
             bierChannel = tx.read(LogicalDatastoreType.CONFIGURATION, path).checkedGet();
             if (bierChannel.isPresent()) {
                 channel = bierChannel.get();
+                LOG.info("get bierChannel from networkChannel success,bierChannel is {}",channel);
             }
         } catch (ReadFailedException e) {
             LOG.error("Get bierChannel from networkChannel is null");
         }
-        if (0 == channel.getChannel().size()) {
+        if (null == channel) {
+            LOG.info("BierChannel is null");
+        } else if (null == channel.getChannel()) {
             LOG.info("ChannelList is null");
+        } else if (0 == channel.getChannel().size()) {
+            LOG.info("ChannelList has no element");
         } else {
+            LOG.info("process find channel contain this node and send");
             findChannelContainThisNodeAndSend(channel.getChannel(),nodeId);
         }
     }
@@ -104,11 +114,11 @@ public class NodeOnlineBierConfigProcess {
         for (Channel channel : channelList) {
             if (null == channel.getIngressNode()) {
                 LOG.info("IngressNode is null");
-            } else if (channel.getIngressNode().equals("node" + nodeId)) {
-                LOG.info("channel: {} is match, process send",channel.getIngressNode());
+            } else if (channel.getIngressNode().equals(nodeId)) {
+                LOG.info("IngressNode: {} is match, process send channel",channel.getIngressNode());
                 bierChannelConfigProcess.processAddedChannel(channel);
             } else {
-                LOG.info("channel: {} is not match",channel.getIngressNode());
+                LOG.info("IngressNode: {} is not match",channel.getIngressNode());
             }
         }
     }

@@ -51,11 +51,13 @@ public class NetconfStateChangeListener implements DataTreeChangeListener<Node> 
                     LOG.info("Node {} was created",rootNode.getDataAfter().getNodeId().getValue());
                     break;
                 case SUBTREE_MODIFIED:
+                    LOG.info("process modify procedure");
                     NetconfNode ncNodeNew = rootNode.getDataAfter().getAugmentation(NetconfNode.class);
                     NetconfNode ncNodeOld = rootNode.getDataBefore().getAugmentation(NetconfNode.class);
                     if ((ncNodeNew.getConnectionStatus() == NetconfNodeConnectionStatus.ConnectionStatus.Connected)
                             && (ncNodeOld.getConnectionStatus() != NetconfNodeConnectionStatus
                             .ConnectionStatus.Connected)) {
+                        LOG.info("Node {} was connected",rootNode.getDataAfter().getNodeId().getValue());
                         if (null != rootNode.getDataAfter().getNodeId().getValue()) {
                             nodeOnlineBierConfigProcess.queryBierConfigAndSendForNodeOnline(rootNode.getDataAfter()
                                     .getNodeId().getValue());

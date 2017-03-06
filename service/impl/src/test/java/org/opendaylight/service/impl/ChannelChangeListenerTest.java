@@ -302,6 +302,7 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
         }
     }
 
+
     private Channel constructChannel(String name,String srcIp,String dstGroup,int domainId,int subDomainId,
             short srcWild,short groupWild,int bfrId,String ingress,List<EgressNode> egressList) {
         ChannelBuilder  builder = new ChannelBuilder();
