@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 
 import java.util.List;
 
+import org.opendaylight.channel.util.ChannelDBUtil;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class DeployChannelInputCheck extends ChannelInputCheck {
     private DeployChannelInput deployChannelInput;
+    private Channel channel;
     private static final Logger LOG = LoggerFactory.getLogger(DeployChannelInputCheck.class);
 
     public DeployChannelInputCheck(DeployChannelInput input) {
@@ -34,18 +36,35 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
         if (result.isInputIllegal()) {
             return result;
         }
-        if (!checkChannelExist(deployChannelInput.getChannelName(),deployChannelInput.getTopologyId())) {
+        channel = ChannelDBUtil.getInstance().getChannelInfo(deployChannelInput.getTopologyId(),
+                deployChannelInput.getChannelName()
+                );
+        if (!checkChannelExist(channel)) {
             return new CheckResult(true, CHANNEL_NOT_EXISTS);
         }
         result = checkNodesInSubdomain();
         if (result.isInputIllegal()) {
             return result;
         }
+        result = checkIngressAndEgressNodes();
+        if (result.isInputIllegal()) {
+            return result;
+        }
+        return new CheckResult(false, "");
+    }
+
+    private CheckResult checkIngressAndEgressNodes() {
+        String ingressNode = deployChannelInput.getIngressNode();
+        List<EgressNode> egressNodeList = deployChannelInput.getEgressNode();
+        for (EgressNode egressNode : egressNodeList) {
+            if (egressNode.getNodeId().equals(ingressNode)) {
+                return new CheckResult(true, INGRESS_EGRESS_CONFLICT);
+            }
+        }
         return new CheckResult(false, "");
     }
 
     private CheckResult checkNodesInSubdomain() {
-        Channel channel = getChannel(deployChannelInput.getTopologyId(),deployChannelInput.getChannelName());
         if (!nodeInSubdomain(deployChannelInput.getTopologyId(),deployChannelInput.getIngressNode(),
                 channel.getDomainId(),channel.getSubDomainId())) {
             return new CheckResult(true, INGRESS_NOT_IN_SUBDOMIN);

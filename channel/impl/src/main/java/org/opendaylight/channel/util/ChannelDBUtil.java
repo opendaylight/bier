@@ -38,6 +38,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParams;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainKey;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
@@ -87,6 +88,14 @@ public class ChannelDBUtil {
             return null;
 
         }
+    }
+
+    public Channel getChannelInfo(String topologyId, String channelName) {
+        Optional<Channel> channel = readChannel(channelName,topologyId);
+        if (channel == null || !channel.isPresent()) {
+            return null;
+        }
+        return channel.get();
     }
 
     private Optional<BierChannel> readBierChannel(String topologyId) {
@@ -162,24 +171,64 @@ public class ChannelDBUtil {
 
     public boolean writeDeployChannelToDB(DeployChannelInput input) {
         WriteTransaction wtx = context.newWriteOnlyTransaction();
-        Channel channel = buildDeployChannelInfo(input);
+        Channel oldChannel = getChannelInfo(input.getTopologyId(),input.getChannelName());
+        Channel channelInfo = buildDeployChannelInfo(input,oldChannel);
         wtx.put(LogicalDatastoreType.CONFIGURATION,
-                buildChannelPath(input.getChannelName(),buildTopoId(input.getTopologyId())),channel);
+                buildChannelPath(input.getChannelName(),buildTopoId(input.getTopologyId())),channelInfo);
         return submitTransaction(wtx);
 
     }
 
 
-    private Channel buildDeployChannelInfo(DeployChannelInput input) {
-        Channel oldChannel = readChannel(input.getChannelName(),buildTopoId(input.getTopologyId())).get();
+    private Channel buildDeployChannelInfo(DeployChannelInput input, Channel channel) {
         List<EgressNode> egressNodeList = new ArrayList<>();
         for (org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNode egressNode
                 : input.getEgressNode()) {
-            egressNodeList.add(new EgressNodeBuilder().setNodeId(egressNode.getNodeId()).build());
+            egressNodeList.add(new EgressNodeBuilder()
+                    .setNodeId(egressNode.getNodeId())
+                    .setEgressBfrId(getNodeBfrId(input.getTopologyId(),egressNode.getNodeId(),
+                            channel.getDomainId(),channel.getSubDomainId()))
+                    .build());
         }
-        return new ChannelBuilder(oldChannel)
+        return new ChannelBuilder(channel)
                 .setIngressNode(input.getIngressNode())
+                .setIngressBfrId(getNodeBfrId(input.getTopologyId(),input.getIngressNode(),
+                        channel.getDomainId(),channel.getSubDomainId()))
                 .setEgressNode(egressNodeList).build();
+    }
+
+    private BfrId getNodeBfrId(String topologyId, String nodeId, DomainId domainId, SubDomainId subDomainId) {
+        BierGlobal bierGlobal = readBierGlobal(buildTopoId(topologyId),nodeId,domainId);
+        BfrId globalBfrId = bierGlobal.getBfrId();
+        if (bierGlobal.getSubDomain() != null) {
+            for (SubDomain subDomain : bierGlobal.getSubDomain()) {
+                if (subDomain.getSubDomainId().equals(subDomainId) && subDomain.getBfrId() != null
+                        && subDomain.getBfrId().getValue() != 0) {
+                    return subDomain.getBfrId();
+                }
+            }
+        }
+        return globalBfrId;
+    }
+
+    private BierGlobal readBierGlobal(String topologyId, String nodeId, DomainId domainId) {
+        ReadOnlyTransaction rtx = context.newReadOnlyTransaction();
+        try {
+            return rtx.read(LogicalDatastoreType.CONFIGURATION,
+                    buildBierGlobalPath(topologyId,nodeId,domainId)).get().get();
+        } catch (ExecutionException | InterruptedException e) {
+            LOG.warn("Channel:occur exception when read databroker {}", e);
+            return null;
+        }
+    }
+
+    private InstanceIdentifier<BierGlobal> buildBierGlobalPath(String topologyId, String nodeId, DomainId domainId) {
+        return InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class,new BierTopologyKey(topologyId))
+                .child(BierNode.class,new BierNodeKey(nodeId))
+                .child(BierNodeParams.class)
+                .child(Domain.class, new DomainKey(domainId))
+                .child(BierGlobal.class);
     }
 
 

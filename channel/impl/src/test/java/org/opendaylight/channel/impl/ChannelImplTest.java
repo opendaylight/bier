@@ -56,6 +56,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParamsBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobalBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
@@ -85,11 +86,11 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
 
     private void configBierNetworkTopology() {
         List<BierNode> bierNodeList = new ArrayList<>();
-        BierNode bierNode1 = buildBierNodeInfo("node1",1,11);
-        BierNode bierNode2 = buildBierNodeInfo("node2",1,11);
-        BierNode bierNode3 = buildBierNodeInfo("node3",1,11);
-        BierNode bierNode4 = buildBierNodeInfo("node4",1,11);
-        BierNode bierNode5 = buildBierNodeInfo("node5",1,11);
+        BierNode bierNode1 = buildBierNodeInfo("node1",1,11,new BfrId(1),new BfrId(11));
+        BierNode bierNode2 = buildBierNodeInfo("node2",1,11,new BfrId(2),null);
+        BierNode bierNode3 = buildBierNodeInfo("node3",1,11,null,new BfrId(33));
+        BierNode bierNode4 = buildBierNodeInfo("node4",1,11,new BfrId(4),new BfrId(0));
+        BierNode bierNode5 = buildBierNodeInfo("node5",1,11,new BfrId(0),new BfrId(55));
         bierNodeList.add(bierNode1);
         bierNodeList.add(bierNode2);
         bierNodeList.add(bierNode3);
@@ -105,16 +106,18 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         wtx.submit();
     }
 
-    private BierNode buildBierNodeInfo(String node, Integer domainId, Integer subDomainID) {
+    private BierNode buildBierNodeInfo(String node, Integer domainId, Integer subDomainID,
+                                       BfrId globalBfrId, BfrId subDomainBfrId) {
         List<Domain> domainList = new ArrayList<>();
         List<SubDomain> subDomainList = new ArrayList<>();
         subDomainList.add(new SubDomainBuilder()
                 .setSubDomainId(new SubDomainId(subDomainID))
+                .setBfrId(subDomainBfrId)
                 .build());
 
         domainList.add(new DomainBuilder()
                 .setDomainId(new DomainId(domainId))
-                .setBierGlobal(new BierGlobalBuilder().setSubDomain(subDomainList).build())
+                .setBierGlobal(new BierGlobalBuilder().setSubDomain(subDomainList).setBfrId(globalBfrId).build())
                 .build());
 
         return new BierNodeBuilder()
@@ -338,9 +341,15 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
                 deployResult.getResult().getConfigureResult().getErrorCause());
 
         egressNodes.add(new EgressNodeBuilder().setNodeId("node7").build());
-        deployResult = deployChannelWithBfr("channel-1","node2",egressNodes);
+        deployResult = deployChannelWithBfr("channel-1","node1",egressNodes);
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("egress-node is not in this sub-domain!",
+                deployResult.getResult().getConfigureResult().getErrorCause());
+
+        egressNodes.remove(2);
+        deployResult = deployChannelWithBfr("channel-1","node2",egressNodes);
+        Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertEquals("ingress-node and egress-nodes conflict!the node must not be both ingress and egress.",
                 deployResult.getResult().getConfigureResult().getErrorCause());
     }
 
@@ -416,19 +425,21 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
                 .EgressNode> egressNodes = new ArrayList<>();
         if (modify) {
             channelBuilder.setIngressNode("node2");
+            channelBuilder.setIngressBfrId(new BfrId(2));
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node3").build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node3").setEgressBfrId(new BfrId(33)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node4").build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node4").setEgressBfrId(new BfrId(4)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node5").build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node5").setEgressBfrId(new BfrId(55)).build());
         } else {
 
             channelBuilder.setIngressNode("node1");
+            channelBuilder.setIngressBfrId(new BfrId(11));
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node2").build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node2").setEgressBfrId(new BfrId(2)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node3").build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node3").setEgressBfrId(new BfrId(33)).build());
 
         }
         channelBuilder.setName(channelName);

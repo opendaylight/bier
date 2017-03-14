@@ -109,6 +109,7 @@ public class ChannelImpl implements BierChannelApiService {
     @Override
     public Future<RpcResult<DeployChannelOutput>> deployChannel(DeployChannelInput input) {
         LOG.info("Channel:deploy-channel {}", input);
+
         DeployChannelInputCheck deployCheck = new DeployChannelInputCheck(input);
         DeployChannelOutputBuilder output = new DeployChannelOutputBuilder();
         CheckResult checkInputResult = deployCheck.check();

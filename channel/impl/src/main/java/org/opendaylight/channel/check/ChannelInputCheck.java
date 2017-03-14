@@ -13,6 +13,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 
+
 public class ChannelInputCheck implements InputCheck {
 
     private ChannelDBUtil channelDBUtil = ChannelDBUtil.getInstance();
@@ -35,6 +36,8 @@ public class ChannelInputCheck implements InputCheck {
     public static final String WILDCARD_IS_INVALID = "wildcard is invalid!it must be in the range [1,32].";
     public static final String INGRESS_NOT_IN_SUBDOMIN = "ingress-node is not in this sub-domain!";
     public static final String EGRESS_NOT_IN_SUBDOMIN = "egress-node is not in this sub-domain!";
+    public static final String INGRESS_EGRESS_CONFLICT = "ingress-node and egress-nodes conflict!the node must not"
+            + " be both ingress and egress.";
 
     private static final Integer MULTICAST_IPV4_1ST_SEGMENT_MIN = 224;
     private static final Integer MULTICAST_IPV4_1ST_SEGMENT_MAX = 239;
@@ -50,7 +53,7 @@ public class ChannelInputCheck implements InputCheck {
 
     public CheckResult checkIpRange(String key, IpAddress ipAddress, boolean isMulticastIp) {
         if (ipAddress != null) {
-            String[] sections = ipAddress.getIpv4Address().getValue().toString().split("\\.");
+            String[] sections = ipAddress.getIpv4Address().getValue().split("\\.");
             Integer value = Integer.parseInt(sections[0]);
             if (isMulticastIp) {
                 if (value < MULTICAST_IPV4_1ST_SEGMENT_MIN || value > MULTICAST_IPV4_1ST_SEGMENT_MAX) {
@@ -80,12 +83,12 @@ public class ChannelInputCheck implements InputCheck {
         return channelDBUtil.isChannelExists(channelName, topoId);
     }
 
-    public boolean hasChannelDeployed(String name, String topologyId) {
-        return channelDBUtil.hasChannelDeplyed(name,topologyId);
+    public boolean checkChannelExist(Channel channel) {
+        return channel == null ? false : true;
     }
 
-    public Channel getChannel(String topologyId, String channelName) {
-        return channelDBUtil.readChannel(channelName,topologyId).get();
+    public boolean hasChannelDeployed(String name, String topologyId) {
+        return channelDBUtil.hasChannelDeplyed(name,topologyId);
     }
 
     public boolean nodeInSubdomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId) {
