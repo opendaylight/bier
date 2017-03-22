@@ -7,11 +7,13 @@
  */
 package org.opendaylight.service.impl;
 
+import org.opendaylight.bier.adapter.api.BierConfigReader;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.service.impl.activate.driver.ActivateNetconfConnetion;
 import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.BierServiceApiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ public class ServiceProvider {
     private final NotificationPublishService notificationService;
     private final ChannelConfigWriter bierChannelWriter;
     private final BierConfigWriter bierConfigWriter;
+    private BierConfigReader bierConfigReader;
 
     private ServiceManager serviceManager;
 
@@ -38,6 +41,10 @@ public class ServiceProvider {
         this.bierChannelWriter = channelConfigWriter;
     }
 
+    public void setBierConfigReader(BierConfigReader bierConfigReader) {
+        this.bierConfigReader = bierConfigReader;
+    }
+
     /**
      * Method called when the blueprint container is created.
      */
@@ -45,6 +52,7 @@ public class ServiceProvider {
         LOG.info("ServiceProvider Session Initiated");
         serviceManager = new ServiceManager(dataBroker, notificationService, bierConfigWriter, bierChannelWriter);
         rpcRegistry.addRpcImplementation(BierServiceApiService.class,serviceManager);
+        ActivateNetconfConnetion activateNetconfConnetion = new ActivateNetconfConnetion(dataBroker,bierConfigReader);
     }
 
     /**

@@ -22,6 +22,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
              interface="org.opendaylight.bier.adapter.api.BierConfigWriter"/>
   <reference id="channelConfigWriter"
              interface="org.opendaylight.bier.adapter.api.ChannelConfigWriter"/>
+  <reference id="bierConfigReader"
+             interface="org.opendaylight.bier.adapter.api.BierConfigReader"/>
              
     
   <bean id="provider"
@@ -32,6 +34,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <argument ref="notificationService" />
     <argument ref="bierConfigWriter" />
     <argument ref="channelConfigWriter" />
+    <property name="bierConfigReader" ref="bierConfigReader"/>
   </bean>
 
 </blueprint>

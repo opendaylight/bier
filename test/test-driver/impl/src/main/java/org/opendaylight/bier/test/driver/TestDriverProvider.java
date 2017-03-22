@@ -82,6 +82,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobalBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.Af;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.AfBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4Builder;
@@ -164,7 +165,7 @@ public class TestDriverProvider implements TestDriverService {
     }
 
     public ConfigureResult buildResult(ConfigurationResult result) {
-        ConfigureResultBuilder resultBuilder = new ConfigureResultBuilder();
+
         if (result.isSuccessful()) {
             return new ConfigureResultBuilder().setResult(ConfigureResult.Result.SUCCESS).build();
         } else {
@@ -309,7 +310,7 @@ public class TestDriverProvider implements TestDriverService {
     }
 
 
-    static String buildDetailInfo( Object controller, Object device) {
+    static String buildDetailInfo(Object controller, Object device) {
 
         String controllerString = String.valueOf(controller);
         String deviceString = String.valueOf(device);
@@ -319,81 +320,232 @@ public class TestDriverProvider implements TestDriverService {
 
     }
 
-    public String compareBierGlobal(BierGlobal bierGlobalFromController,BierGlobal bierGlobalFromDevice) {
+    public boolean compareIpv4(SubDomainId subDomainId,List<Ipv4> ipv4FromController,
+                               List<Ipv4> ipv4FromDevice,ConfigureResultBuilder resultBuilder) {
 
-        String detail = "";
+        if (ipv4FromController == ipv4FromDevice) {
+            return true;
+        }
+
+        if (ipv4FromController == null) {
+            resultBuilder.setErrorCause(subDomainId.toString()
+                    + " Ipv4 from controller is null while it is not null in device. ");
+            return false;
+        }
+        if (ipv4FromDevice == null) {
+            resultBuilder.setErrorCause(subDomainId.toString()
+                    + " Ipv4 from device is null while it is not null in controller. ");
+            return false;
+        }
+
+        if (ipv4FromController.size() != ipv4FromDevice.size()) {
+            resultBuilder.setErrorCause(subDomainId.toString()
+                    + " number of ipv4 in device is different from controller. "
+                    + buildDetailInfo(ipv4FromController,ipv4FromDevice));
+            return false;
+        }
+
+        int counterEqualIpv4 = 0 ;
+
+        for (Ipv4 ipv4C : ipv4FromController) {
+            for (Ipv4 ipv4D : ipv4FromDevice) {
+                if ((ipv4C.getBitstringlength().equals(ipv4D.getBitstringlength()))
+                    && (ipv4C.getBierMplsLabelBase().equals(ipv4D.getBierMplsLabelBase()))) {
+                    counterEqualIpv4 ++ ;
+                    if (!Objects.equals(ipv4C.getBierMplsLabelRangeSize(),
+                            ipv4D.getBierMplsLabelRangeSize())) {
+                        resultBuilder.setErrorCause(subDomainId.toString() + buildDetailInfo(ipv4C,ipv4D));
+                        return false;
+                    }
+                }
+            }
+        }
+        if (counterEqualIpv4 != ipv4FromController.size()) {
+            resultBuilder.setErrorCause(subDomainId.toString() + buildDetailInfo(ipv4FromController,ipv4FromDevice));
+            return false;
+        }
+        return true;
+
+    }
+
+    public boolean compareAf(SubDomainId subDomainId,Af afFromController,Af afFromDevice,
+                             ConfigureResultBuilder resultBuilder) {
+        if (afFromController == afFromDevice) {
+            return true;
+        }
+
+        if (afFromController == null) {
+            resultBuilder.setErrorCause(subDomainId.toString()
+                    + " Af from controller is null while it is not null in device. ");
+            return false;
+        }
+        if (afFromDevice == null) {
+            resultBuilder.setErrorCause(subDomainId.toString()
+                    + " Af from device is null while it is not null in controller. ");
+            return false;
+        }
+
+        if (!compareIpv4(subDomainId,afFromController.getIpv4(),afFromDevice.getIpv4(),resultBuilder)) {
+
+            return false;
+        }
+        return true;
+
+
+
+
+    }
+
+    public boolean compareSubdomain(List<SubDomain> subdomainFromController,
+                                    List<SubDomain> subdomainFromDevice,ConfigureResultBuilder resultBuilder) {
+
+
+        if (subdomainFromController == subdomainFromDevice) {
+            return true;
+        }
+
+        if (subdomainFromController == null) {
+            resultBuilder.setErrorCause(" subdomain from controller is null while it is not null in device. ");
+            return false;
+        }
+        if (subdomainFromDevice == null) {
+            resultBuilder.setErrorCause(" subdomain from device is null while it is not null in controller. ");
+            return false;
+        }
+
+        if (subdomainFromController.size() != subdomainFromDevice.size()) {
+            resultBuilder.setErrorCause(" number of subdomain in device is different from controller. "
+                    + buildDetailInfo(subdomainFromController,subdomainFromDevice));
+            return false;
+        }
+
+        int counterEqualSubdomainId = 0 ;
+
+
+        for (SubDomain subDomainC : subdomainFromController) {
+            for (SubDomain subDomainD : subdomainFromDevice) {
+
+                if (subDomainC.getSubDomainId().equals(subDomainD.getSubDomainId())) {
+                    counterEqualSubdomainId ++ ;
+
+                    if (!Objects.equals(subDomainC.getBfrId(),
+                            subDomainD.getBfrId())) {
+                        resultBuilder.setErrorCause(" subdomain :" + subDomainC.getSubDomainId().toString()
+                                + buildDetailInfo(subDomainC.getBfrId(),subDomainD.getBfrId())) ;
+                        return false;
+                    }
+
+                    if (!Objects.equals(subDomainC.getBitstringlength(),
+                            subDomainD.getBitstringlength())) {
+                        resultBuilder.setErrorCause(" subdomain :" + subDomainC.getSubDomainId().toString()
+                                + buildDetailInfo(subDomainC.getBitstringlength(),subDomainD.getBitstringlength())) ;
+                        return false;
+                    }
+
+                    if (!Objects.equals(subDomainC.getIgpType(),
+                            subDomainD.getIgpType())) {
+                        resultBuilder.setErrorCause(" subdomain :" + subDomainC.getSubDomainId().toString()
+                                + buildDetailInfo(subDomainC.getIgpType(),subDomainD.getIgpType())) ;
+                        return false;
+                    }
+
+                    if (!compareAf(subDomainC.getSubDomainId(),subDomainC.getAf(), subDomainD.getAf(),resultBuilder)) {
+
+                        return false;
+
+                    }
+
+                }
+            }
+
+        }
+        if (counterEqualSubdomainId != subdomainFromController.size()) {
+            resultBuilder.setErrorCause(buildDetailInfo(subdomainFromController,subdomainFromDevice));
+            return false;
+        }
+        return true;
+
+    }
+
+
+    public boolean compareBierGlobal(BierGlobal bierGlobalFromController,
+                                     BierGlobal bierGlobalFromDevice,ConfigureResultBuilder resultBuilder) {
+
 
         LOG.info("compareBierGlobal controller:{}, device:{}",bierGlobalFromController,bierGlobalFromDevice);
 
         if (!Objects.equals(bierGlobalFromController.getBitstringlength(),
                 bierGlobalFromDevice.getBitstringlength())) {
-            detail = detail + buildDetailInfo(bierGlobalFromController.getBitstringlength(),
-                    bierGlobalFromDevice.getBitstringlength());
+            resultBuilder.setErrorCause("BIER global bitstring length ."
+                    + buildDetailInfo(bierGlobalFromController.getBitstringlength(),
+                    bierGlobalFromDevice.getBitstringlength()));
+            return false;
         }
 
         if (!Objects.equals(bierGlobalFromController.getEncapsulationType(),
                 bierGlobalFromDevice.getEncapsulationType())) {
-            detail = detail + buildDetailInfo(bierGlobalFromController.getEncapsulationType(),
-                    bierGlobalFromDevice.getEncapsulationType());
+            resultBuilder.setErrorCause("BIER global encapsulationType ."
+                    + buildDetailInfo(bierGlobalFromController.getEncapsulationType(),
+                            bierGlobalFromDevice.getEncapsulationType()));
+            return false;
         }
 
         if (!Objects.equals(bierGlobalFromController.getBfrId(),
                 bierGlobalFromDevice.getBfrId())) {
-            detail = detail + buildDetailInfo(bierGlobalFromController.getBfrId(),
-                    bierGlobalFromDevice.getBfrId());
+            resultBuilder.setErrorCause("BIER global BFR ID ."
+                    + buildDetailInfo(bierGlobalFromController.getBfrId(),
+                    bierGlobalFromDevice.getBfrId()));
+            return false;
         }
 
         if (!Objects.equals(bierGlobalFromController.getIpv4BfrPrefix(),
                 bierGlobalFromDevice.getIpv4BfrPrefix())) {
-            detail = detail + buildDetailInfo(bierGlobalFromController.getIpv4BfrPrefix(),
-                    bierGlobalFromDevice.getIpv4BfrPrefix());
+            resultBuilder.setErrorCause("BIER global IPv4 BFR prefix ."
+                    + buildDetailInfo(bierGlobalFromController.getIpv4BfrPrefix(),
+                    bierGlobalFromDevice.getIpv4BfrPrefix()));
+            return false;
         }
 
         if (!Objects.equals(bierGlobalFromController.getIpv6BfrPrefix(),
                 bierGlobalFromDevice.getIpv6BfrPrefix())) {
-            detail = detail + buildDetailInfo(bierGlobalFromController.getIpv6BfrPrefix(),
-                    bierGlobalFromDevice.getIpv6BfrPrefix());
+            resultBuilder.setErrorCause("BIER global IPv6 BFR prefix ."
+                    + buildDetailInfo(bierGlobalFromController.getIpv6BfrPrefix(),
+                    bierGlobalFromDevice.getIpv6BfrPrefix()));
+            return false;
         }
 
-        if (!Objects.equals(bierGlobalFromController.getSubDomain(),
-                bierGlobalFromDevice.getSubDomain())) {
-            LOG.info("compareBierGlobal subdomain controller:{}, device:{}",bierGlobalFromController.getSubDomain(),
-                    bierGlobalFromDevice.getSubDomain());
-            detail = detail + buildDetailInfo(bierGlobalFromController.getSubDomain(),
-                    bierGlobalFromDevice.getSubDomain());
+        if (!compareSubdomain(bierGlobalFromController.getSubDomain(),
+                bierGlobalFromDevice.getSubDomain(),resultBuilder)) {
+            return false;
         }
 
-        return detail;
+        return true;
     }
 
     @Override
     public Future<RpcResult<CheckBierGlobalOutput>> checkBierGlobal(CheckBierGlobalInput input) {
+        ConfigureResultBuilder resultBuilder = new ConfigureResultBuilder();
         BierGlobal bierGlobalFromDevice = bierConfigReader.readBierGlobal(input.getNodeName());
         BierGlobal bierGlobalFromController = readBierGlobalFromController(input.getNodeName());
-        String detail = "";
 
         boolean isEqual = false;
 
         if ((bierGlobalFromController == null) && (bierGlobalFromDevice != null)) {
             isEqual = false;
-            detail = "bierGlobalFromController is null while bierGlobalFromDevice is not null.";
-        } else if ((bierGlobalFromController == null ) && (bierGlobalFromDevice == null)) {
+            resultBuilder.setErrorCause("bierGlobalFromController is null while bierGlobalFromDevice is not null.");
+        } else if ((bierGlobalFromController == null) && (bierGlobalFromDevice == null)) {
             isEqual = true;
-            detail = "Both bierGlobalFromController and bierGlobalFromDevice are null";
+            resultBuilder.setErrorCause("Both bierGlobalFromController and bierGlobalFromDevice are null.");
         } else if ((bierGlobalFromController != null) && (bierGlobalFromDevice == null)) {
             isEqual = false;
-            detail = "bierGlobalFromController is not null while bierGlobalFromDevice is  null.";
+            resultBuilder.setErrorCause("bierGlobalFromController is not null while bierGlobalFromDevice is  null.");
         } else {
-            isEqual = bierGlobalFromController.equals(bierGlobalFromDevice);
-            if (!isEqual) {
-                detail = compareBierGlobal(bierGlobalFromController,bierGlobalFromDevice);
-            }
+            isEqual = compareBierGlobal(bierGlobalFromController,bierGlobalFromDevice,resultBuilder);
         }
 
         CheckBierGlobalOutput output = new CheckBierGlobalOutputBuilder()
-                .setConfigureResult(new ConfigureResultBuilder()
+                .setConfigureResult(resultBuilder
                         .setResult(isEqual ? ConfigureResult.Result.SUCCESS : ConfigureResult.Result.FAILURE)
-                        .setErrorCause(detail)
                         .build())
                 .build();
         return RpcResultBuilder.success(output).buildFuture();
@@ -508,20 +660,20 @@ public class TestDriverProvider implements TestDriverService {
         Channel channel = getChannelByName(input.getChannelName());
         List<BfrId> controllerEgress = getContollerBrfIdList(channel);
         List<BfrId> deviceEgress = getDeviceBrfIdList(channel);
-        boolean isEqual = false;
+        boolean isEqual ;
         String detail = "";
 
         if ((controllerEgress == null) && (deviceEgress != null)) {
             isEqual = false;
             detail = "controllerEgress is null while deviceEgress is not null.";
-        } else if ((controllerEgress == null ) && (deviceEgress == null)) {
+        } else if ((controllerEgress == null) && (deviceEgress == null)) {
             isEqual = true;
             detail = "Both controllerEgress and deviceEgress are null";
         } else if ((controllerEgress != null) && (deviceEgress == null)) {
             isEqual = false;
             detail = "controllerEgress is not null while deviceEgress is  null.";
         } else {
-            isEqual = controllerEgress.containsAll(deviceEgress) & (deviceEgress.containsAll(controllerEgress));
+            isEqual = (controllerEgress.containsAll(deviceEgress) && (deviceEgress.containsAll(controllerEgress)));
             if (!isEqual) {
                 detail = "\n controller egress : " + controllerEgress.toString()
                         + "\n device egress : " + deviceEgress.toString();
