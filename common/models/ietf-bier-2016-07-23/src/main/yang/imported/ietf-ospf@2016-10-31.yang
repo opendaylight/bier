@@ -2259,13 +2259,13 @@ module ietf-ospf {
             description "List of OSPF link scope LSAs";
             uses lsa-key;
             uses lsa {
-              refine "version/ospfv2" {
+              refine "version/ospfv2/ospfv2" {
                 must "../../../../../../../../../../../"
                    + "rt:type = 'ospf:ospfv2'" {
                   description "OSPFv2 LSA.";
                 }
               }
-              refine "version/ospfv3" {
+              refine "version/ospfv3/ospfv3" {
                 must "../../../../../../../../../../../"
                    + "rt:type = 'ospf:ospfv3'" {
 
@@ -2447,13 +2447,13 @@ module ietf-ospf {
             description "List of OSPF area scope LSAs";
             uses lsa-key;
             uses lsa {
-              refine "version/ospfv2" {
+              refine "version/ospfv2/ospfv2" {
                 must "../../../../../../../../../"
                    + "rt:type = 'ospf:ospfv2'" {
                   description "OSPFv2 LSA.";
                 }
               }
-              refine "version/ospfv3" {
+              refine "version/ospfv3/ospfv3" {
                 must "../../../../../../../../../"
                    + "rt:type = 'ospf:ospfv3'" {
                   description "OSPFv3 LSA.";
@@ -2800,13 +2800,13 @@ module ietf-ospf {
             description "List of OSPF area scope LSAs";
             uses lsa-key;
             uses lsa {
-              refine "version/ospfv2" {
+              refine "version/ospfv2/ospfv2" {
                 must "../../../../../../../rt:type = "
                    + "'ospf:ospfv2'" {
                   description "OSPFv2 LSA.";
                 }
               }
-              refine "version/ospfv3" {
+              refine "version/ospfv3/ospfv3" {
                 must "../../../../../../../rt:type = "
                    + "'ospf:ospfv3'" {
                   description "OSPFv3 LSA.";
