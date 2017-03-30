@@ -1,230 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2015 ZTE and others.  All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
-    <artifactId>features-parent</artifactId>
+    <artifactId>odlparent-lite</artifactId>
     <version>1.8.0-SNAPSHOT</version>
     <relativePath/>
   </parent>
+  
   <groupId>org.opendaylight.bier</groupId>
-  <artifactId>features-bier</artifactId>
+  <artifactId>features-aggregator</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
-  <!-- <name> formatting is used by autorelease to parse and notify projects on
-       build failure. Please do not modify this unless you have a good reason. -->
-  <name>ODL :: bier :: ${project.artifactId}</name>
+  <packaging>pom</packaging>
 
-  <prerequisites>
-    <maven>3.1.1</maven>
-  </prerequisites>
+  <modules>
+    <module>features4-bier</module>
+    <module>features-bier</module>
+    <module>odl-bier-adapter</module>
+    <module>odl-bier-all</module>
+    <module>odl-bier-channel</module>
+    <module>odl-bier-channel-api</module>
+    <module>odl-bier-channel-cli</module>
+    <module>odl-bier-channel-rest</module>
+    <module>odl-bier-channel-ui</module>
+    <module>odl-bier-driver-common</module>
+    <module>odl-bier-models</module>
+    <module>odl-bier-service</module>
+    <module>odl-bier-service-api</module>
+    <module>odl-bier-service-cli</module>
+    <module>odl-bier-service-rest</module>
+    <module>odl-bier-service-ui</module>
+    <module>odl-bier-std-driver</module>
+    <module>odl-bier-test</module>
+    <module>odl-bier-test-driver</module>
+    <module>odl-bier-test-driver-api</module>
+    <module>odl-bier-test-driver-impl</module>
+    <module>odl-bier-topomanager</module>
+    <module>odl-bier-topomanager-api</module>
+    <module>odl-bier-topomanager-cli</module>
+    <module>odl-bier-topomanager-rest</module>
+    <module>odl-bier-topomanager-ui</module>
+  </modules>
 
-  <properties>
-    <mdsal.model.version>0.10.0-SNAPSHOT</mdsal.model.version>
-    <mdsal.version>1.5.0-SNAPSHOT</mdsal.version>
-    <restconf.version>1.5.0-SNAPSHOT</restconf.version>
-    <netconf.version>1.2.0-SNAPSHOT</netconf.version>
-    <yangtools.version>1.1.0-SNAPSHOT</yangtools.version>
-    <dluxapps.version>0.5.0-SNAPSHOT</dluxapps.version>
-    <openflowplugin.version>0.4.0-SNAPSHOT</openflowplugin.version>
-    <openflowjava.version>0.9.0-SNAPSHOT</openflowjava.version>
-    <configfile.directory>etc/opendaylight/karaf</configfile.directory>
-  </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <!-- project specific dependencies -->
-      <dependency>
-        <groupId>org.opendaylight.controller</groupId>
-        <artifactId>mdsal-artifacts</artifactId>
-        <version>${mdsal.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.opendaylight.netconf</groupId>
-        <artifactId>restconf-artifacts</artifactId>
-        <version>${restconf.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.opendaylight.yangtools</groupId>
-        <artifactId>yangtools-artifacts</artifactId>
-        <version>${yangtools.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.opendaylight.yangtools</groupId>
-      <artifactId>features-yangtools</artifactId>
-      <classifier>features</classifier>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.mdsal.model</groupId>
-      <artifactId>features-mdsal-model</artifactId>
-      <version>${mdsal.model.version}</version>
-      <classifier>features</classifier>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.controller</groupId>
-      <artifactId>features-mdsal</artifactId>
-      <classifier>features</classifier>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.netconf</groupId>
-      <artifactId>features-restconf</artifactId>
-      <classifier>features</classifier>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.netconf</groupId>
-      <artifactId>features-netconf</artifactId>
-      <classifier>features</classifier>
-      <version>${netconf.version}</version>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.netconf</groupId>
-      <artifactId>features-netconf-connector</artifactId>
-      <classifier>features</classifier>
-      <version>${netconf.version}</version>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.dluxapps</groupId>
-      <artifactId>features-dluxapps</artifactId>
-      <classifier>features</classifier>
-      <version>${dluxapps.version}</version>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.openflowplugin</groupId>
-      <artifactId>features-openflowplugin</artifactId>
-      <classifier>features</classifier>
-      <version>${openflowplugin.version}</version>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opendaylight.openflowjava</groupId>
-      <artifactId>features-openflowjava</artifactId>
-      <classifier>features</classifier>
-      <version>${openflowjava.version}</version>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-
-
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>channel-impl</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>channel-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>channel-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>service-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>service-impl</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>service-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>topomanager-impl</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>topomanager-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>topomanager-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>ietf-bier-2016-07-23</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>ietf-multicast-information-2016-10-28</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>bier-adapter</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>bier-driver-common-reporter-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>bier-driver-common-reporter-impl</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>bier-std-driver</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>test-driver-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>test-driver-impl</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>bier-driver-common-util</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-  </dependencies>
-
-</project>
+ </project>
