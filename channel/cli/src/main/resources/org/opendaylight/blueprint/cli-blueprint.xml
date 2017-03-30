@@ -21,8 +21,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <service ref="cliCommandsImpl" odl:type="default"
     interface="org.opendaylight.channel.cli.api.ChannelCliCommands" />
 
-    <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.0.0">
-        <command name="test-command">
+    <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
+        <command>
             <action class="org.opendaylight.channel.cli.commands.ChannelCliTestCommand">
                 <argument ref="cliCommandsImpl"/>
             </action>
