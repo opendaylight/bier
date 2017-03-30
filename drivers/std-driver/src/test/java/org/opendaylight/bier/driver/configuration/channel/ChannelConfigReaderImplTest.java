@@ -101,7 +101,7 @@ public class ChannelConfigReaderImplTest extends AbstractConcurrentDataBrokerTes
     }
 
     private void buildInstance() {
-        netconfDataOperator = new NetconfDataOperator();
+        netconfDataOperator = new NetconfDataOperator(bindingAwareBroker);
         channelConfigWriter = new ChannelConfigWriterImpl(netconfDataOperator);
         channelConfigReader = new ChannelConfigReaderImpl(netconfDataOperator);
         netconfDataOperator.onSessionInitialized(consumerContext);

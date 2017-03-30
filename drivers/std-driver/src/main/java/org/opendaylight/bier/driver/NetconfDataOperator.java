@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 public class NetconfDataOperator implements BindingAwareConsumer {
     private static final Logger LOG = LoggerFactory.getLogger(NetconfDataOperator.class);
+    private final BindingAwareBroker bindingAwareBroker;
     private MountPointService mountService = null;
 
 
@@ -51,6 +52,14 @@ public class NetconfDataOperator implements BindingAwareConsumer {
 
 
     public static final int RETRY_WRITE_MAX = 3;
+
+    public NetconfDataOperator(BindingAwareBroker bindingAwareBroker) {
+        this.bindingAwareBroker = bindingAwareBroker;
+    }
+
+    public void init() {
+        bindingAwareBroker.registerConsumer(this);
+    }
 
     @Override
     public void onSessionInitialized(BindingAwareBroker.ConsumerContext session) {
