@@ -81,7 +81,7 @@ public class BierConfigReaderImplTest extends AbstractConcurrentDataBrokerTest {
     }
 
     private void buildInstance() {
-        netconfDataOperator = new NetconfDataOperator();
+        netconfDataOperator = new NetconfDataOperator(bindingAwareBroker);
         bierConfigWriter = new BierConfigWriterImpl(netconfDataOperator);
         bierConfigReader = new BierConfigReaderImpl(netconfDataOperator);
         netconfDataOperator.onSessionInitialized(consumerContext);

@@ -17,11 +17,45 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <reference id="bindingRegistry"
              interface="org.opendaylight.controller.sal.binding.api.BindingAwareBroker"/>
 
-  <bean id="stdProvider"
-        class="org.opendaylight.bier.driver.BierNetconfDataProvider"
+  <bean id="netconfDataOperator"
+        class="org.opendaylight.bier.driver.NetconfDataOperator"
+        init-method="init">
+    <argument ref="bindingRegistry"/>
+  </bean>
+
+  <bean id="bierConfigWriter"
+        class="org.opendaylight.bier.driver.configuration.node.BierConfigWriterImpl">
+    <argument ref="netconfDataOperator"/>
+  </bean>
+
+  <service ref="bierConfigWriter" interface="org.opendaylight.bier.adapter.api.BierConfigWriter"/>
+
+  <bean id="channelConfigWriter"
+        class="org.opendaylight.bier.driver.configuration.channel.ChannelConfigWriterImpl">
+    <argument ref="netconfDataOperator"/>
+  </bean>
+
+  <service ref="channelConfigWriter" interface="org.opendaylight.bier.adapter.api.ChannelConfigWriter"/>
+
+  <bean id="bierConfigReader"
+        class="org.opendaylight.bier.driver.configuration.node.BierConfigReaderImpl">
+    <argument ref="netconfDataOperator"/>
+  </bean>
+
+  <service ref="bierConfigReader" interface="org.opendaylight.bier.adapter.api.BierConfigReader"/>
+
+  <bean id="channelConfigReader"
+        class="org.opendaylight.bier.driver.configuration.channel.ChannelConfigReaderImpl">
+    <argument ref="netconfDataOperator"/>
+  </bean>
+
+  <service ref="channelConfigReader" interface="org.opendaylight.bier.adapter.api.ChannelConfigReader"/>
+
+  <bean id="netconfNodesListener"
+        class="org.opendaylight.bier.driver.listener.NetconfNodesListener"
         init-method="init" destroy-method="close">
-    <argument ref="dataBroker" />
-    <property name="bindingRegistry" ref="bindingRegistry"/>
+    <argument ref="dataBroker"/>
+    <argument ref="netconfDataOperator"/>
   </bean>
 
 </blueprint>

@@ -145,7 +145,7 @@ public class NetconfNodesListenerTest {
         when(optionalRegistryObject.get()).thenReturn(rpcConsumerRegistry);
         when(rpcConsumerRegistry.getRpcService(NotificationsService.class)).thenReturn(rpcService);
 
-        netconfDataOperator = new NetconfDataOperator();
+        netconfDataOperator = new NetconfDataOperator(bindingAwareBroker);
         netconfDataOperator.onSessionInitialized(consumerContext);
 
 

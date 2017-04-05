@@ -59,16 +59,24 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
     }
 
     private Map<NodeId, ListenerRegistration<IetfBierListener>> mapNodeListenerReg = Maps.newHashMap();
-    private NetconfDataOperator netconfDataOperator ;
+    private final DataBroker dataBroker;
+    private final NetconfDataOperator netconfDataOperator ;
 
 
     public NetconfNodesListener(final DataBroker dataBroker,final NetconfDataOperator netconfDataOperator) {
+        this.dataBroker = dataBroker;
+        this.netconfDataOperator = netconfDataOperator;
+    }
+
+    public void init() {
         listenerRegistration =
                 dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<Node>(LogicalDatastoreType.OPERATIONAL,
                         IidConstants.NETCONF_TOPO_IID.child(Node.class)),this);
-        this.netconfDataOperator = netconfDataOperator;
         LOG.info("Begin to listen to the changes of netconf nodes!");
+    }
 
+    public void close() {
+        unregisterListener();
     }
 
     public void unregisterListener() {
