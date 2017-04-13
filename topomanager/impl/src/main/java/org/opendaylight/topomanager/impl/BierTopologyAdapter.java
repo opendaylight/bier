@@ -78,12 +78,12 @@ public class BierTopologyAdapter {
         final ReadTransaction tx = dataBroker.newReadOnlyTransaction();
         try {
             Optional<Topology> bierTopology = tx.read(LogicalDatastoreType.OPERATIONAL, path).checkedGet();
-            LOG.debug("openflow topology exist in the operational data store at {}",path);
+            LOG.debug("Openflow topology exist in the operational data store at {}",path);
             if (bierTopology.isPresent()) {
                 return true;
             }
         } catch (ReadFailedException e) {
-            LOG.warn("openflow topology read operation failed!", e);
+            LOG.warn("Openflow topology read operation failed!", e);
         }
         return false;
     }
@@ -120,17 +120,17 @@ public class BierTopologyAdapter {
         try {
             ListenableFuture<Topology> result = future.get();
             Topology topology = result.get();
-            if ( null == topology || null == topology.getTopologyId()) {
-                LOG.error("ZTE:get topology is faild!");
+            if (null == topology || null == topology.getTopologyId()) {
+                LOG.error("Get topology is faild!");
                 return null;
             }
             return topology;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Get topology is Interrupted by", e);
+            LOG.error("Get topology is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Get topology is faild cause by", e);
+            LOG.error("Get topology is faild cause by", e);
         }
-        LOG.error("ZTE:get topology is faild!");
+        LOG.error("Get topology is faild!");
         return null;
     }
 

@@ -58,7 +58,7 @@ public class BierTopologyProcess<T> implements Callable<ListenableFuture<T>>,  T
             int ops = 0;
 
             do {
-                if ( 0 == miProcessFlag ) {
+                if (0 == miProcessFlag) {
                     ListenableFuture<Optional<T>> readResult = op.readOperation(tx);
                     //try
                     {

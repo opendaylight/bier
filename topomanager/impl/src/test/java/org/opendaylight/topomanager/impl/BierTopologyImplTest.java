@@ -58,7 +58,11 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopolog
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainKey;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierEncapsulationMpls;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierMplsLabelRangeSize;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Bsl;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.IgpType;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobalBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
@@ -68,8 +72,8 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4Builder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6Builder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
-//import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.LinkId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
@@ -297,6 +301,27 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void configNodeTest5() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureNode(1,1,"1");
+        ConfigureNodeOutput output = configureNode(1,1,"2");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("node bfrId is exist in same subdomain!"));
+    }
+
+    @Test
+    public void configNodeTest6() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureSubdomain(1,2);
+        configureNode(1,1,"1");
+        ConfigureNodeOutput output = configureNode(1,2,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("node label range is overlapped!"));
+    }
+
+    @Test
     public void modifyNodeDomainTest() throws Exception {
         configureDomain(1);
         configureDomain(2);
@@ -497,12 +522,12 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
                 .getBitstringlength().intValue() == 64);
         Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
                 .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv6().get(0)
-                .getBierMplsLabelBase().getValue() == (long)1);
+                .getBierMplsLabelBase().getValue() == (long)5);
         Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
                 .getDomain().get(0).getBierGlobal().getSubDomain().get(0).getAf().getIpv6().get(0)
                 .getBierMplsLabelRangeSize().getValue() == (short)4);
 
-        DeleteIpv6Output output = deleteIpv6(1,1,"1",64,1,4);
+        DeleteIpv6Output output = deleteIpv6(1,1,"1",64,5,4);
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
         QueryNodeOutput queryOutput2 = queryNode();
@@ -721,10 +746,12 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         inputBuilder.setNodeId(nodeId);
         DomainBuilder domainBuilder = new DomainBuilder();
         domainBuilder.setDomainId(new DomainId(domainId));
-        domainBuilder.setKey(new DomainKey(new DomainId(subDomainId)));
+        domainBuilder.setKey(new DomainKey(new DomainId(domainId)));
 
         SubDomainBuilder subDomainBuilder = new SubDomainBuilder();
-        subDomainBuilder.setSubDomainId(new SubDomainId(1));
+        subDomainBuilder.setSubDomainId(new SubDomainId(subDomainId));
+        subDomainBuilder.setBfrId(new BfrId(1));
+        subDomainBuilder.setIgpType(IgpType.OSPF);
 
         Ipv4Builder ipv4Builder = new Ipv4Builder();
         ipv4Builder.setBitstringlength(64);
@@ -737,7 +764,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
         Ipv6Builder ipv6Builder = new Ipv6Builder();
         ipv6Builder.setBitstringlength(64);
-        ipv6Builder.setBierMplsLabelBase(new MplsLabel(1L));
+        ipv6Builder.setBierMplsLabelBase(new MplsLabel(5L));
         ipv6Builder.setBierMplsLabelRangeSize(new BierMplsLabelRangeSize((short)4));
         List<Ipv6> ipv6List = new ArrayList<Ipv6>();
         ipv6List.add(ipv6Builder.build());
@@ -749,6 +776,10 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
         BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
         bierBuilder.setSubDomain(subDomainList);
+        bierBuilder.setBfrId(new BfrId(1));
+        bierBuilder.setEncapsulationType(BierEncapsulationMpls.class);
+        bierBuilder.setBitstringlength(Bsl._64Bit);
+        bierBuilder.setIpv4BfrPrefix(new Ipv4Prefix("10.41.41.41/22"));
         domainBuilder.setBierGlobal(bierBuilder.build());
         List<Domain> domainList = new ArrayList<Domain>();
         domainList.add(domainBuilder.build());
@@ -767,6 +798,10 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         domainBuilder.setDomainId(new DomainId(2));
         domainBuilder.setKey(new DomainKey(new DomainId(2)));
         BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
+        bierBuilder.setEncapsulationType(BierEncapsulationMpls.class);
+        bierBuilder.setBitstringlength(Bsl._64Bit);
+        bierBuilder.setBfrId(new BfrId(1));
+        bierBuilder.setIpv4BfrPrefix(new Ipv4Prefix("10.41.41.41/22"));
         domainBuilder.setBierGlobal(bierBuilder.build());
         List<Domain> domainList = new ArrayList<Domain>();
         domainList.add(domainBuilder.build());
@@ -784,11 +819,24 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         DomainBuilder domainBuilder = new DomainBuilder();
         domainBuilder.setDomainId(new DomainId(1));
         domainBuilder.setKey(new DomainKey(new DomainId(1)));
-        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
-        List<SubDomain> subDomainList = new ArrayList<SubDomain>();
+
         SubDomainBuilder subDomainBuilder = new SubDomainBuilder();
         subDomainBuilder.setSubDomainId(new SubDomainId(2));
+        subDomainBuilder.setBfrId(new BfrId(1));
+        subDomainBuilder.setIgpType(IgpType.OSPF);
+
+        Ipv4Builder ipv4Builder = new Ipv4Builder();
+        ipv4Builder.setBitstringlength(64);
+        ipv4Builder.setBierMplsLabelBase(new MplsLabel(20L));
+        ipv4Builder.setBierMplsLabelRangeSize(new BierMplsLabelRangeSize((short)4));
+        List<Ipv4> ipv4List = new ArrayList<Ipv4>();
+        ipv4List.add(ipv4Builder.build());
+        AfBuilder afBuilder = new AfBuilder();
+        afBuilder.setIpv4(ipv4List);
+        subDomainBuilder.setAf(afBuilder.build());
+        List<SubDomain> subDomainList = new ArrayList<SubDomain>();
         subDomainList.add(subDomainBuilder.build());
+        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
         bierBuilder.setSubDomain(subDomainList);
         domainBuilder.setBierGlobal(bierBuilder.build());
         List<Domain> domainList = new ArrayList<Domain>();

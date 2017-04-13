@@ -39,8 +39,11 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.bier.domain.BierSubDomain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.bier.domain.BierSubDomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.bier.domain.BierSubDomainKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParamsBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierEncapsulationMpls;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4;
@@ -50,6 +53,7 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class BierTopologyManager {
     private static final Logger LOG =  LoggerFactory.getLogger(BierTopologyManager.class);
@@ -102,8 +106,8 @@ public class BierTopologyManager {
     }
 
     public void setTopologyData(final BierTopology bierTopology) {
-        if ( null == dataBroker || null == bierTopology ) {
-            LOG.error("ZTE:Set Bier Topology input is error!");
+        if (null == dataBroker || null == bierTopology) {
+            LOG.error("Set Bier Topology input is error!");
             return;
         }
 
@@ -129,19 +133,19 @@ public class BierTopologyManager {
 
         try {
             ListenableFuture<BierTopology> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Set Bier Topology failed!");
+            if (null == result.get()) {
+                LOG.error("Set bier topology failed!");
                 return;
             }
-            LOG.info("ZTE:Set Bier Topology succeed!");
+            LOG.info("Set bier topology succeed!");
             return;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Set Bier Topology is Interrupted by", e);
+            LOG.error("Set bier topology is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Set Bier Topology is faild cause by", e);
+            LOG.error("Set bier topology is faild cause by", e);
         }
 
-        LOG.error("ZTE:Set Bier Topology failed!");
+        LOG.error("Set bier topology failed!");
         return;
     }
 
@@ -171,24 +175,24 @@ public class BierTopologyManager {
         try {
             ListenableFuture<BierTopology> result = future.get();
             BierTopology topology = result.get();
-            if ( null == topology || null == topology.getTopologyId()) {
-                LOG.error("ZTE:get bier topology is faild!");
+            if (null == topology || null == topology.getTopologyId()) {
+                LOG.error("Get bier topology is faild!");
                 return null;
             }
             return topology;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Get bier topology is Interrupted by", e);
+            LOG.error("Get bier topology is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Get bier topology is faild cause by", e);
+            LOG.error("Get bier topology is faild cause by", e);
         }
-        LOG.error("ZTE:get bier topology is faild!");
+        LOG.error("Get bier topology is faild!");
         return null;
     }
 
     public boolean setDomainData(final String topologyId,final List<BierDomain> domainList) {
 
-        if ( null == dataBroker || null == domainList || domainList.isEmpty() ) {
-            LOG.error("ZTE:Set bier domain input is error!");
+        if (null == dataBroker || null == domainList || domainList.isEmpty()) {
+            LOG.error("Set bier domain input is error!");
             return false;
         }
 
@@ -217,21 +221,21 @@ public class BierTopologyManager {
 
         try {
             ListenableFuture<BierDomain> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Set bier domain failed!");
+            if (null == result.get()) {
+                LOG.error("Set bier domain failed!");
                 return false;
             }
 
-            LOG.info("ZTE:Set bier domain succeed!");
+            LOG.info("Set bier domain succeed!");
             return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Set bier domain is Interrupted by", e);
+            LOG.error("Set bier domain is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Set bier domain is faild cause by", e);
+            LOG.error("Set bier domain is faild cause by", e);
         }
 
 
-        LOG.error("ZTE:Set bier domain failed!");
+        LOG.error("Set bier domain failed!");
         return false;
     }
 
@@ -264,24 +268,24 @@ public class BierTopologyManager {
         try {
             ListenableFuture<BierDomain> result = future.get();
             BierDomain domain = result.get();
-            if ( null == domain || null == domain.getDomainId()) {
-                LOG.error("ZTE:get bier domain is faild!");
+            if (null == domain || null == domain.getDomainId()) {
+                LOG.error("Get bier domain is faild!");
                 return null;
             }
             return domain;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Get bier domain is Interrupted by", e);
+            LOG.error("Get bier domain is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Get bier domain is faild cause by", e);
+            LOG.error("Get bier domain is faild cause by", e);
         }
-        LOG.error("ZTE:get bier domain is faild!");
+        LOG.error("Get bier domain is faild!");
         return null;
     }
 
     public boolean setSubDomainData(final String topologyId,final DomainId domainId,
             final List<BierSubDomain> subDomainList) {
-        if ( null == dataBroker || null == subDomainList || subDomainList.isEmpty() ) {
-            LOG.error("ZTE:Set bier sub-domai input is error!");
+        if (null == dataBroker || null == subDomainList || subDomainList.isEmpty()) {
+            LOG.error("Set bier sub-domai input is error!");
             return false;
         }
 
@@ -311,26 +315,26 @@ public class BierTopologyManager {
 
         try {
             ListenableFuture<BierSubDomain> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Set bier sub-domain failed!");
+            if (null == result.get()) {
+                LOG.error("Set bier sub-domain failed!");
                 return false;
             }
 
-            LOG.info("ZTE:Set bier sub-domain succeed!");
+            LOG.info("Set bier sub-domain succeed!");
             return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Set bier sub-domain is Interrupted by", e);
+            LOG.error("Set bier sub-domain is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Set bier sub-domain is faild cause by", e);
+            LOG.error("Set bier sub-domain is faild cause by", e);
         }
 
-        LOG.error("ZTE:Set bier sub-domain failed!");
+        LOG.error("Set bier sub-domain failed!");
         return false;
     }
 
     public boolean delDomainData(final String topologyId,final DomainId domainId,final List<BierNode> nodeList) {
-        if ( null == dataBroker || null == domainId ) {
-            LOG.error("ZTE:Del bier domain input is error!");
+        if (null == dataBroker || null == domainId) {
+            LOG.error("Del bier domain input is error!");
             return false;
         }
 
@@ -356,21 +360,21 @@ public class BierTopologyManager {
 
         try {
             ListenableFuture<BierDomain> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Del bier domain failed!");
+            if (null == result.get()) {
+                LOG.error("Del bier domain failed!");
                 return false;
             }
 
-            LOG.info("ZTE:Del domain bier domain succeed!");
+            LOG.info("Del bier domain succeed!");
             return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Del bier domain is Interrupted by", e);
+            LOG.error("Del bier domain is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Del bier domain is faild cause by", e);
+            LOG.error("Del bier domain is faild cause by", e);
         }
 
 
-        LOG.error("ZTE:Del bier domain failed!");
+        LOG.error("Del bier domain failed!");
         return false;
     }
 
@@ -393,8 +397,8 @@ public class BierTopologyManager {
     public boolean delSubDomainData(final String topologyId,final DomainId domainId,
             final SubDomainId subDomainId,final List<BierNode> nodeList) {
 
-        if ( null == dataBroker || null == domainId ) {
-            LOG.error("ZTE:Del bier sub-domain input is error!");
+        if (null == dataBroker || null == domainId) {
+            LOG.error("Del bier sub-domain input is error!");
             return false;
         }
 
@@ -422,20 +426,20 @@ public class BierTopologyManager {
 
         try {
             ListenableFuture<BierSubDomain> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Del sub-domain failed!");
+            if (null == result.get()) {
+                LOG.error("Del bier sub-domain failed!");
                 return false;
             }
 
-            LOG.info("ZTE:Del sub-domain succeed!");
+            LOG.info("Del bier sub-domain succeed!");
             return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Del sub-domain is Interrupted by", e);
+            LOG.error("Del bier sub-domain is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Del sub-domain is faild cause by", e);
+            LOG.error("Del bier sub-domain is faild cause by", e);
         }
 
-        LOG.error("ZTE:Del Optical Node failed!");
+        LOG.error("Del bier sub-domain failed!");
         return false;
     }
 
@@ -468,8 +472,8 @@ public class BierTopologyManager {
     }
 
     public boolean setNodeData(String topologyId, final BierNode node) {
-        if ( null == dataBroker || node == null ) {
-            LOG.error("ZTE:Set bier node input is error!");
+        if (null == dataBroker || node == null) {
+            LOG.error("Set bier node input is error!");
             return false;
         }
 
@@ -494,20 +498,20 @@ public class BierTopologyManager {
 
         try {
             ListenableFuture<BierNode> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Set bier node failed!");
+            if (null == result.get()) {
+                LOG.error("Set bier node failed!");
                 return false;
             }
 
-            LOG.info("ZTE:Set bier node succeed!");
+            LOG.info("Set bier node succeed!");
             return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Set bier node is Interrupted by", e);
+            LOG.error("Set bier node is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Set bier node is faild cause by", e);
+            LOG.error("Set bier node is faild cause by", e);
         }
 
-        LOG.error("ZTE:Set bier domain failed!");
+        LOG.error("Set bier node failed!");
         return false;
     }
 
@@ -536,17 +540,17 @@ public class BierTopologyManager {
         try {
             ListenableFuture<BierNode> result = future.get();
             BierNode node = result.get();
-            if ( null == node || null == node.getNodeId()) {
-                LOG.error("ZTE:get bier node is faild!");
+            if (null == node || null == node.getNodeId()) {
+                LOG.error("Get bier node is faild!");
                 return null;
             }
             return node;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Get bier node is Interrupted by", e);
+            LOG.error("Get bier node is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Get bier node is faild cause by", e);
+            LOG.error("Get bier node is faild cause by", e);
         }
-        LOG.error("ZTE:get bier node is faild!");
+        LOG.error("Get bier node is faild!");
         return null;
     }
 
@@ -583,20 +587,20 @@ public class BierTopologyManager {
 
         try {
             ListenableFuture<BierNode> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Del bier node failed!");
+            if (null == result.get()) {
+                LOG.error("Del bier node failed!");
                 return false;
             }
 
-            LOG.info("ZTE:Del bier node succeed!");
+            LOG.info("Del bier node succeed!");
             return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Del bier node is Interrupted by", e);
+            LOG.error("Del bier node is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Del bier node is faild cause by", e);
+            LOG.error("Del bier node is faild cause by", e);
         }
 
-        LOG.error("ZTE:Del bier Node failed!");
+        LOG.error("Del bier Node failed!");
         return false;
     }
 
@@ -652,20 +656,20 @@ public class BierTopologyManager {
 
         try {
             ListenableFuture<BierNode> result = future.get();
-            if ( null == result.get() ) {
-                LOG.error("ZTE:Del bier node ipv6 failed!");
+            if (null == result.get()) {
+                LOG.error("Del bier node ipv4 or ipv6 failed!");
                 return false;
             }
 
-            LOG.info("ZTE:Del bier node ipv6 succeed!");
+            LOG.info("Del bier node ipv4 or ipv6 succeed!");
             return true;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Del bier node ipv6 is Interrupted by", e);
+            LOG.error("Del bier node ipv4 or ipv6 is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Del bier node ipv6 is faild cause by", e);
+            LOG.error("Del bier node ipv4 or ipv6 is faild cause by", e);
         }
 
-        LOG.error("ZTE:Del bier Node ipv4 failed!");
+        LOG.error("Del bier Node ipv4 or ipv6 failed!");
         return false;
     }
 
@@ -698,17 +702,17 @@ public class BierTopologyManager {
         try {
             ListenableFuture<BierLink> result = future.get();
             BierLink link = result.get();
-            if ( null == link || null == link.getLinkId()) {
-                LOG.error("ZTE:get bier link is faild!");
+            if (null == link || null == link.getLinkId()) {
+                LOG.error("Get bier link is faild!");
                 return null;
             }
             return link;
         } catch (InterruptedException e) {
-            LOG.error("ZTE:Get bier link is Interrupted by", e);
+            LOG.error("Get bier link is Interrupted by", e);
         } catch (ExecutionException e) {
-            LOG.error("ZTE:Get bier link is faild cause by", e);
+            LOG.error("Get bier link is faild cause by", e);
         }
-        LOG.error("ZTE:get bier link is faild!");
+        LOG.error("Get bier link is faild!");
         return null;
     }
 
@@ -717,7 +721,7 @@ public class BierTopologyManager {
         List<BierNode> nodeList = new ArrayList<BierNode>();
         BierTopology  topo = getTopologyData(topologyId);
         if (topo == null) {
-            LOG.error("querySubdomainNode rpc topo is not exist!");
+            LOG.error("QuerySubdomainNode rpc topo is not exist!");
             return nodeList;
         }
 
@@ -769,7 +773,7 @@ public class BierTopologyManager {
         List<BierLink> linkList = new ArrayList<BierLink>();
         BierTopology  topo = getTopologyData(topologyId);
         if (topo == null) {
-            LOG.error("querySubdomainLink rpc topo is not exist!");
+            LOG.error("QuerySubdomainLink rpc topo is not exist!");
             return linkList;
         }
 
@@ -1026,5 +1030,250 @@ public class BierTopologyManager {
             bierNodeId.add(bierNode.get(loopi).getNodeId());
         }
         return bierNodeId;
+    }
+
+    public boolean checkNodeBfrId(String topologyId,BierNode node) {
+        List<Domain> domainList = node.getBierNodeParams().getDomain();
+        if (domainList == null) {
+            return true;
+        }
+        int domainSize = domainList.size();
+        for (int iloop = 0; iloop < domainSize; ++iloop) {
+            DomainId domainId = domainList.get(iloop).getDomainId();
+            List<SubDomain> subDomainList = domainList.get(iloop).getBierGlobal().getSubDomain();
+            if (subDomainList == null) {
+                return true;
+            }
+            int subDomainSize = subDomainList.size();
+            for (int jloop = 0; jloop < subDomainSize; ++jloop) {
+                SubDomainId subDomainId =  subDomainList.get(jloop).getSubDomainId();
+                if (!checkNodeBfrId(topologyId,domainId,subDomainId,node)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public boolean checkNodeBfrId(String topologyId,DomainId domainId,
+            SubDomainId subDomainId,BierNode node) {
+        List<BierNode> nodeList = getSubDomainNode(topologyId,domainId,subDomainId);
+        int nodeSize = nodeList.size();
+        for (int i = 0; i < nodeSize; ++i) {
+            BierNode node1 = nodeList.get(i);
+            if (node1.getNodeId().equals(node.getNodeId())) {
+                continue;
+            }
+
+            BfrId bfrId = getNodeBfrId(domainId,subDomainId,node);
+            BfrId bfrId1 = getNodeBfrId(domainId,subDomainId,node1);
+            if (bfrId.equals(bfrId1)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public BfrId getNodeBfrId(DomainId domainId,SubDomainId subDomainId,BierNode node) {
+        BfrId bfrId = new BfrId(new Integer(0));
+        int domainIndex = getDomainIndex(domainId,node);
+        if (domainIndex != -1) {
+            BfrId globalBfrId = node.getBierNodeParams().getDomain().get(domainIndex)
+                    .getBierGlobal().getBfrId();
+            int subDomainIndex = getSubDomainIndex(domainId,subDomainId,node);
+            if (subDomainIndex != -1) {
+                bfrId = node.getBierNodeParams().getDomain().get(domainIndex)
+                        .getBierGlobal().getSubDomain().get(subDomainIndex).getBfrId();
+                if (bfrId.getValue().intValue() == 0) {
+                    bfrId = globalBfrId;
+                }
+            }
+        }
+
+        return bfrId;
+    }
+
+    public class BierMplsLabel {
+        DomainId domainId;
+        SubDomainId subDomainId;
+        String type;
+        int bitstringlength;
+        long labelbase;
+        long rangesize;
+    }
+
+    public boolean checkNodeLabel(BierNode node,BierNode newNode) {
+        List<BierMplsLabel> labelList = getNodeLabel(node);
+        List<BierMplsLabel> newLabelList = getNodeLabel(newNode);
+
+        int newLabelSize = newLabelList.size();
+        for (int iloop = 0; iloop < newLabelSize - 1; ++iloop) {
+            BierMplsLabel label = newLabelList.get(iloop);
+
+            for (int jloop = iloop + 1; jloop < newLabelSize; ++jloop) {
+                BierMplsLabel label1 = newLabelList.get(jloop);
+
+                if (!checkNodeLabel(label,label1)) {
+                    return false;
+                }
+            }
+        }
+
+        int labelSize = labelList.size();
+        if (labelSize == 0) {
+            return true;
+        }
+        for (int iloop = 0; iloop < newLabelSize; ++iloop) {
+            BierMplsLabel label = newLabelList.get(iloop);
+
+            for (int jloop = 0; jloop < labelSize; ++jloop) {
+                BierMplsLabel label1 = labelList.get(jloop);
+
+                if (label.domainId.equals(label1.domainId) && label.subDomainId.equals(label1.subDomainId)
+                        && label.type.equals(label1.type)
+                        && label.bitstringlength == label1.bitstringlength
+                        && label1.labelbase == label1.labelbase) {
+                    continue;
+                }
+
+                if (!checkNodeLabel(label,label1)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public boolean checkNodeLabel(BierMplsLabel label,BierMplsLabel label1) {
+        Long begin = label.labelbase;
+        Long end = label.labelbase + label.rangesize - 1;
+        Long begin1 = label1.labelbase;
+        Long end1 = label1.labelbase + label1.rangesize - 1;
+
+        if (begin >= begin1 && begin <= end1 || end >= begin1 && end <= end1) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public List<BierMplsLabel> getNodeLabel(BierNode node) {
+        List<BierMplsLabel> labelList = new ArrayList<BierMplsLabel>();
+
+        List<Domain> domainList = node.getBierNodeParams().getDomain();
+        if (domainList != null) {
+            int domainSize = domainList.size();
+            for (int iloop = 0; iloop < domainSize; ++iloop) {
+                List<SubDomain> subDomainList = domainList.get(iloop).getBierGlobal().getSubDomain();
+                if (subDomainList != null) {
+                    int subDomainSize = subDomainList.size();
+                    for (int jloop = 0; jloop < subDomainSize; ++jloop) {
+                        if (subDomainList.get(jloop).getAf() != null) {
+                            List<Ipv4> ipv4List = subDomainList.get(jloop).getAf().getIpv4();
+                            if (ipv4List != null) {
+                                int ipv4Size = ipv4List.size();
+                                for (int kloop = 0; kloop < ipv4Size; ++kloop) {
+                                    BierMplsLabel label = new BierMplsLabel();
+                                    label.domainId = domainList.get(iloop).getDomainId();
+                                    label.subDomainId = subDomainList.get(jloop).getSubDomainId();
+                                    label.type = "ipv4";
+                                    Ipv4 ipv4 = ipv4List.get(kloop);
+                                    label.bitstringlength = ipv4.getBitstringlength();
+                                    label.labelbase = ipv4.getBierMplsLabelBase().getValue();
+                                    label.rangesize = ipv4.getBierMplsLabelRangeSize().getValue();
+                                    labelList.add(label);
+                                }
+                            }
+
+                            List<Ipv6> ipv6List = subDomainList.get(jloop).getAf().getIpv6();
+                            if (ipv6List != null) {
+                                int ipv6Size = ipv6List.size();
+                                for (int kloop = 0; kloop < ipv6Size; ++kloop) {
+                                    BierMplsLabel label = new BierMplsLabel();
+                                    label.domainId = domainList.get(iloop).getDomainId();
+                                    label.subDomainId = subDomainList.get(jloop).getSubDomainId();
+                                    label.type = "ipv6";
+                                    Ipv6 ipv6 = ipv6List.get(kloop);
+                                    label.bitstringlength = ipv6.getBitstringlength();
+                                    label.labelbase = ipv6.getBierMplsLabelBase().getValue();
+                                    label.rangesize = ipv6.getBierMplsLabelRangeSize().getValue();
+                                    labelList.add(label);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return labelList;
+    }
+
+    public String checkBierNodeParams(BierNode node,BierNodeParamsBuilder nodeParamsBuilder) {
+        String errorMsg = "";
+
+        List<Domain> domainList = nodeParamsBuilder.getDomain();
+        if (domainList == null || domainList.isEmpty()) {
+            errorMsg = " domain is null or empty!";
+            return errorMsg;
+        }
+
+        int domainSize = domainList.size();
+        for (int iloop = 0; iloop < domainSize; ++iloop) {
+            Domain domain = domainList.get(iloop);
+            DomainId domainId = domain.getDomainId();
+            int domainIndex = getDomainIndex(domainId,node);
+            if (domainIndex == -1) {
+                if (domain.getBierGlobal().getBitstringlength() == null) {
+                    errorMsg = "domain bitstringlength is null!";
+                    return errorMsg;
+                }
+
+                if (domain.getBierGlobal().getBfrId() == null) {
+                    errorMsg = "domain bfrid is null!";
+                    return errorMsg;
+                }
+
+                if (domain.getBierGlobal().getIpv4BfrPrefix() == null
+                        && domain.getBierGlobal().getIpv6BfrPrefix() == null) {
+                    errorMsg = "domain ipv4-bfr-prefix and ipv6-bfr-prefix are null on the same time!";
+                    return errorMsg;
+                }
+            }
+
+            List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
+            if (subDomainList == null || subDomainList.isEmpty()) {
+                continue;
+            }
+            int subDomainSize = subDomainList.size();
+            for (int jloop = 0; jloop < subDomainSize; ++jloop) {
+                SubDomain subDomain = subDomainList.get(jloop);
+                int subDomainIndex = getSubDomainIndex(domainId,subDomain.getSubDomainId(),node);
+                if (subDomainIndex == -1) {
+                    if (subDomain.getIgpType() == null) {
+                        errorMsg = "subdomain igp-type is null!";
+                        return errorMsg;
+                    }
+                    if (domain.getBierGlobal().getEncapsulationType() != null
+                            && domain.getBierGlobal().getEncapsulationType().equals(BierEncapsulationMpls.class)) {
+                        if (subDomain.getAf() == null) {
+                            errorMsg = "subdomain af is null when encapsulation-type is mpls!";
+                            return errorMsg;
+                        }
+
+                        if ((subDomain.getAf().getIpv4() == null || subDomain.getAf().getIpv4().isEmpty())
+                            && (subDomain.getAf().getIpv6() == null || subDomain.getAf().getIpv6().isEmpty())) {
+                            errorMsg = "subdomain ipv4 and ipv6 are null on the same time!";
+                            return errorMsg;
+                        }
+                    }
+                }
+            }
+        }
+
+        return errorMsg;
     }
 }
