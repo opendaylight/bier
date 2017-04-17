@@ -47,7 +47,8 @@ public class BierNodeChangeListener implements DataTreeChangeListener<BierNode> 
                                         + "old BierNode: {}, new BierNode: {}",
                                 change.getRootPath().getRootIdentifier(), rootNode.getDataBefore(),
                                 rootNode.getDataAfter());
-                        if (null == rootNode.getDataBefore()) {
+                        if (null == rootNode.getDataBefore() && null != rootNode.getDataAfter().getBierNodeParams()
+                                .getDomain()) {
                             processAddedNode(rootNode.getDataAfter());
                         } else {
                             processModifiedNode(rootNode.getDataBefore(), rootNode.getDataAfter());
@@ -78,40 +79,41 @@ public class BierNodeChangeListener implements DataTreeChangeListener<BierNode> 
     }
 
     public void processAddedNode(BierNode afterNode) {
-        if (null == afterNode) {
-            return;
-        }
         String nodeId = afterNode.getNodeId();
         bierParametersConfigProcess.processAddedDomain(nodeId, afterNode.getBierNodeParams().getDomain());
     }
 
     public void processDeletedNode(BierNode beforeNode) {
-        if (null == beforeNode) {
-            return;
-        }
         String nodeId = beforeNode.getNodeId();
         bierParametersConfigProcess.processDeletedDomain(nodeId, beforeNode.getBierNodeParams().getDomain());
     }
 
     public void processModifiedNode(BierNode beforeNode, BierNode afterNode) {
-        if (null == beforeNode || null == afterNode) {
-            return;
-        }
         String nodeId = beforeNode.getNodeId();
         bierParametersConfigProcess.processDomain(nodeId,beforeNode.getBierNodeParams().getDomain(),
              afterNode.getBierNodeParams().getDomain());
     }
 
     private boolean bierInfoCheck(BierNode before, BierNode after) {
-        if (null == before && null == after) {
-            return false;
-        }
-        if ((before.getBierNodeParams().getDomain() == null || before.getBierNodeParams().getDomain().isEmpty())
-              && (after.getBierNodeParams().getDomain() == null || after.getBierNodeParams().getDomain().isEmpty())) {
-            LOG.info("No Bier parameters!");
-            return false;
+        if (null == before) {
+            if (null != after.getBierNodeParams() || !after.getBierNodeParams().getDomain().isEmpty()) {
+                return true;
+            } else {
+                LOG.info("No Bier parameters!");
+                return false;
+            }
         } else {
-            return true;
+            if (null != before.getBierNodeParams() || !before.getBierNodeParams().getDomain().isEmpty()) {
+                return true;
+            } else {
+                if ((null != after) && (null != after.getBierNodeParams() || !after.getBierNodeParams().getDomain()
+                        .isEmpty())) {
+                    return true;
+                } else {
+                    LOG.info("No Bier parameters!");
+                    return false;
+                }
+            }
         }
     }
 

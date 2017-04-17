@@ -319,9 +319,6 @@ public class BierParametersConfigProcess {
     }
 
     private List<Domain> getChangeDomainList(List<Domain> domainBefore, List<Domain> domainAfter) {
-        if (null == domainBefore && null == domainAfter) {
-            return null;
-        }
         if (null == domainBefore && null != domainAfter) {
             return domainAfter;
         } else if (null != domainBefore && null == domainAfter) {
@@ -505,9 +502,6 @@ public class BierParametersConfigProcess {
             if (null == before.getAf() && null != after.getAf()) {
                 LOG.info("add af");
                 return true;
-            } else if (null != before.getAf() && null == after.getAf()) {
-                LOG.info("delete af");
-                return true;
             } else {
                 LOG.info("no content in af,only contain af change");
                 return true;
@@ -584,13 +578,7 @@ public class BierParametersConfigProcess {
     }
 
     private boolean checkBfrIdChange(Domain before, Domain after) {
-        if (null != before.getBierGlobal().getBfrId() && null != after.getBierGlobal().getBfrId()) {
-            if (after.getBierGlobal().getBfrId().equals(before.getBierGlobal().getBfrId())) {
-                return false;
-            } else {
-                return true;
-            }
-        } else if ((null == before.getBierGlobal().getBfrId()) && (null == after.getBierGlobal().getBfrId())) {
+        if (after.getBierGlobal().getBfrId().equals(before.getBierGlobal().getBfrId())) {
             return false;
         } else {
             return true;
@@ -598,14 +586,7 @@ public class BierParametersConfigProcess {
     }
 
     private boolean checkIpv4BfrPrefixChange(Domain before, Domain after) {
-        if (null != before.getBierGlobal().getIpv4BfrPrefix() && null != after.getBierGlobal().getIpv4BfrPrefix()) {
-            if (after.getBierGlobal().getIpv4BfrPrefix().equals(before.getBierGlobal().getIpv4BfrPrefix())) {
-                return false;
-            } else {
-                return true;
-            }
-        } else if ((null == before.getBierGlobal().getIpv4BfrPrefix())
-                && (null == after.getBierGlobal().getIpv4BfrPrefix())) {
+        if (after.getBierGlobal().getIpv4BfrPrefix().equals(before.getBierGlobal().getIpv4BfrPrefix())) {
             return false;
         } else {
             return true;
@@ -613,14 +594,7 @@ public class BierParametersConfigProcess {
     }
 
     private boolean checkIpv6BfrPrefixChange(Domain before, Domain after) {
-        if (null != before.getBierGlobal().getIpv6BfrPrefix() && null != after.getBierGlobal().getIpv6BfrPrefix()) {
-            if (after.getBierGlobal().getIpv6BfrPrefix().equals(before.getBierGlobal().getIpv6BfrPrefix())) {
-                return false;
-            } else {
-                return true;
-            }
-        } else if ((null == before.getBierGlobal().getIpv6BfrPrefix())
-                && (null == after.getBierGlobal().getIpv6BfrPrefix())) {
+        if (after.getBierGlobal().getIpv6BfrPrefix().equals(before.getBierGlobal().getIpv6BfrPrefix())) {
             return false;
         } else {
             return true;
@@ -651,14 +625,7 @@ public class BierParametersConfigProcess {
     }
 
     private boolean checkMtIdChange(SubDomain before, SubDomain after) {
-        if (null != before.getMtId() && null != after.getMtId()) {
-            if (after.getMtId().equals(before.getMtId())) {
-                return false;
-            } else {
-                return true;
-            }
-        } else if ((null == before.getMtId())
-                && (null == after.getMtId())) {
+        if (after.getMtId().equals(before.getMtId())) {
             return false;
         } else {
             return true;
@@ -666,14 +633,7 @@ public class BierParametersConfigProcess {
     }
 
     private boolean checkSubDomainBfrIdChange(SubDomain before, SubDomain after) {
-        if (null != before.getBfrId() && null != after.getBfrId()) {
-            if (after.getBfrId().equals(before.getBfrId())) {
-                return false;
-            } else {
-                return true;
-            }
-        } else if ((null == before.getBfrId())
-                && (null == after.getBfrId())) {
+        if (after.getBfrId().equals(before.getBfrId())) {
             return false;
         } else {
             return true;
