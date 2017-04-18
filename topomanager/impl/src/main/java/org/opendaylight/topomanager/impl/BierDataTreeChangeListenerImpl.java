@@ -43,32 +43,12 @@ public abstract class BierDataTreeChangeListenerImpl<T extends DataObject>
     protected DataBroker dataBroker;
 
     protected final ListenerRegistration<DataTreeChangeListener> listenerRegistration;
-    /*
-    protected static final InstanceIdentifier<Topology> II_TO_TOPOLOGY =
-            InstanceIdentifier
-                    .create(NetworkTopology.class)
-                    .child(Topology.class, new TopologyKey(new TopologyId("flow:1")));
-    */
 
     public BierDataTreeChangeListenerImpl(final DataBroker dataBroker,
                                           final InstanceIdentifier<T> ii) {
         final DataTreeIdentifier<T> identifier = new DataTreeIdentifier(LogicalDatastoreType.OPERATIONAL, ii);
         this.dataBroker = dataBroker;
         final SimpleTaskRetryLooper looper = new SimpleTaskRetryLooper(STARTUP_LOOP_TICK, STARTUP_LOOP_MAX_RETRIES);
-        /*try {
-            listenerRegistration = looper.loopUntilNoException(
-                    new Callable<ListenerRegistration<DataTreeChangeListener>>() {
-                        @Override
-                        public ListenerRegistration<DataTreeChangeListener> call() {
-                            return dataBroker.registerDataTreeChangeListener(identifier,
-                                    BierDataTreeChangeListenerImpl.this);
-                        }
-                    });
-        } catch (Exception e) {
-            LOG.error("Data listener registration failed!");
-            throw new IllegalStateException("TopologyManager startup fail! TM bundle needs restart.", e);
-        }
-        */
         listenerRegistration = dataBroker.registerDataTreeChangeListener(identifier,
                 BierDataTreeChangeListenerImpl.this);
     }

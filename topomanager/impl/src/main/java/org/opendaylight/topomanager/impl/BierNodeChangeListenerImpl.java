@@ -66,20 +66,6 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
         InstanceIdentifier<BierNode> iiToTopologyRemovedNode =
                 provideIIToTopologyNode(BIER_TOPOLOGY_ADAPTER.toBierId(nodeId));
         if (iiToTopologyRemovedNode != null) {
-            /*
-            processor.enqueueOperation(new BierTopologyOperation() {
-                @Override
-                public void writeOperation(final ReadWriteTransaction transaction) {
-                    transaction.delete(LogicalDatastoreType.CONFIGURATION, iiToTopologyRemovedNode);
-                }
-
-                @Override
-                public <T> ListenableFuture<T> readOperation(final ReadWriteTransaction transaction) {
-                    return null;
-                }
-            });
-            executor.submit(processor);
-            */
             notifyTopoChange(BierTopologyManager.TOPOLOGY_ID);
         } else {
             LOG.debug("Instance identifier to inventory wasn't translated to topology while deleting node.");
