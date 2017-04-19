@@ -37,13 +37,13 @@ public class ChannelDataBuilder {
 
         BierInformationBuilder bierInformationBuilder = new BierInformationBuilder();
 
-        if (channel.getSubDomainId() != null ) {
-            bierInformationBuilder.setSubDomain(new SubDomainId(channel.getSubDomainId().getValue()) );
+        if (channel.getSubDomainId() != null) {
+            bierInformationBuilder.setSubDomain(new SubDomainId(channel.getSubDomainId().getValue()));
         }
 
-        if (channel.getIngressBfrId() != null ) {
+        if (channel.getIngressBfrId() != null) {
 
-            bierInformationBuilder.setIngressNode(new BfrId(channel.getIngressBfrId().getValue()) );
+            bierInformationBuilder.setIngressNode(new BfrId(channel.getIngressBfrId().getValue()));
         }
         if (channel.getEgressNode() != null) {
             bierInformationBuilder.setEgressNodes(Lists.transform(channel.getEgressNode(),

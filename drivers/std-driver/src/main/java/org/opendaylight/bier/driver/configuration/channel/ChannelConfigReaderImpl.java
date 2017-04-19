@@ -41,7 +41,7 @@ public class ChannelConfigReaderImpl implements ChannelConfigReader {
         InstanceIdentifier<PureMulticast> pureMulticastIid = IidBuilder.buildPureMulticastIId(channel);
         PureMulticast pureMulticast = netconfDataOperator.read(channel.getIngressNode(),pureMulticastIid);
         if (pureMulticast != null) {
-            if ((pureMulticast.getMulticastOverlay() != null )
+            if ((pureMulticast.getMulticastOverlay() != null)
                     && (pureMulticast.getMulticastOverlay().getBierInformation() != null)) {
                 List<EgressNodes> egressNodesList =
                         pureMulticast.getMulticastOverlay().getBierInformation().getEgressNodes();

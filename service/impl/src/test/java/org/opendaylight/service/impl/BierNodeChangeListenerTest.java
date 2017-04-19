@@ -186,6 +186,33 @@ public class BierNodeChangeListenerTest {
     }
 
     @Test
+    public void testDeletedDomainChangeListener3() {
+        setUp();
+
+        List<Ipv4> ipv4List = new ArrayList<>();
+        ipv4List.add(constructIpv4(64, 101L, (short)30));
+
+        List<Ipv6> ipv6List = new ArrayList<>();
+        ipv6List.add(constructIpv6(128, 98L, (short)48));
+
+        List<SubDomain> subDomainList = new ArrayList<>();
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit, ipv4List, ipv6List));
+
+        Domain domain = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+
+        List<Domain> domainListBefore = new ArrayList<>();
+        domainListBefore.add(domain);
+
+        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
+
+        bierNodeChangeListener.processDeletedNode(bierNodeBefore);
+
+        assertDeletedDomainTest3(bierConfigWriterMock.getDomainProcessList());
+    }
+
+    @Test
     public void testModifiedParametersOfDomainChangeListener() {
         setUp();
 
@@ -208,8 +235,8 @@ public class BierNodeChangeListenerTest {
 
         Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 10,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
-        Domain domain4 = constructDomain(0002, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 20,
-                "102.112.20.42/22", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        Domain domain4 = constructDomain(0002, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
+                "102.112.20.42/22", "fe80::7009:fe25:8170:36af/63", subDomainList));
         List<Domain> domainListAfter = new ArrayList<>();
         domainListAfter.add(domain2);
         domainListAfter.add(domain4);
@@ -413,7 +440,7 @@ public class BierNodeChangeListenerTest {
         List<SubDomain> subDomainListBefore = new ArrayList<>();
         List<SubDomain> subDomainListAfter = new ArrayList<>();
         subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit, ipv4List, ipv6List));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.OSPF, 12, 13, Bsl._256Bit, ipv4List, ipv6List));
+        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit, ipv4List, ipv6List));
 
         Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
@@ -451,7 +478,7 @@ public class BierNodeChangeListenerTest {
         List<SubDomain> subDomainListBefore = new ArrayList<>();
         List<SubDomain> subDomainListAfter = new ArrayList<>();
         subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit, ipv4ListBefore, ipv6List));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.OSPF, 12, 13, Bsl._256Bit, ipv4ListAfter, ipv6List));
+        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit, ipv4ListAfter, ipv6List));
 
         Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
@@ -490,7 +517,7 @@ public class BierNodeChangeListenerTest {
         List<SubDomain> subDomainListBefore = new ArrayList<>();
         List<SubDomain> subDomainListAfter = new ArrayList<>();
         subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit, ipv4List, ipv6ListBefore));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.OSPF, 12, 13, Bsl._256Bit, ipv4List, ipv6ListAfter));
+        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit, ipv4List, ipv6ListAfter));
 
         Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
@@ -527,7 +554,7 @@ public class BierNodeChangeListenerTest {
         List<SubDomain> subDomainListAfter = new ArrayList<>();
         subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit, ipv4ListBefore,
                 ipv6ListBefore));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.OSPF, 12, 13, Bsl._256Bit, null, null));
+        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit, null, null));
 
         Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
@@ -885,6 +912,10 @@ public class BierNodeChangeListenerTest {
         assertAddedOrDeletedDomainData(domainList);
     }
 
+    private void assertDeletedDomainTest3(List<Domain> domainList) {
+        assertAddedOrDeletedDomainData(domainList);
+    }
+
     private void assertAddedOrDeletedDomainData(List<Domain> domainList) {
         BierGlobal bierGlobal = domainList.get(0).getBierGlobal();
         SubDomain subDomain = bierGlobal.getSubDomain().get(0);
@@ -920,7 +951,7 @@ public class BierNodeChangeListenerTest {
         Assert.assertEquals(domainList.get(0).getDomainId(), new DomainId(0001));
         Assert.assertEquals(domainList.get(1).getDomainId(), new DomainId(0002));
         Assert.assertEquals(bierGlobal1.getBitstringlength(), Bsl._128Bit);
-        Assert.assertEquals(bierGlobal2.getBfrId(), new BfrId(20));
+        Assert.assertEquals(bierGlobal2.getIpv6BfrPrefix(), new Ipv6Prefix("fe80::7009:fe25:8170:36af/63"));
     }
 
     private void assertAddedSubDomainTest1(List<SubDomain> subDomainList) {
@@ -1003,7 +1034,6 @@ public class BierNodeChangeListenerTest {
     private void assertModifiedParametersOfSubDomainTest(List<SubDomain> subDomainList) {
         Assert.assertEquals(subDomainList.size(), 1);
         Assert.assertEquals(subDomainList.get(0).getSubDomainId(), new SubDomainId(0001));
-        Assert.assertEquals(subDomainList.get(0).getIgpType(), IgpType.OSPF);
         Assert.assertEquals(subDomainList.get(0).getBitstringlength(), Bsl._256Bit);
     }
 
@@ -1025,7 +1055,6 @@ public class BierNodeChangeListenerTest {
                                                                        List<Ipv4> ipv4List) {
         Assert.assertEquals(subDomainList.size(), 1);
         Assert.assertEquals(subDomainList.get(0).getSubDomainId(),new SubDomainId(0001));
-        Assert.assertEquals(subDomainList.get(0).getIgpType(), IgpType.OSPF);
         Assert.assertEquals(subDomainList.get(0).getBitstringlength(), Bsl._256Bit);
         Assert.assertEquals(ipv4List.size(), 1);
         Assert.assertEquals(ipv4List.get(0).getBitstringlength(), new Integer(80));
@@ -1037,7 +1066,6 @@ public class BierNodeChangeListenerTest {
                                                                        List<Ipv6> ipv6List) {
         Assert.assertEquals(subDomainList.size(), 1);
         Assert.assertEquals(subDomainList.get(0).getSubDomainId(),new SubDomainId(0001));
-        Assert.assertEquals(subDomainList.get(0).getIgpType(), IgpType.OSPF);
         Assert.assertEquals(subDomainList.get(0).getBitstringlength(), Bsl._256Bit);
         Assert.assertEquals(ipv6List.size(), 1);
         Assert.assertEquals(ipv6List.get(0).getBitstringlength(), new Integer(256));
@@ -1049,7 +1077,6 @@ public class BierNodeChangeListenerTest {
                                                                            List<Ipv4> ipv4List, List<Ipv6> ipv6List) {
         Assert.assertEquals(subDomainList.size(), 1);
         Assert.assertEquals(subDomainList.get(0).getSubDomainId(),new SubDomainId(0001));
-        Assert.assertEquals(subDomainList.get(0).getIgpType(), IgpType.OSPF);
         Assert.assertEquals(subDomainList.get(0).getBitstringlength(), Bsl._256Bit);
         Assert.assertEquals(ipv4List.size(), 1);
         Assert.assertEquals(ipv4List.get(0).getBitstringlength(), new Integer(64));

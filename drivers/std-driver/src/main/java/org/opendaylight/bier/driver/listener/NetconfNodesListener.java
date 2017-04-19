@@ -49,8 +49,15 @@ import org.slf4j.LoggerFactory;
 
 
 public class NetconfNodesListener implements DataTreeChangeListener<Node> {
+
+
     private static final Logger LOG = LoggerFactory.getLogger(NetconfNodesListener.class);
     private ListenerRegistration<NetconfNodesListener> listenerRegistration;
+
+    public Map<NodeId, ListenerRegistration<IetfBierListener>> getMapNodeListenerReg() {
+        return mapNodeListenerReg;
+    }
+
     private Map<NodeId, ListenerRegistration<IetfBierListener>> mapNodeListenerReg = Maps.newHashMap();
     private NetconfDataOperator netconfDataOperator ;
 
@@ -75,13 +82,7 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
         while (entries.hasNext()) {
 
             Map.Entry<NodeId, ListenerRegistration<IetfBierListener>> entry = entries.next();
-
-            if (entry.getValue() != null ) {
-                entry.getValue().close();
-                LOG.info("unregisterListener {}",entry.getKey());
-
-            }
-
+            unRegisterNotificationListener(entry.getKey());
         }
 
     }
@@ -123,46 +124,67 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
         rpcService.createSubscription(createSubscriptionInputBuilder.build());
     }
 
-
+    public void unRegisterNotificationListener(final NodeId nodeId) {
+        final ListenerRegistration<IetfBierListener> listenerRegistration = mapNodeListenerReg.get(nodeId);
+        if (listenerRegistration != null) {
+            listenerRegistration.close();
+        }
+        mapNodeListenerReg.remove(nodeId);
+        LOG.info("unregisterListener {}",nodeId);
+    }
 
 
 
     @Override
     public void onDataTreeChanged(Collection<DataTreeModification<Node>> changes) {
         LOG.info("Netconf nodes change!");
+        Node nodeBefore = null;
+        Node nodeAfter = null;
+        Node nodeInfo = null;
         for (DataTreeModification<Node> change:changes) {
             DataObjectModification<Node> rootNode = change.getRootNode();
-            if (rootNode.getDataAfter().getNodeId().getValue().equals("controller-config")) {
-
+            nodeBefore = rootNode.getDataBefore();
+            nodeAfter = rootNode.getDataAfter();
+            if (nodeBefore != null) {
+                nodeInfo  = nodeBefore;
+            } else {
+                nodeInfo = nodeAfter;
+            }
+            if (nodeInfo == null) {
+                LOG.info("Netconf node info null");
+                continue;
+            }
+            if (nodeInfo.getNodeId().getValue().equals("controller-config")) {
                 LOG.info("Netconf node {} ignored",rootNode.getDataAfter().getNodeId().getValue());
-                break;
+                continue;
             }
             switch (rootNode.getModificationType()) {
                 case WRITE:
-                    LOG.info("Netconf node {} was created",rootNode.getDataAfter().getNodeId().getValue());
-                    NetconfNode ncNode = rootNode.getDataAfter().getAugmentation(NetconfNode.class);
+                    LOG.info("Netconf node {} was created", nodeAfter.getNodeId().getValue());
+                    NetconfNode ncNode = nodeAfter.getAugmentation(NetconfNode.class);
                     if (ncNode.getConnectionStatus() == NetconfNodeConnectionStatus.ConnectionStatus.Connected) {
                         if (hasNotification(ncNode.getAvailableCapabilities())) {
-                            registerNotificationListener(rootNode.getDataAfter().getNodeId());
+                            registerNotificationListener(nodeAfter.getNodeId());
                         }
 
                     }
                     break;
                 case SUBTREE_MODIFIED:
-                    NetconfNode ncNodeNew = rootNode.getDataAfter().getAugmentation(NetconfNode.class);
-                    NetconfNode ncNodeOld = rootNode.getDataBefore().getAugmentation(NetconfNode.class);
+                    NetconfNode ncNodeNew = nodeAfter.getAugmentation(NetconfNode.class);
+                    NetconfNode ncNodeOld = nodeBefore.getAugmentation(NetconfNode.class);
                     if ((ncNodeNew.getConnectionStatus() == NetconfNodeConnectionStatus.ConnectionStatus.Connected)
                             &&
                             (ncNodeOld.getConnectionStatus() != NetconfNodeConnectionStatus.ConnectionStatus.Connected)
                     ) {
                         if (hasNotification(ncNodeNew.getAvailableCapabilities())) {
-                            registerNotificationListener(rootNode.getDataAfter().getNodeId());
+                            registerNotificationListener(nodeAfter.getNodeId());
                         }
                     }
 
                     break;
                 case DELETE:
-                    LOG.info("Netconf node {} was deleted",rootNode.getDataBefore().getNodeId().getValue());
+                    LOG.info("Netconf node {} was deleted", nodeBefore.getNodeId().getValue());
+                    unRegisterNotificationListener(nodeBefore.getNodeId());
                     break;
                 default:
                     break;

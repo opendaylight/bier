@@ -103,7 +103,7 @@ public class BierConfigWriterImpl implements BierConfigWriter {
         // Now domain id is ignored for ietf-bier.yang doesn't support multiple domains.
 
 
-        if ( type == ConfigurationType.DELETE ) {
+        if (type == ConfigurationType.DELETE) {
 
             LOG.info("configurations write to node {}: delete - sub-domain {}",
                     nodeId,subDomain);
@@ -147,7 +147,7 @@ public class BierConfigWriterImpl implements BierConfigWriter {
         InstanceIdentifier<Ipv4> ipv4IId = getSubDomainIId(subDomainId)
                 .child(Af.class)
                 .child(Ipv4.class, ipv4.getKey());
-        if (type == ConfigurationType.DELETE ) {
+        if (type == ConfigurationType.DELETE) {
 
             return netconfDataOperator.write(
                     DataWriter.OperateType.DELETE,
