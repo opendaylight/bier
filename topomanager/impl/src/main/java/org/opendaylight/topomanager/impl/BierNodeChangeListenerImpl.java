@@ -16,12 +16,8 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
@@ -124,10 +120,4 @@ public class BierNodeChangeListenerImpl extends BierDataTreeChangeListenerImpl<N
 
     }
 
-    public InstanceIdentifier<BierNode> provideIIToTopologyNode(final String nodeIdInTopology) {
-        BierNodeKey bierNodeKey = new BierNodeKey(nodeIdInTopology);
-        return InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(TOPOLOGY_IID))
-                .child(BierNode.class, bierNodeKey);
-    }
 }

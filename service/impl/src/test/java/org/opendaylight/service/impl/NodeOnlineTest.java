@@ -72,13 +72,13 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
     public void nodeOnlineTest() {
         addNodeToDatastore("1", constructDomainList(1, 1, 1, 1));
         addNodeToDatastore("2", constructDomainList(1, 2, 1, 2));
-        //addNodeToDatastore("3", null);
+        addNodeToDatastore("3", null);
         addChannelToDatastore(constructBierChannel("flow:1", "channel-1", "10.84.220.5",
                 "102.112.20.40", 1, 1, (short)30, (short)40, 2, "2",
                 constructEgressNodeList(1, "1")));
         nodeOnlineBierConfigProcess.queryBierConfigAndSendForNodeOnline("1");
         nodeOnlineBierConfigProcess.queryBierConfigAndSendForNodeOnline("2");
-        //nodeOnlineBierConfigProcess.queryBierConfigAndSendForNodeOnline("3");
+        nodeOnlineBierConfigProcess.queryBierConfigAndSendForNodeOnline("3");
         assertDomainList(bierConfigWriterMock.getDomainProcessList());
         assertChannel(channelConfigWriterMock.getChannel());
     }
@@ -181,7 +181,15 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
 
     private void assertChannel(Channel channel) {
         Assert.assertEquals(channel.getName(), "channel-1");
+        Assert.assertEquals(channel.getSrcIp(), new IpAddress(new Ipv4Address("10.84.220.5")));
+        Assert.assertEquals(channel.getDstGroup(), new IpAddress(new Ipv4Address("102.112.20.40")));
+        Assert.assertEquals(channel.getDomainId(), new DomainId(1));
+        Assert.assertEquals(channel.getSubDomainId(), new SubDomainId(1));
         Assert.assertEquals(channel.getIngressBfrId(), new BfrId(2));
+        Assert.assertEquals(channel.getIngressNode(), "2");
+        Assert.assertEquals(channel.getEgressNode().size(), 1);
+        Assert.assertEquals(channel.getEgressNode().get(0).getEgressBfrId(), new BfrId(1));
+        Assert.assertEquals(channel.getEgressNode().get(0).getNodeId(),"1");
     }
 
     private static class BierConfigWriterMock implements BierConfigWriter {

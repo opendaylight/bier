@@ -74,9 +74,13 @@ public class NodeOnlineBierConfigProcess {
         } catch (ReadFailedException e) {
             LOG.error("Get bierNode from bier topology is null");
         }
-        if (0 != node.getBierNodeParams().getDomain().size()) {
-            LOG.info("Node has bier config");
-            return node;
+        if (null != node.getBierNodeParams()) {
+            if (null != node.getBierNodeParams().getDomain() && 0 != node.getBierNodeParams().getDomain().size()) {
+                LOG.info("Node has bier config");
+                return node;
+            } else {
+                return null;
+            }
         } else {
             LOG.info("Node has no bier config");
             return null;

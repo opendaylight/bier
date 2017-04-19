@@ -14,6 +14,11 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.openflowplugin.common.wait.SimpleTaskRetryLooper;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChange;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChangeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -77,5 +82,12 @@ public abstract class BierDataTreeChangeListenerImpl<T extends DataObject>
         TopoChange notification = new TopoChangeBuilder().setTopoId(topoId).build();
         LOG.info("notify TopoChange:" + topoId);
         NotificationProvider.getInstance().notify(notification);
+    }
+
+    public InstanceIdentifier<BierNode> provideIIToTopologyNode(final String nodeIdInTopology) {
+        BierNodeKey bierNodeKey = new BierNodeKey(nodeIdInTopology);
+        return InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(TOPOLOGY_IID))
+                .child(BierNode.class, bierNodeKey);
     }
 }

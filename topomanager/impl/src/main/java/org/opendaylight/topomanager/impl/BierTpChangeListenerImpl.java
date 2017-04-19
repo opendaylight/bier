@@ -17,9 +17,6 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPoint;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPointBuilder;
@@ -71,13 +68,14 @@ public class BierTpChangeListenerImpl
 
     private void processRemovedTerminationPoints(final DataTreeModification<TerminationPoint> modification) {
         final TerminationPoint tp = modification.getRootNode().getDataBefore();
-        final String tpId = BIER_TOPOLOGY_ADAPTER.toBierId(tp.getTpId().getValue());
+        final BierTerminationPoint bierTp = BIER_TOPOLOGY_ADAPTER.toBierTp(tp);
+        final String bierTpId = bierTp.getTpId();
+        final InstanceIdentifier<TerminationPoint> iiTp = modification.getRootPath().getRootIdentifier();
+        final InstanceIdentifier<BierTerminationPoint> iiToTopologyRemovedtp = provideIIToTopologyTp(bierTpId, iiTp);
         final BierTopologyProcess<BierTerminationPoint> processor =
                 new BierTopologyProcess<BierTerminationPoint>(dataBroker,
                         BierTopologyProcess.FLAG_WRITE, (new BierTerminationPointBuilder()).build());
-        InstanceIdentifier<BierTerminationPoint> iiToTopologyRemovedtp = provideIIToTopologyTp(tpId);
         if (iiToTopologyRemovedtp != null) {
-
             processor.enqueueOperation(new BierTopologyOperation() {
                 @Override
                 public void writeOperation(final ReadWriteTransaction transaction) {
@@ -104,11 +102,12 @@ public class BierTpChangeListenerImpl
 
     private void processAddedTerminationPoints(final DataTreeModification<TerminationPoint> modification) {
         final TerminationPoint tp = modification.getRootNode().getDataAfter();
-        BierTerminationPoint bierTp = BIER_TOPOLOGY_ADAPTER.toBierTp(tp);
-        final String tpIdInTopology = bierTp.getTpId();
-        if (tpIdInTopology != null) {
-            final InstanceIdentifier<BierTerminationPoint> iiToTopologytp = provideIIToTopologyTp(tpIdInTopology);
-            sendToTransactionChain(bierTp, iiToTopologytp);
+        final BierTerminationPoint bierTp = BIER_TOPOLOGY_ADAPTER.toBierTp(tp);
+        final String tpId = bierTp.getTpId();
+        final InstanceIdentifier<TerminationPoint> iiTp = modification.getRootPath().getRootIdentifier();
+        if (tpId != null) {
+            InstanceIdentifier<BierTerminationPoint> iiToTopologyAddedtp = provideIIToTopologyTp(tpId, iiTp);
+            sendToTransactionChain(bierTp, iiToTopologyAddedtp);
             //removeLinks(modification.getRootNode().getDataAfter(), point);
         } else {
             LOG.debug("Inventory node key is null. Data can't be written to topology");
@@ -150,11 +149,18 @@ public class BierTpChangeListenerImpl
         executor.submit(processor);
     }
 
-    public InstanceIdentifier<BierTerminationPoint> provideIIToTopologyTp(final String tpIdInTopology) {
-        BierTerminationPointKey bierTerminationPointKey = new BierTerminationPointKey(tpIdInTopology);
-        return InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(TOPOLOGY_IID))
-                .child(BierNode.class)
-                .child(BierTerminationPoint.class, bierTerminationPointKey);
+    public InstanceIdentifier<BierTerminationPoint> provideIIToTopologyTp(
+            final String tpIdInBier,
+            final InstanceIdentifier<TerminationPoint> iiTp) {
+        final String nodeId = iiTp.firstKeyOf(Node.class).getNodeId().getValue();
+        if (tpIdInBier != null && nodeId != null) {
+            InstanceIdentifier<BierNode> iiToBierNode = provideIIToTopologyNode(nodeId);
+            return iiToBierNode.builder().child(BierTerminationPoint.class,
+                    new BierTerminationPointKey(tpIdInBier)).build();
+        } else {
+            LOG.debug("Value of termination point ID in topology is null. "
+                    + "Instance identifier to topology can't be built");
+            return null;
+        }
     }
 }

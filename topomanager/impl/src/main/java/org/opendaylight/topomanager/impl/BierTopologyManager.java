@@ -742,7 +742,13 @@ public class BierTopologyManager {
     public boolean isNodeBelongToSubDomain(DomainId domainId,SubDomainId subDomainId,BierNode node) {
         boolean findFlag = false;
         BierNodeBuilder nodeBuilder = new BierNodeBuilder(node);
+        if (nodeBuilder.getBierNodeParams() == null) {
+            return false;
+        }
         List<Domain> domainList = nodeBuilder.getBierNodeParams().getDomain();
+        if (domainList == null) {
+            return false;
+        }
         int domainSize = domainList.size();
         for (int jloop = 0; jloop < domainSize; ++jloop) {
             Domain domain = domainList.get(jloop);
@@ -751,6 +757,9 @@ public class BierTopologyManager {
             }
 
             List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
+            if (subDomainList == null) {
+                return false;
+            }
             int subDomainSize = subDomainList.size();
             for (int kloop = 0; kloop < subDomainSize; ++kloop) {
                 SubDomain subDomain = subDomainList.get(kloop);
@@ -921,6 +930,9 @@ public class BierTopologyManager {
     }
 
     public int getDomainIndex(DomainId domainId,BierNode node) {
+        if (node.getBierNodeParams() == null) {
+            return -1;
+        }
         List<Domain> domainList =  node.getBierNodeParams().getDomain();
         if (domainList == null) {
             return -1;
@@ -1033,6 +1045,9 @@ public class BierTopologyManager {
     }
 
     public boolean checkNodeBfrId(String topologyId,BierNode node) {
+        if (node.getBierNodeParams() == null) {
+            return true;
+        }
         List<Domain> domainList = node.getBierNodeParams().getDomain();
         if (domainList == null) {
             return true;
@@ -1162,7 +1177,9 @@ public class BierTopologyManager {
 
     public List<BierMplsLabel> getNodeLabel(BierNode node) {
         List<BierMplsLabel> labelList = new ArrayList<BierMplsLabel>();
-
+        if (node.getBierNodeParams() == null) {
+            return labelList;
+        }
         List<Domain> domainList = node.getBierNodeParams().getDomain();
         if (domainList != null) {
             int domainSize = domainList.size();
