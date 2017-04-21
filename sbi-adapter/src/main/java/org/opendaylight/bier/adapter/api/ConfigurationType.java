@@ -11,8 +11,8 @@ package org.opendaylight.bier.adapter.api;
 public enum ConfigurationType {
 
     ADD(1,"add"),
-    MODIFY(1,"modify"),
-    DELETE(1,"delete");
+    MODIFY(2,"modify"),
+    DELETE(3,"delete");
 
     java.lang.String name;
     int value;

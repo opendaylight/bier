@@ -149,7 +149,45 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void queryTopologyTest2() throws Exception {
+        RpcResult<QueryTopologyOutput> output = topoImpl.queryTopology(null).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input is null!",output.getErrors().iterator().next().getMessage());
+
+        QueryTopologyInputBuilder inputBuilder = new QueryTopologyInputBuilder();
+        output = topoImpl.queryTopology(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input param is error!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:2");
+        output = topoImpl.queryTopology(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("topo is not exist!",output.getErrors().iterator().next().getMessage());
+    }
+
+    @Test
     public void queryNodeTest() throws Exception {
+        RpcResult<QueryNodeOutput> output = topoImpl.queryNode(null).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input is null!",output.getErrors().iterator().next().getMessage());
+
+        QueryNodeInputBuilder inputBuilder = new QueryNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.queryNode(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input param is error!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:2");
+        List<String> nodeIdList = new ArrayList<String>();
+        nodeIdList.add("1");
+        inputBuilder.setNode(nodeIdList);
+        output = topoImpl.queryNode(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("topo is not exist!",output.getErrors().iterator().next().getMessage());
+    }
+
+    @Test
+    public void queryNodeTest2() throws Exception {
         QueryNodeOutput output = queryNode();
         Assert.assertTrue(output.getNode().size() == 1);
         Assert.assertTrue(output.getNode().get(0).getNodeId().equals("1"));
@@ -192,6 +230,27 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void queryLinkTest2() throws Exception {
+        RpcResult<QueryLinkOutput> output = topoImpl.queryLink(null).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input is null!",output.getErrors().iterator().next().getMessage());
+
+        QueryLinkInputBuilder inputBuilder = new QueryLinkInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.queryLink(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input param is error!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:2");
+        List<String> linkIdList = new ArrayList<String>();
+        linkIdList.add("1");
+        inputBuilder.setLink(linkIdList);
+        output = topoImpl.queryLink(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("topo is not exist!",output.getErrors().iterator().next().getMessage());
+    }
+
+    @Test
     public void configDomainTest() throws Exception {
         ConfigureDomainOutput output = configureDomain(1);
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
@@ -215,6 +274,44 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         ConfigureDomainOutput output2 = configureDomain(1);
         Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertTrue(output2.getConfigureResult().getErrorCause().equals("domain is exist!"));
+    }
+
+    @Test
+    public void configDomainTest3() throws Exception {
+        RpcResult<ConfigureDomainOutput> output = topoImpl.configureDomain(null).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input is null!"));
+
+        ConfigureDomainInputBuilder inputBuilder = new ConfigureDomainInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.configureDomain(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input param is error!"));
+
+        inputBuilder.setTopologyId("flow:2");
+        List<DomainId> domainIdList = new ArrayList<DomainId>();
+        domainIdList.add(new DomainId(1));
+        inputBuilder.setDomain(domainIdList);
+        output = topoImpl.configureDomain(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("topo is not exist!"));
+    }
+
+    @Test
+    public void queryDomainTest() throws Exception {
+        RpcResult<QueryDomainOutput> output = topoImpl.queryDomain(null).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input is null!",output.getErrors().iterator().next().getMessage());
+
+        QueryDomainInputBuilder inputBuilder = new QueryDomainInputBuilder();
+        output = topoImpl.queryDomain(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input param is error!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:2");
+        output = topoImpl.queryDomain(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("topo is not exist!",output.getErrors().iterator().next().getMessage());
     }
 
     @Test
@@ -256,6 +353,39 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void configSubdomainTest4() throws Exception {
+        RpcResult<ConfigureSubdomainOutput> output = topoImpl.configureSubdomain(null).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input is null!"));
+
+        ConfigureSubdomainInputBuilder inputBuilder = new ConfigureSubdomainInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(1));
+        output = topoImpl.configureSubdomain(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input param is error!"));
+    }
+
+    @Test
+    public void querySubDomainTest() throws Exception {
+        RpcResult<QuerySubdomainOutput> output = topoImpl.querySubdomain(null).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input is null!",output.getErrors().iterator().next().getMessage());
+
+        QuerySubdomainInputBuilder inputBuilder = new QuerySubdomainInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.querySubdomain(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input param is error!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(1));
+        output = topoImpl.querySubdomain(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("domain is not exist!",output.getErrors().iterator().next().getMessage());
+    }
+
+    @Test
     public void configNodeTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -273,7 +403,6 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         Assert.assertTrue(queryOutput.getNode().get(0).getBierNodeParams()
                 .getDomain().get(0).getBierGlobal().getSubDomain().get(0)
                 .getSubDomainId().getValue().intValue() == 1);
-
     }
 
     @Test
@@ -319,6 +448,85 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         ConfigureNodeOutput output = configureNode(1,2,"1");
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("node label range is overlapped!"));
+    }
+
+    @Test
+    public void configNodeTest7() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode1(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals(" domain is null or empty!"));
+    }
+
+    @Test
+    public void configNodeTest8() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode2(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("domain bitstringlength is null!"));
+    }
+
+    @Test
+    public void configNodeTest9() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode3(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("domain bfrid is null!"));
+    }
+
+    @Test
+    public void configNodeTest10() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode4(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("domain ipv4-bfr-prefix and ipv6-bfr-prefix are null on the same time!"));
+    }
+
+    @Test
+    public void configNodeTest11() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode5(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("subdomain igp-type is null!"));
+    }
+
+    @Test
+    public void configNodeTest12() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode6(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("subdomain af is null when encapsulation-type is mpls!"));
+    }
+
+    @Test
+    public void configNodeTest13() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        ConfigureNodeOutput output = configureNode7(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("subdomain ipv4 and ipv6 are null on the same time!"));
+    }
+
+    @Test
+    public void configNodeTest14() throws Exception {
+        RpcResult<ConfigureNodeOutput> output = topoImpl.configureNode(null).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input is null!"));
+
+        ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.configureNode(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input param is error!"));
     }
 
     @Test
@@ -421,6 +629,31 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void deleteNodeTest4() throws Exception {
+        DeleteNodeInputBuilder inputBuilder = new DeleteNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(1));
+        inputBuilder.setSubDomainId(new SubDomainId(1));
+        RpcResult<DeleteNodeOutput> output = topoImpl.deleteNode(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("input param is error!"));
+
+        inputBuilder.setNodeId("3");
+        output = topoImpl.deleteNode(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+
+        inputBuilder.setNodeId("1");
+        output = topoImpl.deleteNode(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
+    }
+
+
+    @Test
     public void deleteIpv4Test() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -497,6 +730,30 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         DeleteIpv4Output output = deleteIpv4(1,1,"1",4,1,4);
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("ipv4 is not exist!"));
+    }
+
+    @Test
+    public void deleteIpv4Test5() throws Exception {
+        DeleteIpv4InputBuilder inputBuilder = new DeleteIpv4InputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(1));
+        inputBuilder.setSubDomainId(new SubDomainId(1));
+        RpcResult<DeleteIpv4Output> output = topoImpl.deleteIpv4(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("input param is error!"));
+
+        inputBuilder.setNodeId("3");
+        output = topoImpl.deleteIpv4(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+
+        inputBuilder.setNodeId("1");
+        output = topoImpl.deleteIpv4(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
     }
 
     @Test
@@ -579,6 +836,30 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void deleteIpv6Test5() throws Exception {
+        DeleteIpv6InputBuilder inputBuilder = new DeleteIpv6InputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setDomainId(new DomainId(1));
+        inputBuilder.setSubDomainId(new SubDomainId(1));
+        RpcResult<DeleteIpv6Output> output = topoImpl.deleteIpv6(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("input param is error!"));
+
+        inputBuilder.setNodeId("3");
+        output = topoImpl.deleteIpv6(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+
+        inputBuilder.setNodeId("1");
+        output = topoImpl.deleteIpv6(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
+    }
+
+    @Test
     public void deleteSubdomainTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -657,6 +938,25 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void deleteDomainTest3() throws Exception {
+        RpcResult<DeleteDomainOutput> output = topoImpl.deleteDomain(null).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input is null!"));
+
+        DeleteDomainInputBuilder inputBuilder = new DeleteDomainInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.deleteDomain(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input param is error!"));
+
+        inputBuilder.setTopologyId("flow:2");
+        inputBuilder.setDomainId(new DomainId(1));
+        output = topoImpl.deleteDomain(inputBuilder.build()).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("topo is not exist!"));
+    }
+
+    @Test
     public void querySubDomainNodeTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -678,6 +978,31 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void querySubDomainNodeTest2() throws Exception {
+        RpcResult<QuerySubdomainNodeOutput> output = topoImpl.querySubdomainNode(null).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input is null!",output.getErrors().iterator().next().getMessage());
+
+        QuerySubdomainNodeInputBuilder inputBuilder = new QuerySubdomainNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.querySubdomainNode(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input param is error!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:2");
+        inputBuilder.setDomainId(new DomainId(1));
+        inputBuilder.setSubDomainId(new SubDomainId(1));
+        output = topoImpl.querySubdomainNode(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("topo is not exist!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.querySubdomainNode(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("domain or subdomain is not exist!",output.getErrors().iterator().next().getMessage());
+    }
+
+    @Test
     public void querySubDomainLinkTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -685,6 +1010,32 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
         QuerySubdomainLinkOutput output = querySubdomainLink(1,1);
         Assert.assertTrue(output.getSubdomainLink().size() == 0);
+    }
+
+    @Test
+    public void querySubDomainLinkTest2() throws Exception {
+        RpcResult<QuerySubdomainLinkOutput> output = topoImpl.querySubdomainLink(null).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input is null!",output.getErrors().iterator().next().getMessage());
+
+        QuerySubdomainLinkInputBuilder inputBuilder = new QuerySubdomainLinkInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.querySubdomainLink(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("input param is error!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:2");
+        inputBuilder.setDomainId(new DomainId(1));
+        inputBuilder.setSubDomainId(new SubDomainId(1));
+        output = topoImpl.querySubdomainLink(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("topo is not exist!",output.getErrors().iterator().next().getMessage());
+
+        inputBuilder.setTopologyId("flow:1");
+        output = topoImpl.querySubdomainLink(inputBuilder.build()).get();
+        Assert.assertFalse(output.isSuccessful());
+        Assert.assertEquals("domain or subdomain is not exist!",output.getErrors().iterator().next().getMessage());
+
     }
 
     private QueryNodeOutput queryNode() throws Exception {
@@ -703,7 +1054,6 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         inputBuilder.setTopologyId("flow:1");
         List<DomainId> domainIdList = new ArrayList<DomainId>();
         domainIdList.add(new DomainId(domainId));
-        //domainIdList.add(new DomainId(2));
         inputBuilder.setDomain(domainIdList);
         RpcResult<ConfigureDomainOutput> output = topoImpl.configureDomain(
                 inputBuilder.build()).get();
@@ -731,7 +1081,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     private QuerySubdomainOutput querySubdomain(String topologyId,
-                                                DomainId domainId) throws Exception {
+            DomainId domainId) throws Exception {
         QuerySubdomainInputBuilder inputBuilder = new QuerySubdomainInputBuilder();
         inputBuilder.setTopologyId(topologyId);
         inputBuilder.setDomainId(domainId);
@@ -770,6 +1120,175 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         ipv6List.add(ipv6Builder.build());
         afBuilder.setIpv6(ipv6List);
 
+        subDomainBuilder.setAf(afBuilder.build());
+        List<SubDomain> subDomainList = new ArrayList<SubDomain>();
+        subDomainList.add(subDomainBuilder.build());
+
+        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
+        bierBuilder.setSubDomain(subDomainList);
+        bierBuilder.setBfrId(new BfrId(1));
+        bierBuilder.setEncapsulationType(BierEncapsulationMpls.class);
+        bierBuilder.setBitstringlength(Bsl._64Bit);
+        bierBuilder.setIpv4BfrPrefix(new Ipv4Prefix("10.41.41.41/22"));
+        domainBuilder.setBierGlobal(bierBuilder.build());
+        List<Domain> domainList = new ArrayList<Domain>();
+        domainList.add(domainBuilder.build());
+        inputBuilder.setDomain(domainList);
+
+        RpcResult<ConfigureNodeOutput> output = topoImpl.configureNode(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private ConfigureNodeOutput configureNode1(int domainId,int subDomainId,String nodeId) throws Exception {
+        ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setNodeId(nodeId);
+        List<Domain> domainList = new ArrayList<Domain>();
+        inputBuilder.setDomain(domainList);
+
+        RpcResult<ConfigureNodeOutput> output = topoImpl.configureNode(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private ConfigureNodeOutput configureNode2(int domainId,int subDomainId,String nodeId) throws Exception {
+        ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setNodeId(nodeId);
+        DomainBuilder domainBuilder = new DomainBuilder();
+        domainBuilder.setDomainId(new DomainId(domainId));
+        domainBuilder.setKey(new DomainKey(new DomainId(domainId)));
+
+        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
+        bierBuilder.setEncapsulationType(BierEncapsulationMpls.class);
+        domainBuilder.setBierGlobal(bierBuilder.build());
+        List<Domain> domainList = new ArrayList<Domain>();
+        domainList.add(domainBuilder.build());
+        inputBuilder.setDomain(domainList);
+
+        RpcResult<ConfigureNodeOutput> output = topoImpl.configureNode(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private ConfigureNodeOutput configureNode3(int domainId,int subDomainId,String nodeId) throws Exception {
+        ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setNodeId(nodeId);
+        DomainBuilder domainBuilder = new DomainBuilder();
+        domainBuilder.setDomainId(new DomainId(domainId));
+        domainBuilder.setKey(new DomainKey(new DomainId(domainId)));
+
+        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
+        bierBuilder.setEncapsulationType(BierEncapsulationMpls.class);
+        bierBuilder.setBitstringlength(Bsl._64Bit);
+        domainBuilder.setBierGlobal(bierBuilder.build());
+        List<Domain> domainList = new ArrayList<Domain>();
+        domainList.add(domainBuilder.build());
+        inputBuilder.setDomain(domainList);
+
+        RpcResult<ConfigureNodeOutput> output = topoImpl.configureNode(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private ConfigureNodeOutput configureNode4(int domainId,int subDomainId,String nodeId) throws Exception {
+        ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setNodeId(nodeId);
+        DomainBuilder domainBuilder = new DomainBuilder();
+        domainBuilder.setDomainId(new DomainId(domainId));
+        domainBuilder.setKey(new DomainKey(new DomainId(domainId)));
+
+        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
+        bierBuilder.setBfrId(new BfrId(1));
+        bierBuilder.setEncapsulationType(BierEncapsulationMpls.class);
+        bierBuilder.setBitstringlength(Bsl._64Bit);
+        domainBuilder.setBierGlobal(bierBuilder.build());
+        List<Domain> domainList = new ArrayList<Domain>();
+        domainList.add(domainBuilder.build());
+        inputBuilder.setDomain(domainList);
+
+        RpcResult<ConfigureNodeOutput> output = topoImpl.configureNode(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private ConfigureNodeOutput configureNode5(int domainId,int subDomainId,String nodeId) throws Exception {
+        ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setNodeId(nodeId);
+        DomainBuilder domainBuilder = new DomainBuilder();
+        domainBuilder.setDomainId(new DomainId(domainId));
+        domainBuilder.setKey(new DomainKey(new DomainId(domainId)));
+
+        SubDomainBuilder subDomainBuilder = new SubDomainBuilder();
+        subDomainBuilder.setSubDomainId(new SubDomainId(subDomainId));
+        subDomainBuilder.setBfrId(new BfrId(1));
+        List<SubDomain> subDomainList = new ArrayList<SubDomain>();
+        subDomainList.add(subDomainBuilder.build());
+
+        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
+        bierBuilder.setSubDomain(subDomainList);
+        bierBuilder.setBfrId(new BfrId(1));
+        bierBuilder.setEncapsulationType(BierEncapsulationMpls.class);
+        bierBuilder.setBitstringlength(Bsl._64Bit);
+        bierBuilder.setIpv4BfrPrefix(new Ipv4Prefix("10.41.41.41/22"));
+        domainBuilder.setBierGlobal(bierBuilder.build());
+        List<Domain> domainList = new ArrayList<Domain>();
+        domainList.add(domainBuilder.build());
+        inputBuilder.setDomain(domainList);
+
+        RpcResult<ConfigureNodeOutput> output = topoImpl.configureNode(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private ConfigureNodeOutput configureNode6(int domainId,int subDomainId,String nodeId) throws Exception {
+        ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setNodeId(nodeId);
+        DomainBuilder domainBuilder = new DomainBuilder();
+        domainBuilder.setDomainId(new DomainId(domainId));
+        domainBuilder.setKey(new DomainKey(new DomainId(domainId)));
+
+        SubDomainBuilder subDomainBuilder = new SubDomainBuilder();
+        subDomainBuilder.setSubDomainId(new SubDomainId(subDomainId));
+        subDomainBuilder.setBfrId(new BfrId(1));
+        subDomainBuilder.setIgpType(IgpType.OSPF);
+        List<SubDomain> subDomainList = new ArrayList<SubDomain>();
+        subDomainList.add(subDomainBuilder.build());
+
+        BierGlobalBuilder bierBuilder = new BierGlobalBuilder();
+        bierBuilder.setSubDomain(subDomainList);
+        bierBuilder.setBfrId(new BfrId(1));
+        bierBuilder.setEncapsulationType(BierEncapsulationMpls.class);
+        bierBuilder.setBitstringlength(Bsl._64Bit);
+        bierBuilder.setIpv4BfrPrefix(new Ipv4Prefix("10.41.41.41/22"));
+        domainBuilder.setBierGlobal(bierBuilder.build());
+        List<Domain> domainList = new ArrayList<Domain>();
+        domainList.add(domainBuilder.build());
+        inputBuilder.setDomain(domainList);
+
+        RpcResult<ConfigureNodeOutput> output = topoImpl.configureNode(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private ConfigureNodeOutput configureNode7(int domainId,int subDomainId,String nodeId) throws Exception {
+        ConfigureNodeInputBuilder inputBuilder = new ConfigureNodeInputBuilder();
+        inputBuilder.setTopologyId("flow:1");
+        inputBuilder.setNodeId(nodeId);
+        DomainBuilder domainBuilder = new DomainBuilder();
+        domainBuilder.setDomainId(new DomainId(domainId));
+        domainBuilder.setKey(new DomainKey(new DomainId(domainId)));
+
+        SubDomainBuilder subDomainBuilder = new SubDomainBuilder();
+        subDomainBuilder.setSubDomainId(new SubDomainId(subDomainId));
+        subDomainBuilder.setBfrId(new BfrId(1));
+        subDomainBuilder.setIgpType(IgpType.OSPF);
+        AfBuilder afBuilder = new AfBuilder();
         subDomainBuilder.setAf(afBuilder.build());
         List<SubDomain> subDomainList = new ArrayList<SubDomain>();
         subDomainList.add(subDomainBuilder.build());

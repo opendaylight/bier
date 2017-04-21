@@ -116,7 +116,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
     public Future<RpcResult<LoadTopologyOutput>> loadTopology() {
         List<Topology> topoList = new ArrayList<Topology>();
         TopologyBuilder topoBuilder = new TopologyBuilder();
-        topoBuilder.setTopologyId(topoManager.TOPOLOGY_ID);
+        topoBuilder.setTopologyId(BierTopologyManager.TOPOLOGY_ID);
         topoList.add(topoBuilder.build());
         LoadTopologyOutputBuilder builder = new LoadTopologyOutputBuilder();
         builder.setTopology(topoList);
@@ -134,10 +134,12 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         }
 
         BierTopology  topo = topoManager.getTopologyData(topologyId);
-        List<String> onlineNodesId = topoManager.nodesOnline(topologyId);
         if (topo == null) {
             return returnRpcErr("topo is not exist!");
         }
+
+        List<String> onlineNodesId = topoManager.nodesOnline(topologyId);
+
         BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
         QueryTopologyOutputBuilder builder = new QueryTopologyOutputBuilder();
         builder.setTopologyId(bierTopoBuilder.getTopologyId());
@@ -389,11 +391,6 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        if (!topoManager.checkDomainExist(topologyId,input.getDomain())) {
-            builder.setConfigureResult(getConfigResult(false,"domain or subdomain is not exist!"));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
-        }
-
         BierNode node = topoManager.getNodeData(topologyId, nodeId);
         if (node == null) {
             builder.setConfigureResult(getConfigResult(false,"node is not exist!"));
@@ -408,6 +405,11 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         String errorMsg = topoManager.checkBierNodeParams(node,nodeParamsBuilder);
         if (!errorMsg.equals("")) {
             builder.setConfigureResult(getConfigResult(false,errorMsg));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        if (!topoManager.checkDomainExist(topologyId,input.getDomain())) {
+            builder.setConfigureResult(getConfigResult(false,"domain or subdomain is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
@@ -507,15 +509,15 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         if (null == input) {
             return returnRpcErr("input is null!");
         }
-        String topologyId = input.getTopologyId();
-        DomainId domainId = input.getDomainId();
-        SubDomainId subDomainId = input.getSubDomainId();
-        if (topologyId == null || topologyId.equals("") || domainId == null || subDomainId == null) {
-            return returnRpcErr("input param is error!");
+
+        String errorCause = checkSubdomain(input,input.getTopologyId(),input.getDomainId(),input.getSubDomainId());
+        if (!errorCause.equals("")) {
+            return returnRpcErr(errorCause);
         }
 
-        List<BierNode> nodeList = topoManager.getSubDomainNode(topologyId,domainId,subDomainId);
-        List<String> onlineNodesId = topoManager.nodesOnline(topologyId);
+        List<BierNode> nodeList = topoManager.getSubDomainNode(input.getTopologyId(),
+                input.getDomainId(),input.getSubDomainId());
+        List<String> onlineNodesId = topoManager.nodesOnline(input.getTopologyId());
         List<SubdomainNode> subDomainNodeList = new ArrayList<SubdomainNode>();
         int nodeSize = nodeList.size();
         for (int iloop = 0; iloop < nodeSize; ++iloop) {
@@ -536,14 +538,15 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         if (null == input) {
             return returnRpcErr("input is null!");
         }
-        String topologyId = input.getTopologyId();
-        DomainId domainId = input.getDomainId();
-        SubDomainId subDomainId = input.getSubDomainId();
-        if (topologyId == null || topologyId.equals("") || domainId == null || subDomainId == null) {
-            return returnRpcErr("input param is error!");
+
+        String errorCause = checkSubdomain(input,input.getTopologyId(),input.getDomainId(),input.getSubDomainId());
+        if (!errorCause.equals("")) {
+            return returnRpcErr(errorCause);
         }
 
-        List<BierLink> linkList = topoManager.getSubDomainLink(topologyId,domainId,subDomainId);
+
+        List<BierLink> linkList = topoManager.getSubDomainLink(input.getTopologyId(),
+                input.getDomainId(),input.getSubDomainId());
         List<SubdomainLink> subDomainLinkList = new ArrayList<SubdomainLink>();
         int linkSize = linkList.size();
         for (int iloop = 0; iloop < linkSize; ++iloop) {
@@ -572,7 +575,8 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
 
         BierTopology  topo = topoManager.getTopologyData(topologyId);
         if (topo == null) {
-            return returnRpcErr("topo is not exist!");
+            builder.setConfigureResult(getConfigResult(false,"topo is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
         }
         BierTopologyBuilder bierTopoBuilder = new BierTopologyBuilder(topo);
 
@@ -722,6 +726,23 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
 
         if (!topoManager.checkNodeBelongToDomain(domainId,subDomainId,node)) {
             return ("node is not belong to domain or subdomain!");
+        }
+
+        return "";
+    }
+
+    public <T> String checkSubdomain(T input,String topologyId,DomainId domainId,SubDomainId subDomainId) {
+        if (topologyId == null || topologyId.equals("") || domainId == null || subDomainId == null) {
+            return "input param is error!";
+        }
+
+        BierTopology  topo = topoManager.getTopologyData(topologyId);
+        if (topo == null) {
+            return "topo is not exist!";
+        }
+        List<BierDomain> domainList = topo.getBierDomain();
+        if (!topoManager.checkSubDomainExist(topologyId,domainId,subDomainId,domainList)) {
+            return "domain or subdomain is not exist!";
         }
 
         return "";

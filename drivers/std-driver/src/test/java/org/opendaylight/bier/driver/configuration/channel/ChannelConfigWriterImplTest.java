@@ -322,4 +322,21 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
         }
     }
 
+    @Test
+    public void testWriteChannel() throws Exception {
+        buildMock();
+        buildInstance();
+        Channel channel = buildChannelAddData();
+        ConfigurationResult writeResult = channelConfigWriter.writeChannel(ConfigurationType.ADD,channel);
+        assertTrue(writeResult.isSuccessful());
+    }
+
+    @Test
+    public void testWriteChannelEgressNode() throws Exception {
+        buildMock();
+        buildInstance();
+        Channel channel = buildChannelAddData();
+        ConfigurationResult writeResult = channelConfigWriter.writeChannelEgressNode(ConfigurationType.ADD,channel);
+        assertTrue(writeResult.isSuccessful());
+    }
 }

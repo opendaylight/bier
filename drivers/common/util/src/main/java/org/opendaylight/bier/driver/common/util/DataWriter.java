@@ -40,10 +40,44 @@ public class DataWriter {
     }
 
 
-    private static final String LOCK_FAILED_RETRY = "Got OptimisticLockFailedException - trying again";
-    private static final String OPERATE_TYPE = " [Operate Type] ";
-    private static final String DATA_INFO = " [Data Info] ";
-    private static final String BLANK = "  ";
+    public static final String LOCK_FAILED_RETRY = "Got OptimisticLockFailedException - trying again";
+    public static final String OPERATE_TYPE = " [Operate Type] ";
+    public static final String DATA_INFO = " [Data Info] ";
+    public static final String BLANK = "  ";
+
+
+    public static <T extends DataObject> void operateFail(final Throwable throwable,OperateType type,
+                            DataBroker dataBroker,InstanceIdentifier<T> path, T data,final int tries) {
+        String detailedInfo = OPERATE_TYPE + type.toString() ;
+        detailedInfo = detailedInfo + DATA_INFO;
+        if (data != null) {
+            detailedInfo = detailedInfo + data.toString();
+        }
+
+        if (throwable instanceof OptimisticLockFailedException) {
+            if ((tries - 1) > 0) {
+                LOG.info(LOCK_FAILED_RETRY);
+                operate(type, dataBroker, tries - 1, path, data);
+            } else {
+                LOG.warn(ConfigurationResult.NETCONF_LOCK_FAILUE +  detailedInfo);
+                //report NETCONF_LOCK_FAILUE
+                DriverNotificationProvider.notifyFailure(
+                        ConfigurationResult.NETCONF_LOCK_FAILUE +  detailedInfo);
+
+            }
+
+        } else if (throwable instanceof TransactionCommitFailedException) {
+            LOG.warn(ConfigurationResult.NETCONF_COMMIT_FAILUE +  detailedInfo);
+            DriverNotificationProvider.notifyFailure(
+                    ConfigurationResult.NETCONF_COMMIT_FAILUE +  detailedInfo);
+
+
+        } else {
+            LOG.warn(ConfigurationResult.NETCONF_EDIT_FAILUE +  detailedInfo + BLANK + throwable.getMessage());
+        }
+
+
+    }
 
     public static <T extends DataObject> CheckedFuture<Void, TransactionCommitFailedException> operate(OperateType type,
                                                               DataBroker dataBroker,
@@ -76,34 +110,7 @@ public class DataWriter {
 
             @Override
             public void onFailure(final Throwable throwable) {
-                String detailedInfo = OPERATE_TYPE + type.toString() ;
-                detailedInfo = detailedInfo + DATA_INFO;
-                if (data != null) {
-                    detailedInfo = detailedInfo + data.toString();
-                }
-
-                if (throwable instanceof OptimisticLockFailedException) {
-                    if ((tries - 1) > 0) {
-                        LOG.info(LOCK_FAILED_RETRY);
-                        operate(type, dataBroker, tries - 1, path, data);
-                    } else {
-                        LOG.warn(ConfigurationResult.NETCONF_LOCK_FAILUE +  detailedInfo);
-                        //report NETCONF_LOCK_FAILUE
-                        DriverNotificationProvider.notifyFailure(
-                                ConfigurationResult.NETCONF_LOCK_FAILUE +  detailedInfo);
-
-                    }
-
-                } else if (throwable instanceof TransactionCommitFailedException) {
-                    LOG.warn(ConfigurationResult.NETCONF_COMMIT_FAILUE +  detailedInfo);
-                    DriverNotificationProvider.notifyFailure(
-                            ConfigurationResult.NETCONF_COMMIT_FAILUE +  detailedInfo);
-
-
-                } else {
-                    LOG.warn(ConfigurationResult.NETCONF_EDIT_FAILUE +  detailedInfo + BLANK + throwable.getMessage());
-                }
-
+                operateFail(throwable,type,dataBroker,path,data,tries);
             }
         });
 

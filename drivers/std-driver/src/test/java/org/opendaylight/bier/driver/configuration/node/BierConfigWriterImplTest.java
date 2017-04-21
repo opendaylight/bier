@@ -310,4 +310,43 @@ public class BierConfigWriterImplTest extends AbstractConcurrentDataBrokerTest {
         assertNull(ipv6Actual);
     }
 
+    @Test
+    public void testWriteDomain() throws Exception {
+        buildMock();
+        buildInstance();
+        ConfigurationResult writeResult = bierConfigWriter.writeDomain(ConfigurationType.ADD, NODE_ID,
+                bierConfigDataBuilder.buildDomain());
+        assertTrue(writeResult.isSuccessful());
+
+    }
+
+    @Test
+    public void testWriteSubdomain() throws Exception {
+        buildMock();
+        buildInstance();
+        ConfigurationResult writeResult = bierConfigWriter.writeSubdomain(ConfigurationType.ADD, NODE_ID,
+                null, bierConfigDataBuilder.buildSubDomainSingle());
+        assertTrue(writeResult.isSuccessful());
+
+    }
+
+    @Test
+    public void testSubdomainIpv4() throws Exception {
+        buildMock();
+        buildInstance();
+        ConfigurationResult writeResult = bierConfigWriter.writeSubdomainIpv4(ConfigurationType.ADD, NODE_ID,
+                null, BierConfigDataBuilder.SUBDOMAINID, bierConfigDataBuilder.buildIpv4SingleAdd());
+        assertTrue(writeResult.isSuccessful());
+
+    }
+
+    @Test
+    public void testSubdomainIpv6() throws Exception {
+        buildMock();
+        buildInstance();
+        ConfigurationResult writeResult = bierConfigWriter.writeSubdomainIpv6(ConfigurationType.ADD, NODE_ID,
+                null, BierConfigDataBuilder.SUBDOMAINID, bierConfigDataBuilder.buildIpv6SingleAdd());
+        assertTrue(writeResult.isSuccessful());
+
+    }
 }

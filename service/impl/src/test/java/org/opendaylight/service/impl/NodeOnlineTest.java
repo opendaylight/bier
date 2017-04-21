@@ -9,6 +9,7 @@ package org.opendaylight.service.impl;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -19,6 +20,10 @@ import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
+import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
+import org.opendaylight.controller.md.sal.binding.api.DataObjectModification.ModificationType;
+import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
+import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -51,20 +56,38 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeConnectionStatus;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyKey;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeKey;
+import org.opendaylight.yangtools.yang.binding.Augmentation;
+import org.opendaylight.yangtools.yang.binding.ChildOf;
+import org.opendaylight.yangtools.yang.binding.DataObject;
+import org.opendaylight.yangtools.yang.binding.Identifiable;
+import org.opendaylight.yangtools.yang.binding.Identifier;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.PathArgument;
 
 
 public class NodeOnlineTest extends AbstractDataBrokerTest {
 
     private BierConfigWriterMock bierConfigWriterMock;
     private ChannelConfigWriterMock channelConfigWriterMock;
-    private NodeOnlineBierConfigProcess nodeOnlineBierConfigProcess;
+    private NetconfStateChangeListener netconfStateChangeListener;
 
     @Before
     public void setUp() {
         bierConfigWriterMock = new BierConfigWriterMock();
         channelConfigWriterMock = new ChannelConfigWriterMock();
-        nodeOnlineBierConfigProcess = new NodeOnlineBierConfigProcess(getDataBroker(), bierConfigWriterMock,
+        netconfStateChangeListener = new NetconfStateChangeListener(getDataBroker(), bierConfigWriterMock,
                 channelConfigWriterMock);
     }
 
@@ -76,9 +99,12 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
         addChannelToDatastore(constructBierChannel("flow:1", "channel-1", "10.84.220.5",
                 "102.112.20.40", 1, 1, (short)30, (short)40, 2, "2",
                 constructEgressNodeList(1, "1")));
-        nodeOnlineBierConfigProcess.queryBierConfigAndSendForNodeOnline("1");
-        nodeOnlineBierConfigProcess.queryBierConfigAndSendForNodeOnline("2");
-        nodeOnlineBierConfigProcess.queryBierConfigAndSendForNodeOnline("3");
+        netconfStateChangeListener.onDataTreeChanged(setNodeData(constructNodeBefore("1"), constructNodeAfter("1"),
+                ModificationType.SUBTREE_MODIFIED));
+        netconfStateChangeListener.onDataTreeChanged(setNodeData(constructNodeBefore("2"), constructNodeAfter("2"),
+                ModificationType.SUBTREE_MODIFIED));
+        netconfStateChangeListener.onDataTreeChanged(setNodeData(constructNodeBefore("3"), constructNodeAfter("3"),
+                ModificationType.SUBTREE_MODIFIED));
         assertDomainList(bierConfigWriterMock.getDomainProcessList());
         assertChannel(channelConfigWriterMock.getChannel());
     }
@@ -164,6 +190,132 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
         } catch (InterruptedException | ExecutionException e) {
             return;
         }
+    }
+
+    private Node constructNodeBefore(String value) {
+        NodeBuilder builder = new NodeBuilder();
+        builder.setKey(new NodeKey(new NodeId(value)));
+        builder.setNodeId(new NodeId(value));
+        builder.addAugmentation(NetconfNode.class, new NetconfNodeBuilder()
+                .setConnectionStatus(NetconfNodeConnectionStatus.ConnectionStatus.Connecting).build());
+        return builder.build();
+    }
+
+    private Node constructNodeAfter(String value) {
+        NodeBuilder builder = new NodeBuilder();
+        builder.setKey(new NodeKey(new NodeId(value)));
+        builder.setNodeId(new NodeId(value));
+        builder.addAugmentation(NetconfNode.class, new NetconfNodeBuilder()
+                .setConnectionStatus(NetconfNodeConnectionStatus.ConnectionStatus.Connected).build());
+        return builder.build();
+    }
+
+    private static class DataTreeModificationMock implements DataTreeModification<Node> {
+        private Node before;
+        private Node after;
+        private ModificationType type;
+
+        public void setNodeData(Node before, Node after, ModificationType type) {
+            this.before = before;
+            this.after = after;
+            this.type = type;
+        }
+
+        @Override
+        public DataTreeIdentifier<Node> getRootPath() {
+            InstanceIdentifier<Node> nodeId = InstanceIdentifier.create(NetworkTopology.class).child(Topology.class,
+                    new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName()))).child(Node.class);
+            return new DataTreeIdentifier<Node>(LogicalDatastoreType.CONFIGURATION, nodeId);
+        }
+
+        @Override
+        public DataObjectModification<Node> getRootNode() {
+            DataObjectModificationMock mock = new DataObjectModificationMock();
+            mock.setNodeData(before, after, type);
+            return mock;
+        }
+    }
+
+    private static class DataObjectModificationMock implements DataObjectModification<Node> {
+        private Node before;
+        private Node after;
+        private ModificationType type;
+
+        public void setNodeData(Node before, Node after, ModificationType type) {
+            this.before = before;
+            this.after = after;
+            this.type = type;
+        }
+
+        @Override
+        public ModificationType getModificationType() {
+            return type;
+        }
+
+        @Override
+        public Node getDataBefore() {
+            return before;
+        }
+
+        @Override
+        public Node getDataAfter() {
+            return after;
+        }
+
+        @Override
+        public PathArgument getIdentifier() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Class<Node> getDataType() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Collection<DataObjectModification<? extends DataObject>> getModifiedChildren() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <C extends ChildOf<? super Node>> DataObjectModification<C> getModifiedChildContainer(
+                Class<C> child) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <C extends Augmentation<Node> & DataObject> DataObjectModification<C> getModifiedAugmentation(
+                Class<C> augmentation) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <C extends Identifiable<K> & ChildOf<? super Node>,
+                K extends Identifier<C>> DataObjectModification<C> getModifiedChildListItem(
+                Class<C> listItem, K listKey) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public DataObjectModification<? extends DataObject> getModifiedChild(
+                PathArgument childArgument) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    }
+
+    private Collection<DataTreeModification<Node>> setNodeData(Node before, Node after, ModificationType type) {
+        Collection<DataTreeModification<Node>> collection = new ArrayList<>();
+        DataTreeModificationMock mock = new DataTreeModificationMock();
+        mock.setNodeData(before, after, type);
+        collection.add(mock);
+        return collection;
     }
 
     private void assertDomainList(List<Domain> domainList) {

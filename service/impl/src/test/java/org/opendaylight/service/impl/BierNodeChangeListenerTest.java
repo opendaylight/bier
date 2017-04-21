@@ -10,6 +10,7 @@ package org.opendaylight.service.impl;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.Assert;
@@ -17,7 +18,15 @@ import org.junit.Test;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
+import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
+import org.opendaylight.controller.md.sal.binding.api.DataObjectModification.ModificationType;
+import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
+import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParams;
@@ -45,6 +54,13 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv6Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
+import org.opendaylight.yangtools.yang.binding.Augmentation;
+import org.opendaylight.yangtools.yang.binding.ChildOf;
+import org.opendaylight.yangtools.yang.binding.DataObject;
+import org.opendaylight.yangtools.yang.binding.Identifiable;
+import org.opendaylight.yangtools.yang.binding.Identifier;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.PathArgument;
 
 public class BierNodeChangeListenerTest {
 
@@ -83,7 +99,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.WRITE));
 
         assertAddedDomainTest1(bierConfigWriterMock.getDomainProcessList());
     }
@@ -116,7 +133,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertAddedDomainTest2(bierConfigWriterMock.getDomainProcessList());
     }
@@ -145,7 +163,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(null));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertDeletedDomainTest1(bierConfigWriterMock.getDomainProcessList());
     }
@@ -179,7 +198,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertDeletedDomainTest2(bierConfigWriterMock.getDomainProcessList());
 
@@ -207,7 +227,7 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
 
-        bierNodeChangeListener.processDeletedNode(bierNodeBefore);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, null, ModificationType.DELETE));
 
         assertDeletedDomainTest3(bierConfigWriterMock.getDomainProcessList());
     }
@@ -246,7 +266,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertModifiedDomainTest(bierConfigWriterMock.getDomainProcessList());
 
@@ -283,7 +304,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertModifiedParametersOfDomainAndDeletedSubDomainTest(bierConfigWriterMock.getDomainProcessList(),
                 bierConfigWriterMock.getSubDomainProcessList());
@@ -317,7 +339,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertAddedSubDomainTest1(bierConfigWriterMock.getSubDomainProcessList());
     }
@@ -353,7 +376,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertAddedSubDomainTest2(bierConfigWriterMock.getSubDomainProcessList());
     }
@@ -386,7 +410,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertDeletedSubDomainTest1(bierConfigWriterMock.getSubDomainProcessList());
     }
@@ -422,7 +447,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertDeletedSubDomainTest2(bierConfigWriterMock.getSubDomainProcessList());
     }
@@ -457,7 +483,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertModifiedParametersOfSubDomainTest(bierConfigWriterMock.getSubDomainProcessList());
     }
@@ -495,7 +522,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertModifiedParametersOfSubDomainAndDeletedIpv4Test(bierConfigWriterMock.getSubDomainProcessList(),
                 bierConfigWriterMock.getIpv4ProcessList());
@@ -534,7 +562,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertModifiedParametersOfSubDomainAndDeletedIpv6Test(bierConfigWriterMock.getSubDomainProcessList(),
                 bierConfigWriterMock.getIpv6ProcessList());
@@ -571,7 +600,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertModifiedParametersOfSubDomainAndDeletedIpv4Ipv6Test(bierConfigWriterMock.getSubDomainProcessList(),
                 bierConfigWriterMock.getIpv4ProcessList(), bierConfigWriterMock.getIpv6ProcessList());
@@ -610,7 +640,8 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertDeleteDSubDomainIpv4(bierConfigWriterMock.getIpv4ProcessList());
     }
@@ -648,11 +679,120 @@ public class BierNodeChangeListenerTest {
         BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
 
-        bierNodeChangeListener.processModifiedNode(bierNodeBefore, bierNodeAfter);
+        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
+                ModificationType.SUBTREE_MODIFIED));
 
         assertDeleteDSubDomainIpv6(bierConfigWriterMock.getIpv6ProcessList());
     }
 
+    private static class DataTreeModificationMock implements DataTreeModification<BierNode> {
+        private BierNode before;
+        private BierNode after;
+        private ModificationType type;
+
+        public void setBierNodeData(BierNode before, BierNode after, ModificationType type) {
+            this.before = before;
+            this.after = after;
+            this.type = type;
+        }
+
+        @Override
+        public DataTreeIdentifier<BierNode> getRootPath() {
+            InstanceIdentifier<BierNode> bierNodeId = InstanceIdentifier.create(BierNetworkTopology.class)
+                    .child(BierTopology.class, new BierTopologyKey("flow:1")).child(BierNode.class);
+            return new DataTreeIdentifier<BierNode>(LogicalDatastoreType.CONFIGURATION, bierNodeId);
+        }
+
+        @Override
+        public DataObjectModification<BierNode> getRootNode() {
+            DataObjectModificationMock mock = new DataObjectModificationMock();
+            mock.setBierNodeData(before, after, type);
+            return mock;
+        }
+    }
+
+    private static class DataObjectModificationMock implements DataObjectModification<BierNode> {
+        private BierNode before;
+        private BierNode after;
+        private ModificationType type;
+
+        public void setBierNodeData(BierNode before, BierNode after, ModificationType type) {
+            this.before = before;
+            this.after = after;
+            this.type = type;
+        }
+
+        @Override
+        public ModificationType getModificationType() {
+            return type;
+        }
+
+        @Override
+        public BierNode getDataBefore() {
+            return before;
+        }
+
+        @Override
+        public BierNode getDataAfter() {
+            return after;
+        }
+
+        @Override
+        public PathArgument getIdentifier() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Class<BierNode> getDataType() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Collection<DataObjectModification<? extends DataObject>> getModifiedChildren() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <C extends ChildOf<? super BierNode>> DataObjectModification<C> getModifiedChildContainer(
+                Class<C> child) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <C extends Augmentation<BierNode> & DataObject> DataObjectModification<C> getModifiedAugmentation(
+                Class<C> augmentation) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public <C extends Identifiable<K> & ChildOf<? super BierNode>,
+                K extends Identifier<C>> DataObjectModification<C> getModifiedChildListItem(
+                Class<C> listItem, K listKey) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public DataObjectModification<? extends DataObject> getModifiedChild(
+                PathArgument childArgument) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    }
+
+    private Collection<DataTreeModification<BierNode>> setBierNodeData(BierNode before, BierNode after,
+                                                                       ModificationType type) {
+        Collection<DataTreeModification<BierNode>> collection = new ArrayList<>();
+        DataTreeModificationMock mock = new DataTreeModificationMock();
+        mock.setBierNodeData(before, after, type);
+        collection.add(mock);
+        return collection;
+    }
 
     private static class BierConfigWriterMock implements BierConfigWriter {
 

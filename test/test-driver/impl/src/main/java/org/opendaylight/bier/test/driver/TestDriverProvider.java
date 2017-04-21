@@ -298,7 +298,7 @@ public class TestDriverProvider implements TestDriverService {
             }
             for (Domain domain : domainList) {
                 LOG.info("readBierGlobalFromController {} {}",domain.getBierGlobal(),nodeId);
-                return bulid(domain.getBierGlobal());
+                return domain.getBierGlobal();
             }
 
         }

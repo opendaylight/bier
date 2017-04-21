@@ -79,7 +79,6 @@ public class BierTpChangeListenerImpl
             processor.enqueueOperation(new BierTopologyOperation() {
                 @Override
                 public void writeOperation(final ReadWriteTransaction transaction) {
-                    //BierTopologyManagerUtil.removeAffectedLinks(terminationPointId, transaction, II_TO_TOPOLOGY);
                     transaction.delete(LogicalDatastoreType.CONFIGURATION, iiToTopologyRemovedtp);
                 }
 
@@ -108,27 +107,9 @@ public class BierTpChangeListenerImpl
         if (tpId != null) {
             InstanceIdentifier<BierTerminationPoint> iiToTopologyAddedtp = provideIIToTopologyTp(tpId, iiTp);
             sendToTransactionChain(bierTp, iiToTopologyAddedtp);
-            //removeLinks(modification.getRootNode().getDataAfter(), point);
         } else {
             LOG.debug("Inventory node key is null. Data can't be written to topology");
         }
-    }
-
-    private void removeLinks(final TerminationPoint tp, final BierTerminationPoint point) {
-        final BierTopologyProcess<BierTerminationPoint> processor =
-                new BierTopologyProcess<BierTerminationPoint>(dataBroker,
-                        BierTopologyProcess.FLAG_WRITE, (new BierTerminationPointBuilder()).build());
-        processor.enqueueOperation(new BierTopologyOperation() {
-            @Override
-            public void writeOperation(final ReadWriteTransaction transaction) {
-
-            }
-
-            @Override
-            public <T> ListenableFuture<T> readOperation(final ReadWriteTransaction transaction) {
-                return null;
-            }
-        });
     }
 
     public void sendToTransactionChain(final BierTerminationPoint bierTp,

@@ -154,7 +154,7 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
     public void removedLinkTest() {
         removeLinkToTopology("1");
         BierLink bierLink = topoManager.getLinkData("flow:1", "1");
-        Assert.assertTrue(bierLink == null || bierLink.getLinkId() == null);
+        Assert.assertTrue(bierLink == null);
     }
 
     @Test
@@ -166,9 +166,9 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
 
     @Test
     public void removedTpTest() {
-        removeTpToTopology("1-2");
+        removeTpToTopology("1-1");
         List<BierTerminationPoint> bierTp = topoManager.getNodeData("flow:1", "1").getBierTerminationPoint();
-        Assert.assertTrue(bierTp.size() == 1);
+        Assert.assertTrue(bierTp.size() == 0);
     }
 
     public void addNodeToTopology(String strNodeId) {
