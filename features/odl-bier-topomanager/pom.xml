@@ -26,12 +26,43 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <properties>
         <mdsal.version>1.6.0-SNAPSHOT</mdsal.version>
         <openflowplugin.version>0.5.0-SNAPSHOT</openflowplugin.version>
+        <mdsal.model.version>0.11.0-SNAPSHOT</mdsal.model.version>
+        <restconf.version>1.6.0-SNAPSHOT</restconf.version>
+        <dluxapps.version>0.6.0-SNAPSHOT</dluxapps.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>odl-mdsal-broker</artifactId>
             <version>${mdsal.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.bier</groupId>
+            <artifactId>odl-bier-models</artifactId>
+            <version>${project.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.netconf</groupId>
+            <artifactId>odl-restconf</artifactId>
+            <version>${restconf.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.netconf</groupId>
+            <artifactId>odl-mdsal-apidocs</artifactId>
+            <version>${restconf.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.dluxapps</groupId>
+            <artifactId>odl-dluxapps-yangman</artifactId>
+            <version>${dluxapps.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
@@ -59,6 +90,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>topomanager-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.bier</groupId>
+            <artifactId>topomanager-cli</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

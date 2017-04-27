@@ -18,31 +18,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.netconf/features-netconf/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-netconf-connector/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/{{VERSION}}/xml/features</repository>
-  <repository>mvn:org.opendaylight.openflowjava/features-openflowjava/{{VERSION}}/xml/features</repository>
 
   <feature name='odl-bier-all' version='${project.version}' description="OpenDaylight :: Bier :: All">
         <feature version='${project.version}'>odl-bier-models</feature>
-        <feature version='${project.version}'>odl-bier-topomanager-api</feature>
         <feature version='${project.version}'>odl-bier-topomanager</feature>
-        <feature version='${project.version}'>odl-bier-topomanager-rest</feature>
-        <feature version='${project.version}'>odl-bier-topomanager-ui</feature>
-        <feature version='${project.version}'>odl-bier-topomanager-cli</feature>
-        <feature version='${project.version}'>odl-bier-channel-api</feature>
         <feature version='${project.version}'>odl-bier-channel</feature>
-        <feature version='${project.version}'>odl-bier-channel-rest</feature>
-        <feature version='${project.version}'>odl-bier-channel-ui</feature>
-        <feature version='${project.version}'>odl-bier-channel-cli</feature>
         <feature version='${project.version}'>odl-bier-adapter</feature>
         <feature version='${project.version}'>odl-bier-std-driver</feature>
-        <feature version='${project.version}'>odl-bier-service-api</feature>
         <feature version='${project.version}'>odl-bier-service</feature>
-        <feature version='${project.version}'>odl-bier-service-rest</feature>
-        <feature version='${project.version}'>odl-bier-service-ui</feature>
-        <feature version='${project.version}'>odl-bier-service-cli</feature>
-        <feature version='${project.version}'>odl-bier-test</feature>
-
-
   </feature>
+
   <feature name='odl-bier-models' version='${project.version}' description='OpenDaylight :: bier :: models'>
     <feature version="${mdsal.model.version}">odl-mdsal-models</feature>
     <bundle>mvn:org.opendaylight.bier/ietf-bier-2016-07-23/{{VERSION}}</bundle>
@@ -51,120 +36,62 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <bundle>mvn:org.opendaylight.bier/bier-topology-model/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-channel-model/{{VERSION}}</bundle>
   </feature>
-  <feature name='odl-bier-topomanager-api' version='${project.version}' description='OpenDaylight :: bier :: topomanager :: api'>
-    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
-    <feature version="${project.version}">odl-bier-models</feature>
-    <bundle>mvn:org.opendaylight.bier/topomanager-api/{{VERSION}}</bundle>
-  </feature>
+
   <feature name='odl-bier-topomanager' version='${project.version}' description='OpenDaylight :: bier :: topomanager'>
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-    <feature version='${openflowplugin.version}'>odl-openflowplugin-southbound</feature>
-    <feature version='${openflowplugin.version}'>odl-openflowplugin-flow-services</feature>
-    <feature version='${project.version}'>odl-bier-topomanager-api</feature>
-    <bundle>mvn:org.opendaylight.bier/topomanager-impl/{{VERSION}}</bundle>
-  </feature>
-  <feature name='odl-bier-topomanager-rest' version='${project.version}' description='OpenDaylight :: bier :: topomanager :: REST'>
-    <feature version="${project.version}">odl-bier-topomanager</feature>
+    <feature version="${project.version}">odl-bier-models</feature>
     <feature version="${restconf.version}">odl-restconf</feature>
-  </feature>
-  <feature name='odl-bier-topomanager-ui' version='${project.version}' description='OpenDaylight :: bier :: topomanager :: UI'>
-    <feature version="${project.version}">odl-bier-topomanager-rest</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
     <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
-  </feature>
-  <feature name='odl-bier-topomanager-cli' version='${project.version}' description='OpenDaylight :: bier :: topomanager :: CLI'>
-    <feature version="${project.version}">odl-bier-topomanager</feature>
+    <feature version='${openflowplugin.version}'>odl-openflowplugin-southbound</feature>
+    <feature version='${openflowplugin.version}'>odl-openflowplugin-flow-services</feature>
+    <bundle>mvn:org.opendaylight.bier/topomanager-api/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/topomanager-impl/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/topomanager-cli/{{VERSION}}</bundle>
   </feature>
 
-
-  <feature name='odl-bier-channel-api' version='${project.version}' description='OpenDaylight :: bier :: channel :: api'>
-    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
-    <feature version="${project.version}">odl-bier-models</feature>
-    <bundle>mvn:org.opendaylight.bier/channel-api/{{VERSION}}</bundle>
-  </feature>
   <feature name='odl-bier-channel' version='${project.version}' description='OpenDaylight :: bier :: channel'>
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-    <feature version='${project.version}'>odl-bier-channel-api</feature>
+    <feature version="${project.version}">odl-bier-models</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+    <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
+    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
+    <bundle>mvn:org.opendaylight.bier/channel-api/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/channel-impl/{{VERSION}}</bundle>
-  </feature>
-  <feature name='odl-bier-channel-rest' version='${project.version}' description='OpenDaylight :: bier :: channel :: REST'>
-    <feature version="${project.version}">odl-bier-channel</feature>
-    <feature version="${restconf.version}">odl-restconf</feature>
-  </feature>
-  <feature name='odl-bier-channel-ui' version='${project.version}' description='OpenDaylight :: bier :: channel :: UI'>
-    <feature version="${project.version}">odl-bier-channel-rest</feature>
-    <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
-  </feature>
-  <feature name='odl-bier-channel-cli' version='${project.version}' description='OpenDaylight :: bier :: channel :: CLI'>
-    <feature version="${project.version}">odl-bier-channel</feature>
     <bundle>mvn:org.opendaylight.bier/channel-cli/{{VERSION}}</bundle>
-  </feature>
-
-  <feature name='odl-bier-service-api' version='${project.version}' description='OpenDaylight :: bier :: service :: api'>
-    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
-    <bundle>mvn:org.opendaylight.bier/service-api/{{VERSION}}</bundle>
-  </feature>
-  <feature name='odl-bier-service' version='${project.version}' description='OpenDaylight :: bier :: service'>
-    <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
-    <feature version='${project.version}'>odl-bier-models</feature>
-    <feature version='${project.version}'>odl-bier-service-api</feature>
-    <feature version='${project.version}'>odl-bier-adapter</feature>
-    <feature version="${netconf.version}">odl-netconf-netty-util</feature>
-    <feature version="${netconf.version}">odl-netconf-connector</feature>
-    <feature version="${project.version}">odl-bier-std-driver</feature>
-    <bundle>mvn:org.opendaylight.bier/service-impl/{{VERSION}}</bundle>
-  </feature>
-  <feature name='odl-bier-service-rest' version='${project.version}' description='OpenDaylight :: bier :: service :: REST'>
-    <feature version="${project.version}">odl-bier-service</feature>
-    <feature version="${restconf.version}">odl-restconf</feature>
-  </feature>
-  <feature name='odl-bier-service-ui' version='${project.version}' description='OpenDaylight :: bier :: service :: UI'>
-    <feature version="${project.version}">odl-bier-service-rest</feature>
-    <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
-    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
-  </feature>
-  <feature name='odl-bier-service-cli' version='${project.version}' description='OpenDaylight :: bier :: service :: CLI'>
-    <feature version="${project.version}">odl-bier-service</feature>
-    <bundle>mvn:org.opendaylight.bier/service-cli/{{VERSION}}</bundle>
   </feature>
 
   <feature name='odl-bier-adapter' version='${project.version}' description='OpenDaylight :: bier :: adapter'>
     <feature version='${project.version}'>odl-bier-models</feature>
-    <feature version='${netconf.version}'>odl-netconf-connector-all</feature>
-    <feature version='${netconf.version}'>odl-netconf-topology</feature>
     <bundle>mvn:org.opendaylight.bier/bier-adapter/{{VERSION}}</bundle>
   </feature>
 
-  <feature name='odl-bier-driver-common' version='${project.version}' description='OpenDaylight :: bier :: driver::common'>
-    <feature version="${project.version}">odl-bier-adapter</feature>
+  <feature name='odl-bier-std-driver' version='${project.version}' description='OpenDaylight :: bier :: std :: driver'>
+    <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+    <feature version='${project.version}'>odl-bier-adapter</feature>
+    <feature version='${netconf.version}'>odl-netconf-connector-all</feature>
     <bundle>mvn:org.opendaylight.bier/bier-driver-common-reporter-api/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-driver-common-reporter-impl/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-driver-common-util/{{VERSION}}</bundle>
-  </feature>
-  <feature name='odl-bier-std-driver' version='${project.version}' description='OpenDaylight :: bier :: std :: driver'>
-    <feature version='${project.version}'>odl-bier-models</feature>
-    <feature version='${project.version}'>odl-bier-driver-common</feature>
     <bundle>mvn:org.opendaylight.bier/bier-std-driver/{{VERSION}}</bundle>
   </feature>
-  <feature name='odl-bier-test-driver-impl' version='${project.version}' description='OpenDaylight :: test :: driver :: impl'>
-    <feature version='${project.version}'>odl-bier-driver-common</feature>
-    <feature version="${project.version}">odl-bier-std-driver</feature>
-    <feature version="${project.version}">odl-bier-test-driver-api</feature>
-    <bundle>mvn:org.opendaylight.bier/test-driver-impl/{{VERSION}}</bundle>
-  </feature>
-  <feature name='odl-bier-test-driver-api' version='${project.version}' description='OpenDaylight :: test :: driver :: api'>
+
+  <feature name='odl-bier-service' version='${project.version}' description='OpenDaylight :: bier :: service'>
+    <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
     <feature version='${project.version}'>odl-bier-models</feature>
-    <bundle>mvn:org.opendaylight.bier/test-driver-api/{{VERSION}}</bundle>
-  </feature>
-  <feature name='odl-bier-test-driver' version='${project.version}' description='OpenDaylight :: bier :: test :: driver'>
-    <feature version="${project.version}">odl-bier-test-driver-impl</feature>
-    <feature version="${project.version}">odl-bier-test-driver-api</feature>
-  </feature>
-  <feature name='odl-bier-test' version='${project.version}' description='OpenDaylight :: bier :: test'>
-    <feature version='${project.version}'>odl-bier-test-driver</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+    <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
+    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
+    <feature version="${project.version}">odl-bier-std-driver</feature>
+    <bundle>mvn:org.opendaylight.bier/service-api/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/service-impl/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/service-cli/{{VERSION}}</bundle>
   </feature>
 
+  <feature name='odl-bier-test-driver' version='${project.version}' description='OpenDaylight :: test :: driver'>
+    <feature version="${project.version}">odl-bier-std-driver</feature>
+    <bundle>mvn:org.opendaylight.bier/test-driver-api/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/test-driver-impl/{{VERSION}}</bundle>
+  </feature>
 
 </features>

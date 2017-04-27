@@ -26,18 +26,21 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <dependencies>
         <dependency>
-            <groupId>org.opendaylight.bier</groupId>
-            <artifactId>odl-bier-test-driver-impl</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>odl-bier-std-driver</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
-            <artifactId>odl-bier-test-driver-api</artifactId>
+            <artifactId>test-driver-api</artifactId>
             <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.bier</groupId>
+            <artifactId>test-driver-impl</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

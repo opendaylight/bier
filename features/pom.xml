@@ -22,32 +22,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <packaging>pom</packaging>
 
   <modules>
+    <module>odl-bier-models</module>
+    <module>odl-bier-topomanager</module>
+    <module>odl-bier-channel</module>
+    <module>odl-bier-adapter</module>
+    <module>odl-bier-std-driver</module>
+    <module>odl-bier-service</module>
+    <module>odl-bier-test-driver</module>
+    <module>odl-bier-all</module>
     <module>features4-bier</module>
     <module>features-bier</module>
-    <module>odl-bier-adapter</module>
-    <module>odl-bier-all</module>
-    <module>odl-bier-channel</module>
-    <module>odl-bier-channel-api</module>
-    <module>odl-bier-channel-cli</module>
-    <module>odl-bier-channel-rest</module>
-    <module>odl-bier-channel-ui</module>
-    <module>odl-bier-driver-common</module>
-    <module>odl-bier-models</module>
-    <module>odl-bier-service</module>
-    <module>odl-bier-service-api</module>
-    <module>odl-bier-service-cli</module>
-    <module>odl-bier-service-rest</module>
-    <module>odl-bier-service-ui</module>
-    <module>odl-bier-std-driver</module>
-    <module>odl-bier-test</module>
-    <module>odl-bier-test-driver</module>
-    <module>odl-bier-test-driver-api</module>
-    <module>odl-bier-test-driver-impl</module>
-    <module>odl-bier-topomanager</module>
-    <module>odl-bier-topomanager-api</module>
-    <module>odl-bier-topomanager-cli</module>
-    <module>odl-bier-topomanager-rest</module>
-    <module>odl-bier-topomanager-ui</module>
   </modules>
 
-</project>
+ </project>

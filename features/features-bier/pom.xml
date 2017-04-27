@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2015 ZTE and others.  All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -27,8 +34,6 @@
     <yangtools.version>1.2.0-SNAPSHOT</yangtools.version>
     <dluxapps.version>0.6.0-SNAPSHOT</dluxapps.version>
     <openflowplugin.version>0.5.0-SNAPSHOT</openflowplugin.version>
-    <openflowjava.version>0.10.0-SNAPSHOT</openflowjava.version>
-    <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
 
   <dependencyManagement>
@@ -64,7 +69,6 @@
       <artifactId>features-yangtools</artifactId>
       <classifier>features</classifier>
       <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.mdsal.model</groupId>
@@ -72,21 +76,18 @@
       <version>${mdsal.model.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.controller</groupId>
       <artifactId>features-mdsal</artifactId>
       <classifier>features</classifier>
       <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.netconf</groupId>
       <artifactId>features-restconf</artifactId>
       <classifier>features</classifier>
       <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.netconf</groupId>
@@ -94,7 +95,6 @@
       <classifier>features</classifier>
       <version>${netconf.version}</version>
       <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.netconf</groupId>
@@ -102,7 +102,6 @@
       <classifier>features</classifier>
       <version>${netconf.version}</version>
       <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.dluxapps</groupId>
@@ -110,7 +109,6 @@
       <classifier>features</classifier>
       <version>${dluxapps.version}</version>
       <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.openflowplugin</groupId>
@@ -118,17 +116,7 @@
       <classifier>features</classifier>
       <version>${openflowplugin.version}</version>
       <type>xml</type>
-      <scope>runtime</scope>
     </dependency>
-    <dependency>
-      <groupId>org.opendaylight.openflowjava</groupId>
-      <artifactId>features-openflowjava</artifactId>
-      <classifier>features</classifier>
-      <version>${openflowjava.version}</version>
-      <type>xml</type>
-      <scope>runtime</scope>
-    </dependency>
-
 
 
     <dependency>

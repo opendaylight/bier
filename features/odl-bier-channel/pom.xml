@@ -25,6 +25,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>OpenDaylight :: bier :: channel</name>
     <properties>
         <mdsal.version>1.6.0-SNAPSHOT</mdsal.version>
+        <mdsal.model.version>0.11.0-SNAPSHOT</mdsal.model.version>
+        <restconf.version>1.6.0-SNAPSHOT</restconf.version>
+        <dluxapps.version>0.6.0-SNAPSHOT</dluxapps.version>
     </properties>
     <dependencies>
         <dependency>
@@ -36,14 +39,45 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
-            <artifactId>odl-bier-channel-api</artifactId>
+            <artifactId>odl-bier-models</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.netconf</groupId>
+            <artifactId>odl-restconf</artifactId>
+            <version>${restconf.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.netconf</groupId>
+            <artifactId>odl-mdsal-apidocs</artifactId>
+            <version>${restconf.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.dluxapps</groupId>
+            <artifactId>odl-dluxapps-yangman</artifactId>
+            <version>${dluxapps.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.bier</groupId>
+            <artifactId>channel-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>channel-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.bier</groupId>
+            <artifactId>channel-cli</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
