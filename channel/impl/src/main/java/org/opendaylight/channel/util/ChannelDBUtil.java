@@ -29,6 +29,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.chan
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelKey;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.egress.node.RcvTp;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.egress.node.RcvTpBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
@@ -53,7 +55,7 @@ public class ChannelDBUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ChannelDBUtil.class);
     private ChannelDBContext context;
     private static ChannelDBUtil instance = new ChannelDBUtil();
-    private static final String DEFAULT_TOPO_ID = "flow:1";
+    private static final String DEFAULT_TOPO_ID = "example-linkstate-topology";
 
     ChannelDBUtil() {
     }
@@ -184,16 +186,24 @@ public class ChannelDBUtil {
         List<EgressNode> egressNodeList = new ArrayList<>();
         for (org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNode egressNode
                 : input.getEgressNode()) {
+            List<RcvTp> rcvTpList = new ArrayList<>();
+            for (org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.egress.node.RcvTp
+                     rcvTp : egressNode.getRcvTp()) {
+                rcvTpList.add(new RcvTpBuilder().setTp(rcvTp.getTp()).build());
+            }
             egressNodeList.add(new EgressNodeBuilder()
                     .setNodeId(egressNode.getNodeId())
                     .setEgressBfrId(getNodeBfrId(input.getTopologyId(),egressNode.getNodeId(),
                             channel.getDomainId(),channel.getSubDomainId()))
+                    .setRcvTp(rcvTpList)
                     .build());
         }
         return new ChannelBuilder(channel)
+                .setBierForwardingType(input.getBierForwardingType())
                 .setIngressNode(input.getIngressNode())
                 .setIngressBfrId(getNodeBfrId(input.getTopologyId(),input.getIngressNode(),
                         channel.getDomainId(),channel.getSubDomainId()))
+                .setSrcTp(input.getSrcTp())
                 .setEgressNode(egressNodeList).build();
     }
 

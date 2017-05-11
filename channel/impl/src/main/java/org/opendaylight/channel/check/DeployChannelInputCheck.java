@@ -42,6 +42,10 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
         if (!checkChannelExist(channel)) {
             return new CheckResult(true, CHANNEL_NOT_EXISTS);
         }
+        if (bierForwardingTypeConflict(channel,deployChannelInput)) {
+            return new CheckResult(true, FORWARDING_TYPE_CONFLICT);
+        }
+
         result = checkNodesInSubdomain();
         if (result.isInputIllegal()) {
             return result;
@@ -51,6 +55,13 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
             return result;
         }
         return new CheckResult(false, "");
+    }
+
+    private boolean bierForwardingTypeConflict(Channel channel, DeployChannelInput deployChannelInput) {
+        if (channel.getBierForwardingType() != null) {
+            return !channel.getBierForwardingType().equals(deployChannelInput.getBierForwardingType());
+        }
+        return false;
     }
 
     private CheckResult checkIngressAndEgressNodes() {
@@ -94,8 +105,14 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
         try {
             Preconditions.checkNotNull(input, INPUT_IS_NULL);
             Preconditions.checkNotNull(input.getChannelName(), CHANNEL_NAME_IS_NULL);
+            Preconditions.checkNotNull(input.getBierForwardingType(),BIER_FORWARDING_TYPE_IS_NULL);
             Preconditions.checkNotNull(input.getIngressNode(), INGRESS_IS_NULL);
+            Preconditions.checkNotNull(input.getSrcTp(),SRC_TP_IS_NULL);
             Preconditions.checkNotNull(input.getEgressNode(), EGRESS_IS_NULL);
+            for (EgressNode egressNode : input.getEgressNode()) {
+                Preconditions.checkNotNull(egressNode.getNodeId(),EGRESS_NODE_ID_IS_NULL);
+                Preconditions.checkNotNull(egressNode.getRcvTp(),RCV_TP_IS_NULL);
+            }
         } catch (NullPointerException e) {
             LOG.warn("NullPointerException: {}",e);
             return new CheckResult(true,e.getMessage());

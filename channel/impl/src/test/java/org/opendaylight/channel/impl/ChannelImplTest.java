@@ -41,10 +41,13 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannel
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.egress.node.RcvTp;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.egress.node.RcvTpBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.output.ChannelName;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.output.ChannelNameBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.ChannelBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
@@ -68,6 +71,7 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 
 
 public class ChannelImplTest extends AbstractDataBrokerTest {
+    private static final String DEFAULT_TOPO = "example-linkstate-topology";
     private ChannelImpl channelImpl;
     private ChannelDBContext context;
 
@@ -97,7 +101,7 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         bierNodeList.add(bierNode4);
         bierNodeList.add(bierNode5);
         BierTopology bierTopology = new BierTopologyBuilder()
-                .setTopologyId("flow:1")
+                .setTopologyId(DEFAULT_TOPO)
                 .setBierNode(bierNodeList)
                 .build();
 
@@ -130,7 +134,7 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
 
     private InstanceIdentifier<BierTopology> buildBierTopologyPath() {
         return InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey("flow:1"));
+                .child(BierTopology.class, new BierTopologyKey(DEFAULT_TOPO));
     }
 
     @Test
@@ -139,8 +143,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         QueryChannelOutput actulChannel = queryChannel("channel-1");
         QueryChannelOutput expectChannel = buildExpectChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short) 24,
-                (short) 30,null, new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query
-                        .channel.output.channel.EgressNode>());
+                (short) 30,null,null,null, new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102
+                        .query.channel.output.channel.EgressNode>());
         assertChannelData(expectChannel.getChannel(),actulChannel.getChannel());
     }
 
@@ -161,20 +165,20 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         RpcResult<AddChannelOutput> result = addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         RpcResult<ModifyChannelOutput> modifyResult = modifyChannel("channel-1",null,22,null,"225.1.1.1",
-                null,(short)24);
+                (short)24,(short)24);
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         QueryChannelOutput actulChannel = queryChannel("channel-1");
         QueryChannelOutput expectChannel = buildExpectChannel("channel-1",1,22,"1.1.1.1","225.1.1.1",(short) 24,
-                (short) 24, null, new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query
-                        .channel.output.channel.EgressNode>());
+                (short) 24, null,null,null,new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102
+                        .query.channel.output.channel.EgressNode>());
         assertChannelData(expectChannel.getChannel(),actulChannel.getChannel());
 
-        modifyResult = modifyChannel("channel-1",2,null,"2.2.2.2",null,(short) 16,null);
+        modifyResult = modifyChannel("channel-1",2,null,"2.2.2.2",null,(short) 16,(short)24);
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         actulChannel = queryChannel("channel-1");
         expectChannel = buildExpectChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",(short) 16,
-                (short) 24, null, new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query
-                        .channel.output.channel.EgressNode>());
+                (short) 24, null,null,null, new ArrayList<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102
+                        .query.channel.output.channel.EgressNode>());
         assertChannelData(expectChannel.getChannel(),actulChannel.getChannel());
     }
 
@@ -182,10 +186,11 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
     public void deployChannelBasicTest() throws Exception {
         RpcResult<AddChannelOutput> result = addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
-        RpcResult<DeployChannelOutput> deployResult = deployChannel("channel-1");
+        RpcResult<DeployChannelOutput> deployResult = deployChannel("channel-1","src-tp","rcv-tp1","rcv-tp2",
+                BierForwardingType.BierTe);
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel
-                channelData = ChannelDBUtil.getInstance().readChannel("channel-1","flow:1").get();
+                channelData = ChannelDBUtil.getInstance().readChannel("channel-1",DEFAULT_TOPO).get();
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel
                 expectChannel = buildChannelData("channel-1",1,11,"1.1.1.1","224.1.1.1",false);
         assertChannelDbData(expectChannel,channelData);
@@ -195,13 +200,21 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
     public void modifyDeployChannelBasicTest() throws Exception {
         RpcResult<AddChannelOutput> result = addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
-        RpcResult<DeployChannelOutput> deployResult = deployChannel("channel-1");
+        RpcResult<DeployChannelOutput> deployResult = deployChannel("channel-1","src-tp","rcv-tp1","rcv-tp2",
+                BierForwardingType.BierTe);
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
         RpcResult<DeployChannelOutput> modifyResult = channelImpl.deployChannel(
-                buildModifyDeployChannelInput("channel-1")).get();
+                buildModifyDeployChannelInput("channel-1",BierForwardingType.Bier)).get();
+        Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertEquals("forwarding-type conflict! can not change forwarding-type,"
+                + " when update deploy-channel info.", modifyResult.getResult().getConfigureResult().getErrorCause());
+
+        modifyResult = channelImpl.deployChannel(buildModifyDeployChannelInput("channel-1",BierForwardingType.BierTe))
+                .get();
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel
-                channelData = ChannelDBUtil.getInstance().readChannel("channel-1","flow:1").get();
+                channelData = ChannelDBUtil.getInstance().readChannel("channel-1",DEFAULT_TOPO).get();
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel
                 expectChannel = buildChannelData("channel-1",1,11,"1.1.1.1","224.1.1.1",true);
         assertChannelDbData(expectChannel,channelData);
@@ -244,18 +257,26 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
     public void queryChannelTest() throws Exception {
         RpcResult<AddChannelOutput> result = addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
         Assert.assertTrue(result.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
-        RpcResult<DeployChannelOutput> deployResult = deployChannel("channel-1");
+        RpcResult<DeployChannelOutput> deployResult = deployChannel("channel-1","src-tp","rcv-tp1","rcv-tp2",
+                BierForwardingType.Bier);
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
-        QueryChannelOutput actulChannel = queryChannel("channel-1");
+
         List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.EgressNode>
                 egressList = new ArrayList<>();
+        List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.egress.node
+                .RcvTp> rcvTps = new ArrayList<>();
+        rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.egress
+                .node.RcvTpBuilder().setTp("rcv-tp1").build());
+        rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.egress
+                .node.RcvTpBuilder().setTp("rcv-tp2").build());
         egressList.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel
-                .EgressNodeBuilder().setNodeId("node2").build());
+                .EgressNodeBuilder().setNodeId("node2").setRcvTp(rcvTps).build());
         egressList.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel
-                .EgressNodeBuilder().setNodeId("node3").build());
+                .EgressNodeBuilder().setNodeId("node3").setRcvTp(rcvTps).build());
 
         QueryChannelOutput expectChannel = buildExpectChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short) 24,
-                (short) 30, "node1",egressList);
+                (short) 30, "node1","src-tp",BierForwardingType.Bier,egressList);
+        QueryChannelOutput actulChannel = queryChannel("channel-1");
         assertQueryChannelData(expectChannel.getChannel().get(0),actulChannel.getChannel().get(0));
     }
 
@@ -313,8 +334,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         Assert.assertEquals("wildcard is invalid!it must be in the range [1,32].",
                 modifyResult.getResult().getConfigureResult().getErrorCause());
 
-        deployChannel("channel-1");
-        modifyResult = modifyChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",null,null);
+        deployChannel("channel-1","src-tp","rcv-tp1","rcv-tp2",BierForwardingType.BierTe);
+        modifyResult = modifyChannel("channel-1",2,22,"2.2.2.2","225.1.1.1",(short)32,(short)32);
         Assert.assertTrue(modifyResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("The Channel has deployed,can not modify",
                 modifyResult.getResult().getConfigureResult().getErrorCause());
@@ -322,25 +343,37 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void checkDeployChannelInputTest() throws Exception {
-        RpcResult<DeployChannelOutput> deployResult = deployChannel("channel-1");
+        RpcResult<DeployChannelOutput> deployResult = deployChannel("channel-1","src-tp","rcv-tp1","rcv-tp2",
+                BierForwardingType.Bier);
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("The Channel does not exists!",
                 deployResult.getResult().getConfigureResult().getErrorCause());
 
         addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
-        deployResult = deployChannel(null);
+        deployResult = deployChannel(null,"src-tp","rcv-tp1","rcv-tp2",BierForwardingType.BierTe);
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("channel-name is null!",deployResult.getResult().getConfigureResult().getErrorCause());
 
+        deployResult = deployChannel("channel-1",null,"rcv-tp1","rcv-tp2",BierForwardingType.BierTe);
+        Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertEquals("src-tp is null!",deployResult.getResult().getConfigureResult().getErrorCause());
+
+        deployResult = deployChannel("channel-1","src-tp","rcv-tp1","rcv-tp2",null);
+        Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertEquals("bier forwarding type is null!",
+                deployResult.getResult().getConfigureResult().getErrorCause());
+
         List<EgressNode> egressNodes = new ArrayList<>();
-        egressNodes.add(new EgressNodeBuilder().setNodeId("node2").build());
-        egressNodes.add(new EgressNodeBuilder().setNodeId("node3").build());
+        List<RcvTp> rcvTpList = new ArrayList<>();
+        rcvTpList.add(new RcvTpBuilder().setTp("rcv-tp").build());
+        egressNodes.add(new EgressNodeBuilder().setNodeId("node2").setRcvTp(rcvTpList).build());
+        egressNodes.add(new EgressNodeBuilder().setNodeId("node3").setRcvTp(rcvTpList).build());
         deployResult = deployChannelWithBfr("channel-1","node6",egressNodes);
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("ingress-node is not in this sub-domain!",
                 deployResult.getResult().getConfigureResult().getErrorCause());
 
-        egressNodes.add(new EgressNodeBuilder().setNodeId("node7").build());
+        egressNodes.add(new EgressNodeBuilder().setNodeId("node7").setRcvTp(rcvTpList).build());
         deployResult = deployChannelWithBfr("channel-1","node1",egressNodes);
         Assert.assertTrue(deployResult.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertEquals("egress-node is not in this sub-domain!",
@@ -388,15 +421,21 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         Assert.assertEquals(expect.getChannelName(), actual.getChannelName());
     }
 
-    private DeployChannelInput buildModifyDeployChannelInput(String channelName) {
+    private DeployChannelInput buildModifyDeployChannelInput(String channelName,BierForwardingType type) {
+        List<RcvTp> rcvTps = new ArrayList<>();
+        rcvTps.add(new RcvTpBuilder().setTp("rcv-tp1").build());
+        rcvTps.add(new RcvTpBuilder().setTp("rcv-tp2").build());
+        rcvTps.add(new RcvTpBuilder().setTp("rcv-tp3").build());
         List<EgressNode> egresNodes = new ArrayList<>();
-        egresNodes.add(new EgressNodeBuilder().setNodeId("node3").build());
-        egresNodes.add(new EgressNodeBuilder().setNodeId("node4").build());
-        egresNodes.add(new EgressNodeBuilder().setNodeId("node5").build());
+        egresNodes.add(new EgressNodeBuilder().setNodeId("node3").setRcvTp(rcvTps).build());
+        egresNodes.add(new EgressNodeBuilder().setNodeId("node4").setRcvTp(rcvTps).build());
+        egresNodes.add(new EgressNodeBuilder().setNodeId("node5").setRcvTp(rcvTps).build());
         return new DeployChannelInputBuilder()
                 .setChannelName(channelName)
                 .setIngressNode("node2")
                 .setEgressNode(egresNodes)
+                .setBierForwardingType(type)
+                .setSrcTp("src-tp")
                 .build();
     }
 
@@ -406,6 +445,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
                                              .channel.Channel channelData) {
         Assert.assertEquals(expectChannel.getEgressNode(), channelData.getEgressNode());
         Assert.assertEquals(expectChannel.getIngressNode(),channelData.getIngressNode());
+        Assert.assertEquals(expectChannel.getBierForwardingType(),channelData.getBierForwardingType());
+        Assert.assertEquals(expectChannel.getSrcTp(),channelData.getSrcTp());
         Assert.assertEquals(expectChannel.getDomainId(),channelData.getDomainId());
         Assert.assertEquals(expectChannel.getDstGroup(),channelData.getDstGroup());
         Assert.assertEquals(expectChannel.getGroupWildcard(),channelData.getGroupWildcard());
@@ -423,26 +464,45 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
                 .network.channel.bier.channel.ChannelBuilder();
         List<org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel
                 .EgressNode> egressNodes = new ArrayList<>();
+        List<org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel
+                .egress.node.RcvTp> rcvTps = new ArrayList<>();
         if (modify) {
             channelBuilder.setIngressNode("node2");
+            rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
+                    .channel.egress.node.RcvTpBuilder().setTp("rcv-tp1").build());
+            rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
+                    .channel.egress.node.RcvTpBuilder().setTp("rcv-tp2").build());
+            rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
+                    .channel.egress.node.RcvTpBuilder().setTp("rcv-tp3").build());
             channelBuilder.setIngressBfrId(new BfrId(2));
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node3").setEgressBfrId(new BfrId(33)).build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node3").setRcvTp(rcvTps)
+                    .setEgressBfrId(new BfrId(33)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node4").setEgressBfrId(new BfrId(4)).build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node4").setRcvTp(rcvTps)
+                    .setEgressBfrId(new BfrId(4)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node5").setEgressBfrId(new BfrId(55)).build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node5").setRcvTp(rcvTps)
+                    .setEgressBfrId(new BfrId(55)).build());
         } else {
 
+            rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
+                    .channel.egress.node.RcvTpBuilder().setTp("rcv-tp1").build());
+            rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
+                    .channel.egress.node.RcvTpBuilder().setTp("rcv-tp2").build());
             channelBuilder.setIngressNode("node1");
             channelBuilder.setIngressBfrId(new BfrId(11));
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node2").setEgressBfrId(new BfrId(2)).build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node2").setRcvTp(rcvTps)
+                    .setEgressBfrId(new BfrId(2)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
-                    .channel.channel.EgressNodeBuilder().setNodeId("node3").setEgressBfrId(new BfrId(33)).build());
+                    .channel.channel.EgressNodeBuilder().setNodeId("node3").setRcvTp(rcvTps)
+                    .setEgressBfrId(new BfrId(33)).build());
 
         }
         channelBuilder.setName(channelName);
+        channelBuilder.setBierForwardingType(BierForwardingType.BierTe);
+        channelBuilder.setSrcTp("src-tp");
         channelBuilder.setDomainId(new DomainId(domainId));
         channelBuilder.setSubDomainId(new SubDomainId(subDomainId));
         channelBuilder.setSrcIp(new IpAddress(new Ipv4Address(srcIp)));
@@ -453,14 +513,26 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         return channelBuilder.build();
     }
 
-    private RpcResult<DeployChannelOutput> deployChannel(String channelName)
+    private RpcResult<DeployChannelOutput> deployChannel(String channelName, String srcTp, String rcvTp1, String rcvTp2,
+                                                         BierForwardingType forwardingType)
             throws ExecutionException, InterruptedException {
         List<EgressNode> egressNodes = new ArrayList<>();
-        egressNodes.add(new EgressNodeBuilder().setNodeId("node2").build());
-        egressNodes.add(new EgressNodeBuilder().setNodeId("node3").build());
+        List<RcvTp> rcvTps = new ArrayList<>();
+        rcvTps.add(new RcvTpBuilder().setTp(rcvTp1).build());
+        rcvTps.add(new RcvTpBuilder().setTp(rcvTp2).build());
+        egressNodes.add(new EgressNodeBuilder()
+                .setNodeId("node2")
+                .setRcvTp((rcvTp1 == null && rcvTp2 == null) ? null : rcvTps)
+                .build());
+        egressNodes.add(new EgressNodeBuilder()
+                .setNodeId("node3")
+                .setRcvTp((rcvTp1 == null && rcvTp2 == null) ? null : rcvTps)
+                .build());
         DeployChannelInput input = new DeployChannelInputBuilder()
                 .setChannelName(channelName)
+                .setBierForwardingType(forwardingType)
                 .setIngressNode("node1")
+                .setSrcTp(srcTp)
                 .setEgressNode(egressNodes)
                 .build();
         return channelImpl.deployChannel(input).get();
@@ -471,6 +543,8 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
             throws ExecutionException, InterruptedException {
         DeployChannelInput input = new DeployChannelInputBuilder()
                 .setChannelName(channelName)
+                .setBierForwardingType(BierForwardingType.Bier)
+                .setSrcTp("src-tp")
                 .setIngressNode(ingressNode)
                 .setEgressNode(egressNodes)
                 .build();
@@ -513,11 +587,14 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
 
     private QueryChannelOutput buildExpectChannel(String channelName, Integer domainId, Integer subDomainID,
                                                   String srcIp, String groupIp, Short srcWildcard, Short groupWildcard,
-                                                  String ingressNode, List<org.opendaylight.yang.gen.v1.urn.bier
-            .channel.api.rev161102.query.channel.output.channel.EgressNode> egressList) {
+                                                  String ingressNode,String srcTp,BierForwardingType type,
+                                                  List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102
+                                                          .query.channel.output.channel.EgressNode> egressList) {
         List<Channel> channels = new ArrayList<>();
         Channel channel = new ChannelBuilder()
                 .setName(channelName)
+                .setBierForwardingType(type)
+                .setSrcTp(srcTp)
                 .setDomainId(new DomainId(domainId))
                 .setSubDomainId(new SubDomainId(subDomainID))
                 .setSrcIp(new IpAddress(new Ipv4Address(srcIp)))

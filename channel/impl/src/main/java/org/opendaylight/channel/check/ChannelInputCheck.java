@@ -27,7 +27,11 @@ public class ChannelInputCheck implements InputCheck {
     public static final String SRC_WILDCARD_IS_NULL = "src-wildcard is null!";
     public static final String GROUP_WILDCARD_IS_NULL = "group-wildcard is null!";
     public static final String INGRESS_IS_NULL = "ingress-node is null!";
+    public static final String SRC_TP_IS_NULL = "src-tp is null!";
+    public static final String RCV_TP_IS_NULL = "rcv-tp is null!";
     public static final String EGRESS_IS_NULL = "egress-node is null!";
+    public static final String EGRESS_NODE_ID_IS_NULL = "egress-node id is null!";
+    public static final String BIER_FORWARDING_TYPE_IS_NULL = "bier forwarding type is null!";
     public static final String CHANNEL_EXISTS = "The Channel already exists!";
     public static final String CHANNEL_NOT_EXISTS = "The Channel does not exists!";
     public static final String CHANNEL_DEPLOYED = "The Channel has deployed,can not modify";
@@ -38,6 +42,8 @@ public class ChannelInputCheck implements InputCheck {
     public static final String EGRESS_NOT_IN_SUBDOMIN = "egress-node is not in this sub-domain!";
     public static final String INGRESS_EGRESS_CONFLICT = "ingress-node and egress-nodes conflict!the node must not"
             + " be both ingress and egress.";
+    public static final String FORWARDING_TYPE_CONFLICT = "forwarding-type conflict! can not change forwarding-type,"
+            + " when update deploy-channel info.";
 
     private static final Integer MULTICAST_IPV4_1ST_SEGMENT_MIN = 224;
     private static final Integer MULTICAST_IPV4_1ST_SEGMENT_MAX = 239;
@@ -76,7 +82,11 @@ public class ChannelInputCheck implements InputCheck {
     }
 
     private boolean isWildCastIllegal(Short wildcard) {
-        return (wildcard != null) && ((wildcard > WILDCARD_MAX) || (wildcard < WILDCARD_MIN));
+        if (wildcard != null) {
+            return ((wildcard > WILDCARD_MAX) || (wildcard < WILDCARD_MIN));
+        } else {
+            return true;
+        }
     }
 
     public boolean checkChannelExist(String channelName, String topoId) {

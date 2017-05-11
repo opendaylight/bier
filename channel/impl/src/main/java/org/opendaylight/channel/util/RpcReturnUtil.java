@@ -28,13 +28,4 @@ public class RpcReturnUtil {
     public static <T> Future<RpcResult<T>> returnRpcResult(T out) {
         return Futures.immediateFuture(RpcResultBuilder.<T>success(out).build());
     }
-
-    public static <T> RpcResult<T> returnResultOk() {
-        return RpcResultBuilder.<T>success().build();
-    }
-
-    public static <T> RpcResult<T> returnResultErr(String errMsg) {
-        return RpcResultBuilder.<T>failed().withError(RpcError.ErrorType.APPLICATION, errMsg)
-                .build();
-    }
 }

@@ -43,8 +43,10 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.o
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.output.ChannelNameBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.ChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.EgressNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.egress.node.RcvTpBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.egress.node.RcvTp;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResultBuilder;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -166,6 +168,8 @@ public class ChannelImpl implements BierChannelApiService {
             org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.ChannelBuilder
                     channelBuilder = new ChannelBuilder(channel);
             channelBuilder.setIngressNode(channel.getIngressNode());
+            channelBuilder.setSrcTp(channel.getSrcTp());
+            channelBuilder.setBierForwardingType(channel.getBierForwardingType());
             channelBuilder.setEgressNode(buildEgressNodes(channel.getEgressNode()));
             channelList.add(channelBuilder.build());
         }
@@ -176,9 +180,18 @@ public class ChannelImpl implements BierChannelApiService {
             .EgressNode> buildEgressNodes(List<EgressNode> egressNode) {
         List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.EgressNode>
                 egressNodeList = new ArrayList<>();
+
         if (egressNode != null && !egressNode.isEmpty()) {
             for (EgressNode node : egressNode) {
-                egressNodeList.add(new EgressNodeBuilder().setNodeId(node.getNodeId()).build());
+                List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel
+                        .egress.node.RcvTp> rcvTpList = new ArrayList<>();
+                for (RcvTp rcvTp : node.getRcvTp()) {
+                    rcvTpList.add(new RcvTpBuilder().setTp(rcvTp.getTp()).build());
+                }
+                egressNodeList.add(new EgressNodeBuilder()
+                        .setNodeId(node.getNodeId())
+                        .setRcvTp(rcvTpList)
+                        .build());
             }
         }
         return egressNodeList;
