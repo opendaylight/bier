@@ -30,11 +30,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
   <feature name='odl-bier-models' version='${project.version}' description='OpenDaylight :: bier :: models'>
     <feature version="${mdsal.model.version}">odl-mdsal-models</feature>
+    <bundle>mvn:org.opendaylight.bier/ietf-routing-ex-2016-10-20/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/ietf-mpls-2017-03-11/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/ietf-bier-2016-07-23/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/ietf-multicast-information-2016-10-28/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-common-model/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-topology-model/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/bier-channel-model/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/ietf-bier-te-2016-10-13/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/bier-te-path-model/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/bier-te-forwarding-model/{{VERSION}}</bundle>
+
   </feature>
 
   <feature name='odl-bier-topomanager' version='${project.version}' description='OpenDaylight :: bier :: topomanager'>

@@ -5,9 +5,6 @@ module bier-channel {
        prefix "inet";
        revision-date "2013-07-15";
      }
-  import ietf-mpls {
-       prefix "mpls";
-     }
   
   import ietf-bier {
         prefix bier;
@@ -20,6 +17,17 @@ module bier-channel {
     description "Initial revision.";
   }
   
+      typedef bier-forwarding-type{
+           type enumeration {
+                enum "bier" {
+                    value 1;
+                }
+                enum "bier-te" {
+                    value 2;
+                }
+           }
+  	  }
+
   container bier-network-channel {
     list bier-channel {
       key "topology-id";
@@ -37,6 +45,9 @@ module bier-channel {
 		leaf ingress-bfr-id {
 		    type bier:bfr-id;
 		}
+		leaf src-tp {
+            type string;
+        }
         list egress-node {
             key "node-id";
             ordered-by user;
@@ -46,7 +57,16 @@ module bier-channel {
             leaf egress-bfr-id {
                 type bier:bfr-id;
             }
+            list rcv-tp {
+                leaf tp {
+                    type string;
+                }
+            }
           }
+        leaf bier-forwarding-type {
+            type bier-forwarding-type;
+        }
+
       }
     }
   }

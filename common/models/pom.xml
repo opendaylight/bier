@@ -23,11 +23,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 <name>ODL :: bier :: ${project.artifactId}</name>
 
 <modules>
+    <module>ietf-routing-ex-2016-10-20</module>
+    <module>ietf-mpls-2017-03-11</module>
     <module>ietf-bier-2016-07-23</module>
     <module>ietf-multicast-information-2016-10-28</module>
     <module>bier-common-model</module>
     <module>bier-topology-model</module>
     <module>bier-channel-model</module>
+    <module>ietf-bier-te-2016-10-13</module>
+    <module>bier-te-forwarding-model</module>
+    <module>bier-te-path-model</module>
 </modules>
 <dependencies>
     <dependency>

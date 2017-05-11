@@ -6,10 +6,6 @@ module bier-topology-api {
        prefix "inet";
      }
   
-  import ietf-mpls {
-       prefix "mpls";
-     }
-  
   import ietf-bier {
         prefix bier;
     }

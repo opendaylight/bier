@@ -254,6 +254,32 @@
         }
     }
 
+    grouping transport-bier-te {
+        description "The BIER TE transport information.";
+
+        choice encap-type {
+            case mpls {
+                description "The BIER forwarding depend on mpls.";
+            }
+            description "The encapsulation type in BIER.";
+        }
+        leaf ecmp {
+            type boolean;
+            description "The capability of ECMP.";
+        }
+        leaf frr {
+            type boolean;
+            description "The capability of fast re-route.";
+        }
+        list path {
+            key "path-id";
+            leaf path-id {
+                type uint32;
+                description "The path id that correspond this flow.";
+            }
+        }
+    }
+
     grouping transport-pim {
         description "The requirement information of pim transportion.";
         leaf graceful-restart {
@@ -322,6 +348,10 @@
         container bier {
             uses transport-bier;
             description "The transport technology is BIER.";
+        }
+        container bier-te {
+            uses transport-bier-te;
+            description "The transport technology is BIER TE.";
         }
         container cisco-mode {
             uses transport-cisco-mode;

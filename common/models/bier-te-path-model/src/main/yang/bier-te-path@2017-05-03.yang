@@ -1,0 +1,51 @@
+module bier-te-path {
+
+    namespace "urn:bier:te:path";
+    prefix "bier-te-path";
+    
+	import ietf-bier {
+		prefix "bier";
+		revision-date 2016-07-23;
+	}
+    import ietf-bier-te {
+        prefix "bier-te";
+        revision-date 2016-10-13;
+    }
+    
+    organization "zte";	
+	    revision 2017-05-03 {
+        description "Initial revision.";
+    }
+
+
+    grouping te-path {
+
+		list path {
+			key "path-id";
+			leaf path-id {
+				type uint32;
+			}
+			leaf subdomain-id {
+				type bier:sub-domain-id;
+			}
+
+			leaf bitstringlength{
+				type bier:bsl;
+			}
+			leaf si {
+				type bier:si;
+			}
+			list bitstring {
+				key "bitposition";
+				leaf bitposition {
+					type bier-te:bit-string;
+				}
+			}
+		}
+    }
+  
+    container bier-te-path {
+    	description "The BIER TE path";
+		uses te-path;
+    }
+}

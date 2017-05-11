@@ -8,6 +8,7 @@ module bier-topology {
   
   import ietf-mpls {
        prefix "mpls";
+       revision-date 2016-07-05;
      }
   
   import ietf-bier {
@@ -78,6 +79,74 @@ module bier-topology {
 	  }
   }
   
+  grouping bier-te-node-params {
+    list te-domain {
+      key "domain-id";
+      ordered-by user;
+      leaf domain-id {
+			  type bier-common:domain-id;
+			}
+	    list te-sub-domain{
+          key "sub-domain-id";
+          ordered-by user;
+          leaf sub-domain-id{
+              type bier:sub-domain-id;
+          }
+          
+          list te-bsl{
+              key "bitstringlength";
+              ordered-by user;
+              leaf bitstringlength {
+                type bier:bsl;
+              }
+          
+          
+              list te-si {
+                key "si";
+                ordered-by user;
+                leaf si{
+                  type bier:si;
+                }
+                leaf ft-label {
+                    type mpls:mpls-label;
+                } 
+          
+                 list te-bp {
+                   key "tp-id";
+                   ordered-by user;
+                   leaf tp-id {
+			               type string;
+		               }
+            
+                   leaf bitposition {
+                     //type bier-te:bit-string;
+                     type uint16;
+                   }
+                 }
+             }
+          }
+        
+      }
+	  }
+  }
+
+	grouping termination-point {
+		leaf tp-id {
+			type string;
+		}
+		leaf if-name {
+		  type string;
+		}
+		leaf tp-ip-prefix {
+			type inet:ip-address;
+		}
+		leaf tp-index {
+			type uint32;
+		}
+		leaf if-speed {
+		  type uint64;
+		}
+	}
   
   grouping bier-node {
 		leaf node-id {
@@ -92,6 +161,9 @@ module bier-topology {
 		container bier-node-params {
 		    uses bier-node-params;
 		}
+		container bier-te-node-params {
+		    uses bier-te-node-params;
+		}
 		leaf latitude {
 			default 0;
 			type uint64;
@@ -103,9 +175,16 @@ module bier-topology {
 		list bier-termination-point {
 		    key "tp-id";
 		    ordered-by user;
-				leaf tp-id {
-					type string;
-				}
+		    uses termination-point;
+		}
+
+		container bier-te-lable-range {
+			leaf label-base{
+			  type mpls:mpls-label;
+			}
+			leaf label-range-size{
+			  type bier:bier-mpls-label-range-size;
+			}
 		}
 	}
 	
@@ -138,6 +217,9 @@ module bier-topology {
 		}
 		leaf loss {
 			default 0;
+			type uint64;
+		}
+		leaf metric {
 			type uint64;
 		}
 	}

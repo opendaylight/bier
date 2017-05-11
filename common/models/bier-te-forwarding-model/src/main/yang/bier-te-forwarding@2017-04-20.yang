@@ -1,0 +1,42 @@
+module bier-te-forwarding {
+
+    namespace "urn:bier:te:forwarding";
+    prefix "bier-te-forwarding";
+    
+    import bier-common {
+        prefix bier-common;
+    }
+    
+    import ietf-bier-te {
+        prefix bier-te;
+    }
+    
+    organization "zte";	
+	    revision 2017-04-20 {
+        description "Initial revision.";
+    }
+  
+    container bier-te-forwarding-config {
+        description "The BIER TE forwarding information container.";
+        
+          list bier-node {
+			  key "node-id";
+			  ordered-by user;
+			  leaf node-id {
+			     type string;
+		      }
+              uses bier-te-node-forwarding-params;
+          }
+    }
+    
+    grouping bier-te-node-forwarding-params {
+          list domain {
+              key "domain-id";
+              ordered-by user;
+              leaf domain-id {
+			     type bier-common:domain-id;
+	          }
+			  uses bier-te:te-info;
+          }
+    }
+}

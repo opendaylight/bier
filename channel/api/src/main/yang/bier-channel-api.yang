@@ -46,12 +46,23 @@ module bier-channel-api {
 				list channel {
 					key name;
 					uses bier-channel:channel;
+					leaf bier-forwarding-type {
+                        type bier-channel:bier-forwarding-type;
+                    }
 					leaf ingress-node {
+                        type string;
+                    }
+                    leaf src-tp {
                         type string;
                     }
                     list egress-node {
                         leaf node-id {
                           type string;
+                        }
+                        list rcv-tp {
+                            leaf tp {
+                                type string;
+                            }
                         }
                     }
 				}
@@ -107,10 +118,21 @@ module bier-channel-api {
 			leaf ingress-node {
 			  type string;
 		  }
+		  leaf src-tp {
+		      type string;
+		  }
 		  list egress-node {
 			  leaf node-id {
 			      type string;
 			  }
+			  list rcv-tp {
+                  leaf tp {
+                      type string;
+                  }
+			  }
+		  }
+		  leaf bier-forwarding-type {
+		      type bier-channel:bier-forwarding-type;
 		  }
 		}
 		output {

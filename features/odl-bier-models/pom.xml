@@ -35,14 +35,39 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <classifier>features</classifier>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.bier</groupId>
-            <artifactId>ietf-bier-2016-07-23</artifactId>
-            <version>${project.version}</version>
+           <groupId>${project.groupId}</groupId>
+           <artifactId>ietf-routing-ex-2016-10-20</artifactId>
+           <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.bier</groupId>
-            <artifactId>ietf-multicast-information-2016-10-28</artifactId>
-            <version>${project.version}</version>
+           <groupId>${project.groupId}</groupId>
+           <artifactId>ietf-mpls-2017-03-11</artifactId>
+           <version>${project.version}</version>
+        </dependency>
+        <dependency>
+           <groupId>${project.groupId}</groupId>
+           <artifactId>ietf-bier-2016-07-23</artifactId>
+           <version>${project.version}</version>
+        </dependency>
+        <dependency>
+           <groupId>${project.groupId}</groupId>
+           <artifactId>ietf-multicast-information-2016-10-28</artifactId>
+           <version>${project.version}</version>
+        </dependency>
+        <dependency>
+           <groupId>${project.groupId}</groupId>
+           <artifactId>ietf-bier-te-2016-10-13</artifactId>
+           <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>bier-te-path-model</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>bier-te-forwarding-model</artifactId>
+          <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
