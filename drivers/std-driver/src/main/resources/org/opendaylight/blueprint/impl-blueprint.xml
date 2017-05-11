@@ -58,4 +58,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <argument ref="netconfDataOperator"/>
   </bean>
 
+    <bean id="deviceInterfaceReader"
+          class="org.opendaylight.bier.driver.configuration.interfaces.DeviceInterfaceReaderImpl">
+        <argument ref="netconfDataOperator"/>
+    </bean>
+
+    <service ref="deviceInterfaceReader" interface="org.opendaylight.bier.adapter.api.DeviceInterfaceReader"/>
+
+    <bean id="bierTeLabelRangeConfigWriter"
+          class="org.opendaylight.bier.driver.configuration.label.BierTeLabelRangeConfigWriterImpl">
+        <argument ref="netconfDataOperator"/>
+    </bean>
+
+    <service ref="bierTeLabelRangeConfigWriter" interface="org.opendaylight.bier.adapter.api.BierTeLabelRangeConfigWriter"/>
+
+
+
 </blueprint>

@@ -29,6 +29,7 @@ import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.common.util.DataGetter;
 import org.opendaylight.bier.driver.common.util.IidConstants;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
@@ -289,7 +290,7 @@ public class TestDriverProvider implements TestDriverService {
         InstanceIdentifier<BierNode> bierNodeIId = IidConstants.BIER_TOPO_IID
                 .child(BierNode.class,new BierNodeKey(nodeId));
 
-        BierNode bierNode = DataGetter.readData(dataBroker,bierNodeIId);
+        BierNode bierNode = DataGetter.readData(dataBroker,bierNodeIId,LogicalDatastoreType.CONFIGURATION);
         if ((bierNode != null) && (bierNode.getBierNodeParams() != null)) {
             List<Domain> domainList = bierNode.getBierNodeParams().getDomain();
             if ((domainList == null) || domainList.isEmpty()) {
@@ -631,7 +632,7 @@ public class TestDriverProvider implements TestDriverService {
 
         InstanceIdentifier<Channel> multicastInfoIid =
                 IidConstants.BIER_CHANNEL_IID.child(Channel.class, new ChannelKey(channelName));
-        return DataGetter.readData(dataBroker, multicastInfoIid);
+        return DataGetter.readData(dataBroker, multicastInfoIid,LogicalDatastoreType.CONFIGURATION);
     }
 
     private List<BfrId> getContollerBrfIdList(Channel channel) {

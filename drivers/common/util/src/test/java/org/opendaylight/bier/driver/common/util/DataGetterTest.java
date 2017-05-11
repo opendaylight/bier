@@ -28,6 +28,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelBuilder;
@@ -129,7 +130,8 @@ public class DataGetterTest {
 
         assertNull(DataGetter.readData(NODE_ID,
                 IidBuilder.buildPureMulticastIId(new ChannelBuilder().build()),
-                mountService));
+                mountService,
+                LogicalDatastoreType.CONFIGURATION));
     }
 
     //@Test
@@ -160,7 +162,7 @@ public class DataGetterTest {
         when(readResult.checkedGet()).thenReturn(pureMulticastOptional);
         when(pureMulticastOptional.isPresent()).thenReturn(false);
 
-        assertNull(DataGetter.readData(NODE_ID,pureMulticastIId,mountService));
+        assertNull(DataGetter.readData(NODE_ID,pureMulticastIId,mountService,LogicalDatastoreType.CONFIGURATION));
 
     }
 
@@ -194,7 +196,7 @@ public class DataGetterTest {
         when(pureMulticastOptional.isPresent()).thenReturn(true);
         PureMulticast pureMulticast = new PureMulticastBuilder().build();
         when(pureMulticastOptional.get()).thenReturn(pureMulticast);
-        assertNotNull(DataGetter.readData(NODE_ID,pureMulticastIId,mountService));
+        assertNotNull(DataGetter.readData(NODE_ID,pureMulticastIId,mountService, LogicalDatastoreType.CONFIGURATION));
 
     }
 

@@ -18,6 +18,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
@@ -93,17 +94,31 @@ public class NetconfDataOperator implements BindingAwareConsumer {
     }
 
 
-    public <T extends DataObject> T read(DataBroker dataBroker,
+    public <T extends DataObject> T readConfigration(DataBroker dataBroker,
                                          InstanceIdentifier<T> path) {
 
-        return DataGetter.readData(dataBroker,path);
+        return DataGetter.readData(dataBroker,path, LogicalDatastoreType.CONFIGURATION);
+
+    }
+
+    public <T extends DataObject> T readConfigration(String nodeId,
+                                                          InstanceIdentifier<T> path) {
+
+        return DataGetter.readData(nodeId,path,mountService,LogicalDatastoreType.CONFIGURATION);
 
     }
 
     public <T extends DataObject> T read(String nodeId,
-                                                          InstanceIdentifier<T> path) {
+                                         InstanceIdentifier<T> path) {
 
-        return DataGetter.readData(nodeId,path,mountService);
+        return readConfigration(nodeId,path);
+
+    }
+
+    public <T extends DataObject> T read(DataBroker dataBroker,
+                                                     InstanceIdentifier<T> path) {
+
+        return readConfigration(dataBroker,path);
 
     }
 

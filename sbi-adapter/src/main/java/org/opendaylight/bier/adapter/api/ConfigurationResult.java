@@ -29,6 +29,10 @@ public class ConfigurationResult {
     public static final String IPV4_RANGESIZE_INVALID = "Subdomain's ipv4 mpls range size should not be smaller "
             + "than 16,node id :";
     public static final String EGRESS_INFO_NULL = "Multicast info with null egress nodes. ";
+    public static final String LABEL_MIN = "Label base ";
+    public static final String LABEL_MAX = "The max label ";
+    public static final String LABEL_INVALID = "is invalid label expected: [[16‥1048575]],node id :";
+
     private Result cfgResult;
     private String failureReason;
 

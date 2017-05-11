@@ -79,12 +79,12 @@ public class DataGetter {
 
 
     public static <T extends DataObject> T readData(DataBroker dataBroker,
-                                                    InstanceIdentifier<T> path) {
+                                                    InstanceIdentifier<T> path,LogicalDatastoreType datastoreType) {
         T data = null;
         final ReadOnlyTransaction transaction = dataBroker.newReadOnlyTransaction();
         Optional<T> optionalData;
         try {
-            optionalData = transaction.read(LogicalDatastoreType.CONFIGURATION, path).checkedGet();
+            optionalData = transaction.read(datastoreType, path).checkedGet();
             if (optionalData.isPresent()) {
                 data = optionalData.get();
             } else {
@@ -98,7 +98,9 @@ public class DataGetter {
     }
 
     public static <T extends DataObject> T readData(String nodeId,
-                                             InstanceIdentifier<T> path,MountPointService mountService) {
+                                             InstanceIdentifier<T> path,
+                                             MountPointService mountService,
+                                             LogicalDatastoreType datastoreType) {
 
 
 
@@ -108,7 +110,7 @@ public class DataGetter {
         if (nodeBroker == null) {
             return null;
         }
-        return readData(nodeBroker,path);
+        return readData(nodeBroker,path,datastoreType);
 
     }
 
