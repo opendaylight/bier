@@ -59,17 +59,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>bier-adapter</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>bier-driver-common-util</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>bier-channel-model</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>

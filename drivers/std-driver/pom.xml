@@ -36,18 +36,18 @@
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>bier-topology-model</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>bier-channel-model</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>bier-adapter</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
@@ -58,7 +58,7 @@
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>ietf-multicast-information-2016-10-28</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>

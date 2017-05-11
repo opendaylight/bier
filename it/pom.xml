@@ -37,7 +37,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>features-bier</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${project.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
     </dependency>
