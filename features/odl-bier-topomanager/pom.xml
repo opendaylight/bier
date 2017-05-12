@@ -82,10 +82,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
-            <artifactId>odl-bier-topomanager-api</artifactId>
+            <artifactId>topomanager-api</artifactId>
             <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
