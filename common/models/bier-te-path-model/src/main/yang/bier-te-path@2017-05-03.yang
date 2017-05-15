@@ -20,32 +20,34 @@ module bier-te-path {
 
     grouping te-path {
 
-		list path {
-			key "path-id";
-			leaf path-id {
-				type uint32;
-			}
-			leaf subdomain-id {
-				type bier:sub-domain-id;
-			}
+		leaf path-id {
+			type uint32;
+		}
+		leaf subdomain-id {
+			type bier:sub-domain-id;
+		}
 
-			leaf bitstringlength{
-				type bier:bsl;
-			}
-			leaf si {
-				type bier:si;
-			}
-			list bitstring {
-				key "bitposition";
-				leaf bitposition {
-					type bier-te:bit-string;
-				}
+		leaf bitstringlength{
+			type bier:bsl;
+		}
+		leaf si {
+			type bier:si;
+		}
+		list bitstring {
+			key "bitposition";
+			leaf bitposition {
+				type bier-te:bit-string;
 			}
 		}
+
     }
   
     container bier-te-path {
     	description "The BIER TE path";
-		uses te-path;
+    	list path {
+			key "path-id";
+			uses te-path;
+    	}
+
     }
 }

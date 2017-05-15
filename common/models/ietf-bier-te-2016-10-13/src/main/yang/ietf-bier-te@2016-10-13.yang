@@ -14,10 +14,15 @@ module ietf-bier-te {
         revision-date 2016-07-23;
     }
 
-    import ietf-routing-types {
-        prefix "rt-types";
-        revision-date 2017-02-27;
+    import ietf-mpls {
+        prefix "mpls";
+        revision-date 2016-07-05;
     }
+
+   import yang-ext {
+     prefix "ext";
+     revision-date 2013-07-09;
+   }
 
     organization " IETF BIER(Bit Indexed Explicit Replication ) Working Group";
     contact
@@ -225,7 +230,7 @@ module ietf-bier-te {
             description "The out interface of this forwarding item.";
         }
         leaf out-label {
-            type rt-types:mpls-label;
+            type mpls:mpls-label;
         }
         leaf ecmp {
             type boolean;
@@ -252,7 +257,7 @@ module ietf-bier-te {
                 description "The set identifier of this forwarding item.";
             }
             leaf ft-label {
-                type rt-types:mpls-label;
+                type mpls:mpls-label;
                 description "The label of forwarding table.";
             }
             list te-f-index {
@@ -301,6 +306,7 @@ module ietf-bier-te {
     * Configuration data nodes
     */
     augment "/rt:routing" {
+        ext:augment-identifier "bier-te-configuration";
         description "The BIER TE information.";
         container bier-te-config {
             description "The BIER TE information container.";
