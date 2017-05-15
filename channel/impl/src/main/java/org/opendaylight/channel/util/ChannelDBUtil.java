@@ -20,6 +20,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannel
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannel;
@@ -38,8 +39,16 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParams;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeNodeParams;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomainKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomainKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.TeBsl;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.TeSi;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBp;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
@@ -138,6 +147,18 @@ public class ChannelDBUtil {
         }
     }
 
+    private Optional<TeSubDomain> readBierTeNodeSubDomain(String topologyId, String node, DomainId domainId,
+                                                      SubDomainId subDomainId) {
+        ReadOnlyTransaction rtx = context.newReadOnlyTransaction();
+        try {
+            return rtx.read(LogicalDatastoreType.CONFIGURATION,
+                    buildBierTeNodeSubDomainPath(topologyId,node,domainId,subDomainId)).get();
+        } catch (ExecutionException | InterruptedException e) {
+            LOG.warn("Channel:occur exception when read databroker {}", e);
+            return null;
+        }
+    }
+
     private InstanceIdentifier<SubDomain> buildBierNodeSubDomainPath(String topologyId, String node,
                                                                       DomainId domainId, SubDomainId subDomainId) {
         return InstanceIdentifier.create(BierNetworkTopology.class)
@@ -147,6 +168,16 @@ public class ChannelDBUtil {
                 .child(Domain.class, new DomainKey(domainId))
                 .child(BierGlobal.class)
                 .child(SubDomain.class, new SubDomainKey(subDomainId));
+    }
+
+    private InstanceIdentifier<TeSubDomain> buildBierTeNodeSubDomainPath(String topologyId, String node,
+                                                                     DomainId domainId, SubDomainId subDomainId) {
+        return InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(topologyId))
+                .child(BierNode.class, new BierNodeKey(node))
+                .child(BierTeNodeParams.class)
+                .child(TeDomain.class, new TeDomainKey(domainId))
+                .child(TeSubDomain.class, new TeSubDomainKey(subDomainId));
     }
 
     private InstanceIdentifier<Channel> buildChannelPath(String name, String topologyId) {
@@ -342,13 +373,42 @@ public class ChannelDBUtil {
         return false;
     }
 
-    public boolean isBierNodeInSubDomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId) {
-        Optional<SubDomain> bierNodeSubDomain = readBierNodeSubDomain(buildTopoId(topologyId),
-                node, domainId, subDomainId);
-        if (bierNodeSubDomain == null || !bierNodeSubDomain.isPresent()) {
-            return false;
+    public boolean isBierNodeInSubDomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId,
+                                         BierForwardingType type) {
+        if (type.equals(BierForwardingType.Bier)) {
+            Optional<SubDomain> bierNodeSubDomain = readBierNodeSubDomain(buildTopoId(topologyId),
+                    node, domainId, subDomainId);
+            if (bierNodeSubDomain == null || !bierNodeSubDomain.isPresent()) {
+                return false;
+            }
+        }
+        if (type.equals(BierForwardingType.BierTe)) {
+            Optional<TeSubDomain> bierTeNodeSubDomain = readBierTeNodeSubDomain(buildTopoId(topologyId),
+                    node, domainId, subDomainId);
+            if (bierTeNodeSubDomain == null || !bierTeNodeSubDomain.isPresent()) {
+                return false;
+            }
         }
         return true;
     }
+
+    public boolean isTpInTeSubdomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId,
+                                     String tpId) {
+        Optional<TeSubDomain> bierTeNodeSubDomain = readBierTeNodeSubDomain(buildTopoId(topologyId),
+                node, domainId, subDomainId);
+        if (bierTeNodeSubDomain != null && bierTeNodeSubDomain.isPresent()) {
+            for (TeBsl teBsl : bierTeNodeSubDomain.get().getTeBsl()) {
+                for (TeSi teSi : teBsl.getTeSi()) {
+                    for (TeBp teBp : teSi.getTeBp()) {
+                        if (teBp.getTpId().equals(tpId)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
 }

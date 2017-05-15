@@ -8,6 +8,7 @@
 package org.opendaylight.channel.check;
 
 import org.opendaylight.channel.util.ChannelDBUtil;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
@@ -40,6 +41,8 @@ public class ChannelInputCheck implements InputCheck {
     public static final String WILDCARD_IS_INVALID = "wildcard is invalid!it must be in the range [1,32].";
     public static final String INGRESS_NOT_IN_SUBDOMIN = "ingress-node is not in this sub-domain!";
     public static final String EGRESS_NOT_IN_SUBDOMIN = "egress-node is not in this sub-domain!";
+    public static final String SRCTP_NOT_IN_SUBDOMIN = "src-tp is not in this sub-domain!";
+    public static final String RCVTP_NOT_IN_SUBDOMIN = "rcv-tp is not in this sub-domain!";
     public static final String INGRESS_EGRESS_CONFLICT = "ingress-node and egress-nodes conflict!the node must not"
             + " be both ingress and egress.";
     public static final String FORWARDING_TYPE_CONFLICT = "forwarding-type conflict! can not change forwarding-type,"
@@ -101,7 +104,13 @@ public class ChannelInputCheck implements InputCheck {
         return channelDBUtil.hasChannelDeplyed(name,topologyId);
     }
 
-    public boolean nodeInSubdomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId) {
-        return channelDBUtil.isBierNodeInSubDomain(topologyId,node,domainId,subDomainId);
+    public boolean nodeInSubdomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId,
+                                   BierForwardingType type) {
+        return channelDBUtil.isBierNodeInSubDomain(topologyId,node,domainId,subDomainId,type);
+    }
+
+    public boolean tpInTeSubdomain(String topologyId, String node, DomainId domainId, SubDomainId subDomainId,
+                                   String tpId) {
+        return channelDBUtil.isTpInTeSubdomain(topologyId,node,domainId,subDomainId,tpId);
     }
 }

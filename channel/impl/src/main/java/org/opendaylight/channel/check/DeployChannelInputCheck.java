@@ -14,6 +14,8 @@ import java.util.List;
 import org.opendaylight.channel.util.ChannelDBUtil;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNode;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.egress.node.RcvTp;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
@@ -77,20 +79,47 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
 
     private CheckResult checkNodesInSubdomain() {
         if (!nodeInSubdomain(deployChannelInput.getTopologyId(),deployChannelInput.getIngressNode(),
-                channel.getDomainId(),channel.getSubDomainId())) {
+                channel.getDomainId(),channel.getSubDomainId(),deployChannelInput.getBierForwardingType())) {
             return new CheckResult(true, INGRESS_NOT_IN_SUBDOMIN);
         }
         if (!egressNodesInSubdomain(deployChannelInput.getTopologyId(),deployChannelInput.getEgressNode(),
-                channel.getDomainId(),channel.getSubDomainId())) {
+                channel.getDomainId(),channel.getSubDomainId(),deployChannelInput.getBierForwardingType())) {
             return new CheckResult(true,EGRESS_NOT_IN_SUBDOMIN);
+        }
+        if (deployChannelInput.getBierForwardingType().equals(BierForwardingType.BierTe)) {
+            if (!srcTpInSubdomain(deployChannelInput.getTopologyId(), deployChannelInput.getIngressNode(),
+                    channel.getDomainId(), channel.getSubDomainId(),deployChannelInput.getSrcTp())) {
+                return new CheckResult(true, SRCTP_NOT_IN_SUBDOMIN);
+            }
+            if (!rcvTpsInSubdomain(deployChannelInput.getTopologyId(),deployChannelInput.getEgressNode(),
+                    channel.getDomainId(),channel.getSubDomainId())) {
+                return new CheckResult(true,RCVTP_NOT_IN_SUBDOMIN);
+            }
         }
         return new CheckResult(false,"");
     }
 
-    private boolean egressNodesInSubdomain(String topologyId, List<EgressNode> egressNodeList,
-                                           DomainId domainId, SubDomainId subDomainId) {
+    private boolean srcTpInSubdomain(String topologyId, String ingressNode, DomainId domainId,
+                                     SubDomainId subDomainId, String tp) {
+        return tpInTeSubdomain(topologyId,ingressNode,domainId,subDomainId,tp);
+    }
+
+    private boolean rcvTpsInSubdomain(String topologyId, List<EgressNode> egressNodeList, DomainId domainId,
+                                     SubDomainId subDomainId) {
         for (EgressNode egressNode : egressNodeList) {
-            if (!nodeInSubdomain(topologyId,egressNode.getNodeId(),domainId,subDomainId)) {
+            for (RcvTp rcvTp : egressNode.getRcvTp()) {
+                if (!tpInTeSubdomain(topologyId,egressNode.getNodeId(),domainId,subDomainId,rcvTp.getTp())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean egressNodesInSubdomain(String topologyId, List<EgressNode> egressNodeList,
+                                           DomainId domainId, SubDomainId subDomainId, BierForwardingType type) {
+        for (EgressNode egressNode : egressNodeList) {
+            if (!nodeInSubdomain(topologyId,egressNode.getNodeId(),domainId,subDomainId,type)) {
                 return false;
             }
         }
