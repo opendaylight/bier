@@ -24,7 +24,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
              interface="org.opendaylight.bier.adapter.api.BierConfigReader"/>
   <reference id="channelConfigReader"
              interface="org.opendaylight.bier.adapter.api.ChannelConfigReader"/>
-
+    <reference id="bierTeBiftWriter"
+               interface="org.opendaylight.bier.adapter.api.BierTeBiftWriter"/>
   <bean id="provider"
     class="org.opendaylight.bier.test.driver.TestDriverProvider"
     init-method="init" destroy-method="close">
@@ -34,6 +35,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <property name="channelConfigWriter" ref="channelConfigWriter"/>
     <property name="bierConfigReader" ref="bierConfigReader"/>
     <property name="channelConfigReader" ref="channelConfigReader"/>
+    <property name="bierTeBiftWriter" ref="bierTeBiftWriter"/>
   </bean>
 
 

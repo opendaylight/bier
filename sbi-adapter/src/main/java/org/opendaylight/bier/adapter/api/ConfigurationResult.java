@@ -31,8 +31,8 @@ public class ConfigurationResult {
     public static final String EGRESS_INFO_NULL = "Multicast info with null egress nodes. ";
     public static final String LABEL_MIN = "Label base ";
     public static final String LABEL_MAX = "The max label ";
-    public static final String LABEL_INVALID = "is invalid label expected: [[16‥1048575]],node id :";
-
+    public static final String LABEL_INVALID = "is invalid label,expected:[16,1048575] ,node id :";
+    public static final String PATH_NULL = "No path info for the channel :";
     private Result cfgResult;
     private String failureReason;
 

@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 
 import org.opendaylight.bier.adapter.api.BierConfigReader;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigReader;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
@@ -72,6 +73,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetIpv4Config
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetTeBiftInput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetTeBiftOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetTeBiftOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.TestDriverService;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
@@ -87,6 +91,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.AfBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4Builder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.routing.BierTeConfigBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -103,6 +108,7 @@ public class TestDriverProvider implements TestDriverService {
     private BindingAwareBroker.RpcRegistration<TestDriverService> rpcReg;
     private ChannelConfigWriter channelConfigWrite;
     private ChannelConfigReader channelConfigReader;
+    private BierTeBiftWriter bierTeBiftWriter;
 
 
 
@@ -131,6 +137,9 @@ public class TestDriverProvider implements TestDriverService {
         this.channelConfigReader = channelConfigReader;
     }
 
+    public void setBierTeBiftWriter(BierTeBiftWriter bierTeBiftWriter) {
+        this.bierTeBiftWriter = bierTeBiftWriter;
+    }
 
 
     /**
@@ -692,6 +701,17 @@ public class TestDriverProvider implements TestDriverService {
 
     }
 
+    @Override
+    public Future<RpcResult<SetTeBiftOutput>> setTeBift(SetTeBiftInput input) {
+        ConfigurationType type =
+                getConfigurationType(input.getWriteType());
+        ConfigurationResult result = bierTeBiftWriter.writeTeBift(type, input.getNodeName(),
+                new BierTeConfigBuilder().setTeSubdomain(input.getTeSubdomain()).build());
+
+        SetTeBiftOutput output =
+                new SetTeBiftOutputBuilder().setConfigureResult(buildResult(result)).build();
+        return RpcResultBuilder.success(output).buildFuture();
+    }
 
 
 }

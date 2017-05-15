@@ -11,6 +11,10 @@ module test-driver {
     import bier-common {
         prefix bier-common;
     }
+    import ietf-bier-te {
+        prefix bier-te;
+    }
+
 	organization "zte";
 	revision 2016-12-19 {
     description "Initial revision.";
@@ -241,5 +245,27 @@ module test-driver {
         }
 
     }
+
+    rpc set-te-bift {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+
+            leaf write-type {
+                mandatory true;
+                type config-type;
+            }
+
+            uses bier-te:te-info;
+        }
+        output {
+           uses bier-common:configure-result;
+        }
+	}
+
 
 }				

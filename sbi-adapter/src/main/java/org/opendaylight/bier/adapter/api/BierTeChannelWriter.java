@@ -7,12 +7,11 @@
  */
 package org.opendaylight.bier.adapter.api;
 
-import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.TePath;
+import java.util.List;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 
+public interface BierTeChannelWriter {
 
-
-
-public interface BierTeBitstringWriter {
-
-    ConfigurationResult writeBierTeBitstring(ConfigurationType type, String nodeId,TePath tePath);
+    ConfigurationResult writeBierTeChannel(ConfigurationType type, String nodeId,
+                                             Channel channel, List<Long> pathId);
 }

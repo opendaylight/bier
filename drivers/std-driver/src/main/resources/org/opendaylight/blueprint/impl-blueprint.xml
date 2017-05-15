@@ -66,12 +66,32 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <service ref="deviceInterfaceReader" interface="org.opendaylight.bier.adapter.api.DeviceInterfaceReader"/>
 
     <bean id="bierTeLabelRangeConfigWriter"
-          class="org.opendaylight.bier.driver.configuration.label.BierTeLabelRangeConfigWriterImpl">
+          class="org.opendaylight.bier.driver.configuration.te.label.BierTeLabelRangeConfigWriterImpl">
         <argument ref="netconfDataOperator"/>
     </bean>
 
     <service ref="bierTeLabelRangeConfigWriter" interface="org.opendaylight.bier.adapter.api.BierTeLabelRangeConfigWriter"/>
 
+    <bean id="bierTeBiftWriter"
+          class="org.opendaylight.bier.driver.configuration.te.bift.BierTeBiftWriterImpl">
+        <argument ref="netconfDataOperator"/>
+    </bean>
+
+    <service ref="bierTeBiftWriter" interface="org.opendaylight.bier.adapter.api.BierTeBiftWriter"/>
+
+    <bean id="bierTeBitstringWriter"
+          class="org.opendaylight.bier.driver.configuration.te.bitstring.BierTeBitstringWriterImpl">
+        <argument ref="netconfDataOperator"/>
+    </bean>
+
+    <service ref="bierTeBitstringWriter" interface="org.opendaylight.bier.adapter.api.BierTeBitstringWriter"/>
+
+    <bean id="bierTeChannelWriter"
+          class="org.opendaylight.bier.driver.configuration.te.channel.BierTeChannelWriterImpl">
+        <argument ref="netconfDataOperator"/>
+    </bean>
+
+    <service ref="bierTeChannelWriter" interface="org.opendaylight.bier.adapter.api.BierTeChannelWriter"/>
 
 
 </blueprint>
