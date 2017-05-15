@@ -1,0 +1,154 @@
+module bier-te-config-api {
+	namespace "urn:bier:te:config:api";
+	prefix "bier-te-config-api";
+	
+  import ietf-inet-types {
+       prefix "inet";
+     }
+  
+  import ietf-mpls {
+       prefix "mpls";
+       revision-date 2016-07-05;
+     }
+
+  import ietf-bier {
+        prefix bier;
+    }
+    
+  import bier-common {
+        prefix bier-common;
+    }
+  
+  import bier-topology {
+        prefix bier-topology;
+    }
+	
+	organization "zte";	
+	revision 2016-11-02 {
+    description "Initial revision.";
+  }
+  
+	rpc configure-te-node {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+				leaf node-id {
+			    type string; 
+		    }
+		    
+		    uses bier-topology:bier-te-node-params;
+		}
+		output {
+       uses bier-common:configure-result;
+		}
+	}
+	
+	rpc configure-te-label {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+				leaf node-id {
+			    type string; 
+		    }
+		    
+		    leaf label-base{
+			      type mpls:mpls-label;
+			  }
+			  leaf label-range-size{
+			     type bier:bier-mpls-label-range-size;
+			  }
+		}
+		output {
+       uses bier-common:configure-result;
+		}
+	}
+	
+	rpc delete-te-bsl {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+				leaf node-id {
+			    type string; 
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    
+		    leaf bitstringlength {
+            type bier:bsl;
+        }
+		}
+		output {
+       uses bier-common:configure-result;
+		}
+	}
+	
+	rpc delete-te-si {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+				leaf node-id {
+			    type string; 
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    
+		    leaf bitstringlength {
+            type bier:bsl;
+        }
+        
+        leaf si{
+          type bier:si;
+        }
+		}
+		output {
+       uses bier-common:configure-result;
+		}
+	}
+	
+	rpc delete-te-bp {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+				leaf node-id {
+			    type string; 
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    
+		    leaf bitstringlength {
+            type bier:bsl;
+        }
+		    
+		    leaf si{
+          type bier:si;
+        }
+        
+        leaf tp-id {
+			      type string;
+		    }
+		}
+		output {
+       uses bier-common:configure-result;
+		}
+	}
+}

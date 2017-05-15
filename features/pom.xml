@@ -23,10 +23,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
   <modules>
     <module>odl-bier-models</module>
-    <module>odl-bier-topomanager</module>
     <module>odl-bier-channel</module>
     <module>odl-bier-adapter</module>
     <module>odl-bier-std-driver</module>
+    <module>odl-bier-bierman</module>
     <module>odl-bier-service</module>
     <module>odl-bier-test-driver</module>
     <module>odl-bier-all</module>

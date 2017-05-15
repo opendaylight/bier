@@ -1,0 +1,118 @@
+module bier-config-api {
+	namespace "urn:bier:config:api";
+	prefix "bier-config-api";
+	
+  import ietf-inet-types {
+       prefix "inet";
+     }
+  
+  import ietf-mpls {
+       prefix "mpls";
+       revision-date 2016-07-05;
+     }
+
+  import ietf-bier {
+        prefix bier;
+    }
+    
+  import bier-common {
+        prefix bier-common;
+    }
+  
+  import bier-topology {
+        prefix bier-topology;
+    }
+	
+	organization "zte";	
+	revision 2016-11-02 {
+    description "Initial revision.";
+  }
+  
+  identity bier-encapsulation-mpls {
+       base bier:bier-encapsulation;
+       description
+         "This identity represents MPLS encapsulation for bier.";
+     }
+  
+	rpc configure-node {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+				leaf node-id {
+			    type string; 
+		    }
+		    
+		    uses bier-topology:bier-node-params;
+		}
+		output {
+       uses bier-common:configure-result;
+		}
+	}
+	
+	rpc delete-node	{
+	  input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		     leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    leaf node-id {
+			    type string;
+		    }
+		}
+		output {
+        uses bier-common:configure-result;
+		}	
+	}
+	
+	rpc delete-ipv4	{
+	  input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		     leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    leaf node-id {
+			    type string;
+		    }
+		    container ipv4 {
+			    uses bier:bier-mpls-cfg;
+		    }
+		}
+		output {
+        uses bier-common:configure-result;
+		}	
+	}
+	
+	rpc delete-ipv6	{
+	  input {
+		    leaf topology-id {
+			    type string; 
+		    }
+		     leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+			    type bier:sub-domain-id;
+		    }
+		    leaf node-id {
+			    type string;
+		    }
+		    container ipv6 {
+			    uses bier:bier-mpls-cfg;
+		    }
+		}
+		output {
+        uses bier-common:configure-result;
+		}	
+	}
+}

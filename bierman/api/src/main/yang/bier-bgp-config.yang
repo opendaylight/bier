@@ -1,0 +1,30 @@
+module bier-bgp-config {
+
+	namespace "urn:bier:bgp:config";
+	prefix "bier-bgp-config";
+
+	import ietf-inet-types {
+		prefix "inet";
+	}
+
+	organization "zte";
+	revision 2016-11-02 {
+    	    description "Initial revision.";
+  	}
+	grouping bgp-config {
+		leaf address {
+			type inet:ip-address;
+		}
+		leaf as {
+			type inet:as-number;
+		}
+	}
+	container config {
+		container local {
+			uses bgp-config;
+		}
+		container neighbour {
+			uses bgp-config;
+		}
+	}
+}

@@ -18,13 +18,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.netconf/features-netconf/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-netconf-connector/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/{{VERSION}}/xml/features</repository>
+  <repository>mvn:org.opendaylight.bgpcep/features-bgp/{{VERSION}}/xml/features</repository>
 
   <feature name='odl-bier-all' version='${project.version}' description="OpenDaylight :: Bier :: All">
         <feature version='${project.version}'>odl-bier-models</feature>
-        <feature version='${project.version}'>odl-bier-topomanager</feature>
         <feature version='${project.version}'>odl-bier-channel</feature>
         <feature version='${project.version}'>odl-bier-adapter</feature>
         <feature version='${project.version}'>odl-bier-std-driver</feature>
+        <feature version='${project.version}'>odl-bier-bierman</feature>
         <feature version='${project.version}'>odl-bier-service</feature>
   </feature>
 
@@ -43,7 +44,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
   </feature>
 
-  <feature name='odl-bier-topomanager' version='${project.version}' description='OpenDaylight :: bier :: topomanager'>
+  <feature name='odl-bier-bierman' version='${project.version}' description='OpenDaylight :: bier :: bierman'>
     <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
     <feature version="${project.version}">odl-bier-models</feature>
     <feature version="${restconf.version}">odl-restconf</feature>
@@ -51,9 +52,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
     <feature version='${openflowplugin.version}'>odl-openflowplugin-southbound</feature>
     <feature version='${openflowplugin.version}'>odl-openflowplugin-flow-services</feature>
-    <bundle>mvn:org.opendaylight.bier/topomanager-api/{{VERSION}}</bundle>
-    <bundle>mvn:org.opendaylight.bier/topomanager-impl/{{VERSION}}</bundle>
-    <bundle>mvn:org.opendaylight.bier/topomanager-cli/{{VERSION}}</bundle>
+    <feature version='${bgpcep.version}'>odl-bgpcep-bgp-all</feature>
+    <feature version='${project.version}'>odl-bier-std-driver</feature>
+    <bundle>mvn:org.opendaylight.bier/bierman-api/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/bierman-impl/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/bierman-cli/{{VERSION}}</bundle>
   </feature>
 
   <feature name='odl-bier-channel' version='${project.version}' description='OpenDaylight :: bier :: channel'>

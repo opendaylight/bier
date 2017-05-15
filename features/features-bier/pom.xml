@@ -34,6 +34,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <yangtools.version>1.2.0-SNAPSHOT</yangtools.version>
     <dluxapps.version>0.6.0-SNAPSHOT</dluxapps.version>
     <openflowplugin.version>0.5.0-SNAPSHOT</openflowplugin.version>
+    <bgpcep.version>0.8.0-SNAPSHOT</bgpcep.version>
   </properties>
 
   <dependencyManagement>
@@ -117,6 +118,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <version>${openflowplugin.version}</version>
       <type>xml</type>
     </dependency>
+    <dependency>
+      <groupId>org.opendaylight.bgpcep</groupId>
+      <artifactId>features-bgp</artifactId>
+      <classifier>features</classifier>
+      <version>${bgpcep.version}</version>
+      <type>xml</type>
+      <scope>runtime</scope>
+    </dependency>
 
 
     <dependency>
@@ -153,17 +162,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>topomanager-impl</artifactId>
+      <artifactId>bierman-impl</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>topomanager-api</artifactId>
+      <artifactId>bierman-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>topomanager-cli</artifactId>
+      <artifactId>bierman-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
 
