@@ -208,9 +208,6 @@ module bier-topology {
 			  type string;
 		  }
 		}
-		leaf bfr-adj-id {
-			type uint16;
-		}
 		leaf delay {
 			default 0;
 			type uint64;
