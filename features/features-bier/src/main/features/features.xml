@@ -26,6 +26,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <feature version='${project.version}'>odl-bier-adapter</feature>
         <feature version='${project.version}'>odl-bier-std-driver</feature>
         <feature version='${project.version}'>odl-bier-bierman</feature>
+        <feature version='${project.version}'>odl-bier-te-pce</feature>	
         <feature version='${project.version}'>odl-bier-service</feature>
   </feature>
 
@@ -70,6 +71,21 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <bundle>mvn:org.opendaylight.bier/channel-cli/{{VERSION}}</bundle>
   </feature>
 
+  <feature name='odl-bier-te-pce' version='${project.version}' description='OpenDaylight :: bier :: pce'>
+    <feature version='${mdsal.version}'>odl-mdsal-broker</feature>
+    <feature version="${project.version}">odl-bier-models</feature>
+    <feature version="${restconf.version}">odl-restconf</feature>
+    <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
+    <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
+    <feature version='${project.version}'>odl-bier-bierman</feature>
+    <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jung-graph-impl/2.0.1_2</bundle>
+    <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.collections-generic/4.01_1</bundle>
+    <bundle>mvn:org.opendaylight.bier/pce-api/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/pce-impl/{{VERSION}}</bundle>
+    <bundle>mvn:org.opendaylight.bier/pce-cli/{{VERSION}}</bundle>
+  </feature> 
+
+
   <feature name='odl-bier-adapter' version='${project.version}' description='OpenDaylight :: bier :: adapter'>
     <feature version='${project.version}'>odl-bier-models</feature>
     <bundle>mvn:org.opendaylight.bier/bier-adapter/{{VERSION}}</bundle>
@@ -91,6 +107,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${restconf.version}">odl-restconf</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
     <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
+    <feature version="${project.version}">odl-bier-te-pce</feature>
     <feature version="${project.version}">odl-bier-std-driver</feature>
     <bundle>mvn:org.opendaylight.bier/service-api/{{VERSION}}</bundle>
     <bundle>mvn:org.opendaylight.bier/service-impl/{{VERSION}}</bundle>

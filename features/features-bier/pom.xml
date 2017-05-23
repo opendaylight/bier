@@ -159,6 +159,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <artifactId>service-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
+    
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>pce-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>pce-impl</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>pce-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -175,7 +191,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <artifactId>bierman-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
-
 
     <dependency>
       <groupId>${project.groupId}</groupId>

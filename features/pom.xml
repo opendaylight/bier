@@ -27,6 +27,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <module>odl-bier-adapter</module>
     <module>odl-bier-std-driver</module>
     <module>odl-bier-bierman</module>
+    <module>odl-bier-te-pce</module>
     <module>odl-bier-service</module>
     <module>odl-bier-test-driver</module>
     <module>odl-bier-all</module>
