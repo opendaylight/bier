@@ -46,23 +46,23 @@ public class BierConfigServiceImpl implements BierConfigApiService {
     }
 
     public Future<RpcResult<ConfigureNodeOutput>> configureNode(ConfigureNodeInput input) {
-        ConfigureNodeOutputBuilder builder = new ConfigureNodeOutputBuilder();
+        ConfigureNodeOutputBuilder configureBuilder = new ConfigureNodeOutputBuilder();
         if (null == input) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"input is null!"));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
+            configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,"input is null!"));
+            return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
         }
 
         String topologyId = input.getTopologyId();
         String nodeId = input.getNodeId();
         if (topologyId == null || topologyId.equals("") || nodeId == null || nodeId.equals("")) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"input param is error!"));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
+            configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,"input param is error!"));
+            return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
         }
 
         BierNode node = topoManager.getNodeData(topologyId, nodeId);
         if (node == null) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"node is not exist!"));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
+            configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,"node is not exist!"));
+            return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
         }
 
         BierNodeBuilder nodeBuilder = new BierNodeBuilder(node);
@@ -72,32 +72,33 @@ public class BierConfigServiceImpl implements BierConfigApiService {
 
         String errorMsg = topoManager.checkBierNodeParams(node,nodeParamsBuilder);
         if (!errorMsg.equals("")) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,errorMsg));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
+            configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,errorMsg));
+            return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
         }
 
         if (!topoManager.checkDomainExist(topologyId,input.getDomain())) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"domain or subdomain is not exist!"));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
+            configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,"domain or subdomain is not exist!"));
+            return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
         }
 
         if (!topoManager.checkNodeBfrId(topologyId,nodeBuilder.build())) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"node bfrId is exist in same subdomain!"));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
+            configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,
+                    "node bfrId is exist in same subdomain!"));
+            return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
         }
 
         if (!topoManager.checkNodeLabel(node,nodeBuilder.build())) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"node label range is overlapped!"));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
+            configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,"node label range is overlapped!"));
+            return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
         }
 
         if (!topoManager.setNodeData(topologyId, nodeBuilder.build())) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"write node to datastore failed!"));
-            return RpcResultBuilder.success(builder.build()).buildFuture();
+            configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,"write node to datastore failed!"));
+            return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
         }
 
-        builder.setConfigureResult(RpcUtil.getConfigResult(true,""));
-        return RpcResultBuilder.success(builder.build()).buildFuture();
+        configureBuilder.setConfigureResult(RpcUtil.getConfigResult(true,""));
+        return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
     }
 
     public Future<RpcResult<DeleteNodeOutput>> deleteNode(DeleteNodeInput input) {

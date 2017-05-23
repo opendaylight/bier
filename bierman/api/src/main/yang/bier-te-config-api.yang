@@ -64,6 +64,20 @@ module bier-te-config-api {
        uses bier-common:configure-result;
 		}
 	}
+
+	rpc delete-te-label {
+    		input {
+    		    leaf topology-id {
+    			    type string;
+    		    }
+    				leaf node-id {
+    			    type string;
+    		    }
+    		}
+    		output {
+           uses bier-common:configure-result;
+    		}
+    	}
 	
 	rpc delete-te-bsl {
 		input {

@@ -10,7 +10,11 @@ package org.opendaylight.bierman.impl;
 import org.opendaylight.bier.adapter.api.DeviceInterfaceReader;
 import org.opendaylight.bierman.impl.bierconfig.BierConfigServiceImpl;
 import org.opendaylight.bierman.impl.teconfig.BierTeConfigServiceImpl;
-import org.opendaylight.bierman.impl.topo.*;
+import org.opendaylight.bierman.impl.topo.BierLinkChangeListenerImpl;
+import org.opendaylight.bierman.impl.topo.BierNodeChangeListenerImpl;
+import org.opendaylight.bierman.impl.topo.BierTopologyServiceImpl;
+import org.opendaylight.bierman.impl.topo.BierTpChangeListenerImpl;
+import org.opendaylight.bierman.impl.topo.NetConfigStateChangeListenerImpl;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
@@ -88,7 +92,7 @@ public class BierManagerProvider {
             bierCfgService.close();
         }
 
-        if(bierTeCfgService != null) {
+        if (bierTeCfgService != null) {
             bierTeCfgService.close();
         }
 
