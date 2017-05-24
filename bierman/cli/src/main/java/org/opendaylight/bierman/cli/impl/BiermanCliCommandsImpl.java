@@ -7,8 +7,8 @@
  */
 package org.opendaylight.bierman.cli.impl;
 
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.bierman.cli.api.BiermanCliCommands;
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

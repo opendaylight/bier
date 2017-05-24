@@ -274,32 +274,30 @@ public class BierDataAdapter {
     }
 
     public BierLink toBierLink(Link link) {
-        LinkBuilder linkBuilder = new LinkBuilder(link);
-
         BierLinkBuilder bierLinkBuilder = new BierLinkBuilder();
-        String linkId = toBierLinkId(linkBuilder.getLinkId().getValue());
+        String linkId = toBierLinkId(link.getLinkId().getValue());
         bierLinkBuilder.setLinkId(linkId);
         BierLinkKey bierLinkKey = new BierLinkKey(linkId);
         bierLinkBuilder.setKey(bierLinkKey);
 
-        Source source = linkBuilder.getSource();
-        SourceBuilder sourceBuilder = new SourceBuilder(source);
+        Source source = link.getSource();
         LinkSourceBuilder bierSource = new LinkSourceBuilder();
-        String sourceNodeId = sourceBuilder.getSourceNode().getValue();
+        String sourceNodeId = source.getSourceNode().getValue();
         bierSource.setSourceNode(toBierNodeId(sourceNodeId));
-        bierSource.setSourceTp(toBierTpId(sourceBuilder.getSourceTp().getValue()));
+        bierSource.setSourceTp(toBierTpId(source.getSourceTp().getValue()));
         bierLinkBuilder.setLinkSource(bierSource.build());
 
-        Destination dest = linkBuilder.getDestination();
-        DestinationBuilder destBuilder = new DestinationBuilder(dest);
+        Destination dest = link.getDestination();
         LinkDestBuilder bierDest = new LinkDestBuilder();
-        String destNodeId = destBuilder.getDestNode().getValue();
+        String destNodeId = dest.getDestNode().getValue();
         bierDest.setDestNode(toBierNodeId(destNodeId));
-        bierDest.setDestTp(toBierTpId(destBuilder.getDestTp().getValue()));
+        bierDest.setDestTp(toBierTpId(dest.getDestTp().getValue()));
         bierLinkBuilder.setLinkDest(bierDest.build());
 
         Long metric = link.getAugmentation(Link1.class).getIgpLinkAttributes().getMetric();
         bierLinkBuilder.setMetric(BigInteger.valueOf(metric));
+        bierLinkBuilder.setDelay(BigInteger.valueOf(0));
+        bierLinkBuilder.setLoss(BigInteger.valueOf(0));
 
         return bierLinkBuilder.build();
     }

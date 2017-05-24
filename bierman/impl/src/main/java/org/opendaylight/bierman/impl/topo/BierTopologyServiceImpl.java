@@ -8,11 +8,58 @@
 package org.opendaylight.bierman.impl.topo;
 
 import com.google.common.util.concurrent.Futures;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Future;
+
 import org.opendaylight.bierman.impl.BierDataManager;
 import org.opendaylight.bierman.impl.NotificationProvider;
 import org.opendaylight.bierman.impl.RpcUtil;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.*;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.BierTopologyApiService;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureDomainInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureDomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureDomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureSubdomainInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureSubdomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureSubdomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomainInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LoadTopologyOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LoadTopologyOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryDomainInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryDomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryDomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryLinkInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryLinkOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryLinkOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryNodeInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryNodeOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryNodeOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainLinkInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainLinkOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainLinkOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainNodeInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainNodeOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainNodeOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QuerySubdomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTeSubdomainLinkInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTeSubdomainLinkOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTeSubdomainLinkOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTeSubdomainNodeInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTeSubdomainNodeOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTeSubdomainNodeOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.load.topology.output.Topology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.load.topology.output.TopologyBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.query.domain.output.Domain;
@@ -37,7 +84,13 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.topology.Nod
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.topology.NodeIdBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.*;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierDomain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierDomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierDomainKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLinkBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.bier.domain.BierSubDomain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.bier.domain.BierSubDomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.bier.domain.BierSubDomainKey;
@@ -46,10 +99,6 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Future;
 
 public class BierTopologyServiceImpl implements BierTopologyApiService {
     private static final Logger LOG = LoggerFactory.getLogger(BierTopologyServiceImpl.class);
@@ -159,6 +208,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
                 }
             }
         }
+        LOG.info("nodeList --------" + nodeList);
         QueryNodeOutputBuilder builder = new QueryNodeOutputBuilder();
         builder.setNode(nodeList);
         return RpcResultBuilder.success(builder.build()).buildFuture();
@@ -450,7 +500,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<QueryTeSubdomainNodeOutput>> queryTeSubdomainNode(QueryTeSubdomainNodeInput input){
+    public Future<RpcResult<QueryTeSubdomainNodeOutput>> queryTeSubdomainNode(QueryTeSubdomainNodeInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -480,7 +530,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
 
     }
 
-    public Future<RpcResult<QueryTeSubdomainLinkOutput>> queryTeSubdomainLink(QueryTeSubdomainLinkInput input){
+    public Future<RpcResult<QueryTeSubdomainLinkOutput>> queryTeSubdomainLink(QueryTeSubdomainLinkInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }

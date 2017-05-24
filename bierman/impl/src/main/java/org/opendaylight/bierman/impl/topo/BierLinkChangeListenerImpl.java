@@ -175,7 +175,7 @@ public class BierLinkChangeListenerImpl
         AddLinkBuilder addLinkBuilder = new AddLinkBuilder(link);
         LinkAdd notification = new LinkAddBuilder().setTopoId(TOPOLOGY_IID)
                 .setAddLink(addLinkBuilder.build()).build();
-        LOG.info("notify LinkAdd:" + link.getLinkId());
+        LOG.info("notify LinkAdd:" + link);
         NotificationProvider.getInstance().notify(notification);
     }
 
@@ -183,7 +183,7 @@ public class BierLinkChangeListenerImpl
         RemoveLinkBuilder removeLinkBuilder = new RemoveLinkBuilder(link);
         LinkRemove notification = new LinkRemoveBuilder().setTopoId(TOPOLOGY_IID)
                 .setRemoveLink(removeLinkBuilder.build()).build();
-        LOG.info("notify LinkRemove:" + link.getLinkId());
+        LOG.info("notify LinkRemove:" + link);
         NotificationProvider.getInstance().notify(notification);
     }
 
@@ -193,7 +193,7 @@ public class BierLinkChangeListenerImpl
         LinkChange notification = new LinkChangeBuilder().setTopoId(TOPOLOGY_IID)
                 .setOldLink(oldLinkBuilder.build())
                 .setNewLink(newLinkBuilder.build()).build();
-        LOG.info("notify LinkChange:" + oldLink.getLinkId());
+        LOG.info("notify LinkChange: old link--" + oldLink + "; new link--" +newLink);
         NotificationProvider.getInstance().notify(notification);
     }
 
