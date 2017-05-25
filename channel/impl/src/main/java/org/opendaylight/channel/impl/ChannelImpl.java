@@ -185,12 +185,14 @@ public class ChannelImpl implements BierChannelApiService {
             for (EgressNode node : egressNode) {
                 List<org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel
                         .egress.node.RcvTp> rcvTpList = new ArrayList<>();
-                for (RcvTp rcvTp : node.getRcvTp()) {
-                    rcvTpList.add(new RcvTpBuilder().setTp(rcvTp.getTp()).build());
+                if (node.getRcvTp() != null) {
+                    for (RcvTp rcvTp : node.getRcvTp()) {
+                        rcvTpList.add(new RcvTpBuilder().setTp(rcvTp.getTp()).build());
+                    }
                 }
                 egressNodeList.add(new EgressNodeBuilder()
                         .setNodeId(node.getNodeId())
-                        .setRcvTp(rcvTpList)
+                        .setRcvTp(rcvTpList.isEmpty() ? null : rcvTpList)
                         .build());
             }
         }

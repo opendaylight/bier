@@ -227,7 +227,7 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel
                 channelData = ChannelDBUtil.getInstance().readChannel("channel-1",DEFAULT_TOPO).get();
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel
-                expectChannel = buildChannelData("channel-1",1,11,"1.1.1.1","224.1.1.1",false);
+                expectChannel = buildChannelData("channel-1",1,11,"1.1.1.1","224.1.1.1",false,true);
         assertChannelDbData(expectChannel,channelData);
     }
 
@@ -251,7 +251,7 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel
                 channelData = ChannelDBUtil.getInstance().readChannel("channel-1",DEFAULT_TOPO).get();
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel
-                expectChannel = buildChannelData("channel-1",1,11,"1.1.1.1","224.1.1.1",true);
+                expectChannel = buildChannelData("channel-1",1,11,"1.1.1.1","224.1.1.1",true,true);
         assertChannelDbData(expectChannel,channelData);
     }
 
@@ -506,7 +506,7 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
 
     private org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
             .Channel buildChannelData(String channelName, Integer domainId, Integer subDomainId, String srcIp,
-                                     String groupIp, boolean modify) {
+                                     String groupIp, boolean modify, boolean isBierTe) {
         org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
                 .ChannelBuilder channelBuilder = new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier
                 .network.channel.bier.channel.ChannelBuilder();
@@ -522,16 +522,16 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
                     .channel.egress.node.RcvTpBuilder().setTp("tp3").build());
             rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
                     .channel.egress.node.RcvTpBuilder().setTp("tp4").build());
-            channelBuilder.setIngressBfrId(new BfrId(2));
+            channelBuilder.setIngressBfrId(isBierTe ? null : new BfrId(2));
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
                     .channel.channel.EgressNodeBuilder().setNodeId("node3").setRcvTp(rcvTps)
-                    .setEgressBfrId(new BfrId(33)).build());
+                    .setEgressBfrId(isBierTe ? null : new BfrId(33)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
                     .channel.channel.EgressNodeBuilder().setNodeId("node4").setRcvTp(rcvTps)
-                    .setEgressBfrId(new BfrId(4)).build());
+                    .setEgressBfrId(isBierTe ? null : new BfrId(4)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
                     .channel.channel.EgressNodeBuilder().setNodeId("node5").setRcvTp(rcvTps)
-                    .setEgressBfrId(new BfrId(55)).build());
+                    .setEgressBfrId(isBierTe ? null : new BfrId(55)).build());
         } else {
 
             rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
@@ -539,13 +539,13 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
             rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel
                     .channel.egress.node.RcvTpBuilder().setTp("tp3").build());
             channelBuilder.setIngressNode("node1");
-            channelBuilder.setIngressBfrId(new BfrId(11));
+            channelBuilder.setIngressBfrId(isBierTe ? null : new BfrId(11));
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
                     .channel.channel.EgressNodeBuilder().setNodeId("node2").setRcvTp(rcvTps)
-                    .setEgressBfrId(new BfrId(2)).build());
+                    .setEgressBfrId(isBierTe ? null : new BfrId(2)).build());
             egressNodes.add(new org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier
                     .channel.channel.EgressNodeBuilder().setNodeId("node3").setRcvTp(rcvTps)
-                    .setEgressBfrId(new BfrId(33)).build());
+                    .setEgressBfrId(isBierTe ? null : new BfrId(33)).build());
 
         }
         channelBuilder.setName(channelName);
