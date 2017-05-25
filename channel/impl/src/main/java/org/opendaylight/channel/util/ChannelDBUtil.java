@@ -218,27 +218,33 @@ public class ChannelDBUtil {
         for (org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNode egressNode
                 : input.getEgressNode()) {
             List<RcvTp> rcvTpList = new ArrayList<>();
-            for (org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.egress.node.RcvTp
-                     rcvTp : egressNode.getRcvTp()) {
-                rcvTpList.add(new RcvTpBuilder().setTp(rcvTp.getTp()).build());
+            if (egressNode.getRcvTp() != null) {
+                for (org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.egress.node.RcvTp
+                         rcvTp : egressNode.getRcvTp()) {
+                    rcvTpList.add(new RcvTpBuilder().setTp(rcvTp.getTp()).build());
+                }
             }
             egressNodeList.add(new EgressNodeBuilder()
                     .setNodeId(egressNode.getNodeId())
                     .setEgressBfrId(getNodeBfrId(input.getTopologyId(),egressNode.getNodeId(),
-                            channel.getDomainId(),channel.getSubDomainId()))
-                    .setRcvTp(rcvTpList)
+                            channel.getDomainId(),channel.getSubDomainId(),input.getBierForwardingType()))
+                    .setRcvTp(rcvTpList.isEmpty() ? null : rcvTpList)
                     .build());
         }
         return new ChannelBuilder(channel)
                 .setBierForwardingType(input.getBierForwardingType())
                 .setIngressNode(input.getIngressNode())
                 .setIngressBfrId(getNodeBfrId(input.getTopologyId(),input.getIngressNode(),
-                        channel.getDomainId(),channel.getSubDomainId()))
+                        channel.getDomainId(),channel.getSubDomainId(),input.getBierForwardingType()))
                 .setSrcTp(input.getSrcTp())
                 .setEgressNode(egressNodeList).build();
     }
 
-    private BfrId getNodeBfrId(String topologyId, String nodeId, DomainId domainId, SubDomainId subDomainId) {
+    private BfrId getNodeBfrId(String topologyId, String nodeId, DomainId domainId, SubDomainId subDomainId,
+                               BierForwardingType type) {
+        if (type.equals(BierForwardingType.BierTe)) {
+            return null;
+        }
         BierGlobal bierGlobal = readBierGlobal(buildTopoId(topologyId),nodeId,domainId);
         BfrId globalBfrId = bierGlobal.getBfrId();
         if (bierGlobal.getSubDomain() != null) {

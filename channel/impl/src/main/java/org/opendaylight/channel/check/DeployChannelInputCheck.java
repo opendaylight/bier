@@ -136,11 +136,15 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
             Preconditions.checkNotNull(input.getChannelName(), CHANNEL_NAME_IS_NULL);
             Preconditions.checkNotNull(input.getBierForwardingType(),BIER_FORWARDING_TYPE_IS_NULL);
             Preconditions.checkNotNull(input.getIngressNode(), INGRESS_IS_NULL);
-            Preconditions.checkNotNull(input.getSrcTp(),SRC_TP_IS_NULL);
+            if (input.getBierForwardingType().equals(BierForwardingType.BierTe)) {
+                Preconditions.checkNotNull(input.getSrcTp(), SRC_TP_IS_NULL);
+            }
             Preconditions.checkNotNull(input.getEgressNode(), EGRESS_IS_NULL);
             for (EgressNode egressNode : input.getEgressNode()) {
                 Preconditions.checkNotNull(egressNode.getNodeId(),EGRESS_NODE_ID_IS_NULL);
-                Preconditions.checkNotNull(egressNode.getRcvTp(),RCV_TP_IS_NULL);
+                if (input.getBierForwardingType().equals(BierForwardingType.BierTe)) {
+                    Preconditions.checkNotNull(egressNode.getRcvTp(), RCV_TP_IS_NULL);
+                }
             }
         } catch (NullPointerException e) {
             LOG.warn("NullPointerException: {}",e);
