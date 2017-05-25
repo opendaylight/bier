@@ -7,6 +7,8 @@
  */
 package org.opendaylight.bier.pce.impl.pathcore;
 
+import edu.uci.ics.jung.graph.Graph;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
-import edu.uci.ics.jung.graph.Graph;
 
 public class OptimalPath<V, E> implements ISpt<V, E> {
     private Graph<V, E> graph;
@@ -94,7 +94,7 @@ public class OptimalPath<V, E> implements ISpt<V, E> {
     }
 
     private ISourceData<V, E> getSourceData() {
-        if(null == sd){
+        if (null == sd) {
             sd = new SourceDataImpl(sourceNode);
         }
         return sd;
@@ -150,14 +150,13 @@ public class OptimalPath<V, E> implements ISpt<V, E> {
                 return null;
             }
             V node = optimalNodeDistanceEntry.getKey();
-            Number distance = optimalNodeDistanceEntry.getValue();
-
             removeTentDistance(node);
 
             List<E> incomingEdges = tentIncomingEdgesMap.get(node);
             tentIncomingEdgesMap.remove(node);
 
             setDestNodeDescendFlag(incomingEdges);
+            Number distance = optimalNodeDistanceEntry.getValue();
 
             pathDistanceMap.put(node, distance);
             pathIncomingEdgeMap.put(node, incomingEdges);
@@ -176,19 +175,22 @@ public class OptimalPath<V, E> implements ISpt<V, E> {
             Number neighborNodeDistance = tentDistanceMap.get(neighborNode);
             long incomingEdgeMeasure = strategy.getEdgeMeasure(edgeMeasure, incomingEdge);
             if (neighborNodeDistance == null) {
-                addTentDistance(neighborNode, strategy.transEdgeMeasure(locNodeDistance.longValue(),incomingEdgeMeasure));
+                addTentDistance(neighborNode,
+                        strategy.transEdgeMeasure(locNodeDistance.longValue(),incomingEdgeMeasure));
 
                 List<E> edgeList = new ArrayList<>();
                 edgeList.add(incomingEdge);
                 tentIncomingEdgesMap.put(neighborNode, edgeList);
             } else if (strategy.isCurNodeMoreOptimal(locNodeDistance.longValue(), incomingEdgeMeasure,
                     neighborNodeDistance.longValue())) {
-                addTentDistance(neighborNode, strategy.transEdgeMeasure(locNodeDistance.longValue(),incomingEdgeMeasure));
+                addTentDistance(neighborNode,
+                        strategy.transEdgeMeasure(locNodeDistance.longValue(),incomingEdgeMeasure));
 
                 List<E> edgeList = tentIncomingEdgesMap.get(neighborNode);
                 edgeList.clear();
                 edgeList.add(incomingEdge);
-            } else if (strategy.transEdgeMeasure(locNodeDistance.longValue(), incomingEdgeMeasure) == neighborNodeDistance.longValue()) {
+            } else if (strategy.transEdgeMeasure(locNodeDistance.longValue(), incomingEdgeMeasure)
+                    == neighborNodeDistance.longValue()) {
                 List<E> edgeList = tentIncomingEdgesMap.get(neighborNode);
                 edgeList.add(incomingEdge);
             }
@@ -205,14 +207,21 @@ public class OptimalPath<V, E> implements ISpt<V, E> {
         }
 
         @Override
+        public Map<V, Number> getDistance() {
+            return pathDistanceMap;
+        }
+
+        @Override
         public Map<V, List<E>> getIncomingEdgeMap() {
             return pathIncomingEdgeMap;
         }
 
+
         @Override
-        public Map<V, Number> getDistance() {
-            return pathDistanceMap;
+        public LinkedList<V> getDistanceOrderList() {
+            return distanceOrderList;
         }
+
 
         protected void addTentDistance(V node, Number metric) {
             if (tentDistanceMap.containsKey(node)) {
@@ -245,10 +254,6 @@ public class OptimalPath<V, E> implements ISpt<V, E> {
 
         };
 
-        @Override
-        public LinkedList<V> getDistanceOrderList() {
-            return distanceOrderList;
-        }
     }
 
 }

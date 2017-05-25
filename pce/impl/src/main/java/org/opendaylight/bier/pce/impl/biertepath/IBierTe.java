@@ -10,15 +10,12 @@ package org.opendaylight.bier.pce.impl.biertepath;
 
 import java.util.List;
 
-import org.opendaylight.bier.pce.impl.provider.PceResult;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 
 
 public interface IBierTe {
 
     String getBfirNodeId();
-
-    BierPathUnifyKey getBierPathUnifyKey();
 
     List<BierLink> getPath();
 

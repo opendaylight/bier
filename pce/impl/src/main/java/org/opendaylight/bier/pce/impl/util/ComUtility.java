@@ -8,25 +8,18 @@
 
 package org.opendaylight.bier.pce.impl.util;
 
+import edu.uci.ics.jung.graph.Graph;
+
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import edu.uci.ics.jung.graph.Graph;
-
-import org.opendaylight.bier.pce.impl.pathcore.PortKey;
 import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.links.PathLink;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.links.PathLinkBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-
-
-
 
 public class ComUtility {
     public static final long DEFAULT_METRIC = 0x0a;
@@ -140,7 +133,8 @@ public class ComUtility {
             return reverseLinks;
         }
 
-        Collection<BierLink> links = graph.findEdgeSet(link.getLinkDest().getDestNode(), link.getLinkSource().getSourceNode());
+        Collection<BierLink> links = graph.findEdgeSet(link.getLinkDest().getDestNode(),
+                link.getLinkSource().getSourceNode());
         if ((links == null) || (links.isEmpty())) {
             return null;
         }

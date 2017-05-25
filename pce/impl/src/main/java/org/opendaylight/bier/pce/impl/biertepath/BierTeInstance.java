@@ -16,7 +16,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.opendaylight.bier.pce.impl.pathcore.BierTesRecordPerPort;
 import org.opendaylight.bier.pce.impl.provider.NotificationProvider;
 import org.opendaylight.bier.pce.impl.provider.PcePathDb;
 import org.opendaylight.bier.pce.impl.topology.PathsRecordPerTopology;
@@ -30,7 +29,6 @@ import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.bfer.BierPat
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.input.Bfer;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.instance.path.output.Link;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.instance.path.output.LinkBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstance;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,14 +45,14 @@ public class BierTeInstance {
     public BierTeInstance(CreateBierPathInput input) {
         this.channelName = input.getChannelName();
         this.bfirNodeId = input.getBfirNodeId();
-        this.topoId = (input.getTopologyId() != null) ? input.getTopologyId() : TopologyProvider.defaultTopoIdString;
+        this.topoId = (input.getTopologyId() != null) ? input.getTopologyId() : TopologyProvider.DEFAULT_TOPO_ID_STRING;
     }
 
-    public BierTeInstance(BierTEInstance data) {
+/*    public BierTeInstance(BierTEInstance data) {
 
         this.channelName = data.getChannelName();
         this.bfirNodeId = data.getBfirNodeId();
-        this.topoId = (data.getTopologyId() != null) ? data.getTopologyId() : TopologyProvider.defaultTopoIdString;
+        this.topoId = (data.getTopologyId() != null) ? data.getTopologyId() : TopologyProvider.DEFAULT_TOPO_ID_STRING;
         for (org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer bfer : data.getBfer()) {
             SingleBierPath bierPath = new SingleBierPath(bfirNodeId, bfer, topoId,channelName);
             BierPathUnifyKey pathKey = new BierPathUnifyKey(channelName,bfirNodeId, bfer.getBferNodeId());
@@ -62,7 +60,7 @@ public class BierTeInstance {
             allPaths.addAll(bierPath.getPath());
             BierTesRecordPerPort.getInstance().update(pathKey, null, bierPath.getPath());
         }
-    }
+    }*/
 
     public void calcPath(CreateBierPathInput input, boolean isUpdate) {
         boolean isFailRollback = (input.isSaveCreateFail() != null) && (!input.isSaveCreateFail());
@@ -79,7 +77,8 @@ public class BierTeInstance {
                 if (isUpdate) {
                     bierPath.writeDb();
                 }
-                BierPathUnifyKey pathKey = new BierPathUnifyKey(channelName,bierPath.getBfirNodeId(),bierPath.getBferNodeId());
+                BierPathUnifyKey pathKey = new BierPathUnifyKey(channelName,bierPath.getBfirNodeId(),
+                        bierPath.getBferNodeId());
                 bierPaths.put(pathKey,bierPath);
                 PathsRecordPerTopology.getInstance().add(this.topoId, pathKey);
                 if (bierPath.getPath() != null && !bierPath.getPath().isEmpty()) {
@@ -117,6 +116,7 @@ public class BierTeInstance {
     public String getTopoId() {
         return this.topoId;
     }
+
     public List<SingleBierPath> getAllBierPath() {
         List<SingleBierPath> singleBierPaths = new ArrayList<>();
         if (!bierPaths.isEmpty()) {
@@ -162,7 +162,7 @@ public class BierTeInstance {
         if (isTeInstancePathUpdate()) {
             notifyPathChange();
         }
-        }
+    }
 
     public void notifyPathChange() {
         BierPathUpdate notification = new BierPathUpdateBuilder()
@@ -171,7 +171,7 @@ public class BierTeInstance {
                 .setBfer(buildBfers())
                 .build();
 
-        LOG.info("notifyPathChange: channelName -" + getChannelName()+ " bier-te path change! ");
+        LOG.info("notifyPathChange: channelName -" + getChannelName() + " bier-te path change! ");
         NotificationProvider.getInstance().notify(notification);
     }
 

@@ -33,7 +33,7 @@ public class MetricTransformer implements ITransformer<BierLink> {
 
         for (BierLink containedLink : contrainedLinkList) {
             if (containedLink.equals(link)) {
-                metric -= metric/2;
+                metric -= metric / 2;
             }
         }
         return metric < 1 ? 1 : metric;

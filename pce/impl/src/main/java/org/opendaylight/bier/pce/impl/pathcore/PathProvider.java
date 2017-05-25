@@ -9,17 +9,19 @@ package org.opendaylight.bier.pce.impl.pathcore;
 
 import com.google.common.collect.Lists;
 
-import org.opendaylight.bier.pce.impl.provider.PceResult;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
-import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
 import org.opendaylight.bier.pce.impl.biertepath.LspGetPath;
+import org.opendaylight.bier.pce.impl.provider.PceResult;
+import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
 import org.opendaylight.bier.pce.impl.util.ComUtility;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+
 
 public class PathProvider<T extends ITransformer<BierLink>> {
     private static final Logger LOG = LoggerFactory.getLogger(PathProvider.class);
@@ -35,8 +37,8 @@ public class PathProvider<T extends ITransformer<BierLink>> {
     private ITransformerFactory factory;
     private boolean failRollback = false;
 
-    public <F extends ITransformerFactory<T>> PathProvider(String bfirNodeId,
-                                                           BierPathUnifyKey bierPathUnifyKey, String bferNodeId, String topoId,
+    public <F extends ITransformerFactory<T>> PathProvider(String bfirNodeId, BierPathUnifyKey bierPathUnifyKey,
+                                                           String bferNodeId, String topoId,
                                                            ICalcStrategy<String, BierLink> strategy, F factory) {
         this.bfirNodeId = bfirNodeId;
         this.bierPathUnifyKey = bierPathUnifyKey;

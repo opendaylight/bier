@@ -7,10 +7,10 @@
  */
 package org.opendaylight.bier.cli.impl;
 
+import org.opendaylight.bier.cli.api.PceCliCommands;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.opendaylight.bier.cli.api.PceCliCommands;
 
 public class PceCliCommandsImpl implements PceCliCommands {
 

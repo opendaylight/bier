@@ -8,20 +8,18 @@
 
 package org.opendaylight.bier.pce.impl.topology;
 
+import com.google.common.annotations.VisibleForTesting;
 
-import java.util.ArrayList;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.SparseMultigraph;
+import edu.uci.ics.jung.graph.util.EdgeType;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.SparseMultigraph;
-import edu.uci.ics.jung.graph.util.EdgeType;
-
-
-import org.opendaylight.bier.pce.impl.pathcore.PortKey;
 import org.opendaylight.bier.pce.impl.provider.DbProvider;
 import org.opendaylight.bier.pce.impl.provider.NotificationProvider;
 import org.opendaylight.bier.pce.impl.provider.PcePathImpl;
@@ -37,21 +35,19 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LinkAdd;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LinkChange;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LinkRemove;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.link.add.AddLink;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLinkBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-
 
 public class TopologyProvider implements BierTopologyApiListener {
     private static final Logger LOG = LoggerFactory.getLogger(TopologyProvider.class);
-    public static final String defaultTopoIdString = "example-linkstate-topology";
+    public static final String DEFAULT_TOPO_ID_STRING = "example-linkstate-topology";
     private final DataBroker dataBroker;
     private final RpcProviderRegistry rpcRegistry;
     private final NotificationPublishService notificationPublishService;
@@ -135,7 +131,7 @@ public class TopologyProvider implements BierTopologyApiListener {
         NotificationProvider.getInstance().setNotificationService(notificationPublishService);
         DbProvider.getInstance().setDataBroker(dataBroker);
         pceService = rpcRegistry.addRpcImplementation(BierPceService.class,pcePathImpl);
-        pcePathImpl.recoveryDb();
+        pcePathImpl.writeDbRoot();
         setPcePathImpl(pcePathImpl);
         PathsRecordPerTopology.getInstance().setPcePathService(pcePathImpl);
     }
@@ -150,6 +146,7 @@ public class TopologyProvider implements BierTopologyApiListener {
         }
     }
 
+/*
     public Graph<String, BierLink> getTopoGraphRecover(String topoId) {
         Graph<String, BierLink> topoGraph = topoGraphMap.get(topoId);
         if (topoGraph == null) {
@@ -158,6 +155,7 @@ public class TopologyProvider implements BierTopologyApiListener {
 
         return topoGraph;
     }
+*/
 
 
     private Graph<String, BierLink> transformTopo2Graph(List<BierLink> list) {
@@ -242,7 +240,7 @@ public class TopologyProvider implements BierTopologyApiListener {
     }
 
     public void initGraph() {
-        newTopoGraph(defaultTopoIdString);
+        newTopoGraph(DEFAULT_TOPO_ID_STRING);
     }
 
     public void setPcePathImpl(PcePathImpl pcePathImpl) {
@@ -250,7 +248,7 @@ public class TopologyProvider implements BierTopologyApiListener {
     }
 
     public Graph<String, BierLink> getTopoGraph(String topoIdInput) {
-        String topoId = (topoIdInput == null) ? defaultTopoIdString : topoIdInput;
+        String topoId = (topoIdInput == null) ? DEFAULT_TOPO_ID_STRING : topoIdInput;
 
         Graph<String, BierLink> topoGraph = topoGraphMap.get(topoId);
         if (topoGraph == null) {
