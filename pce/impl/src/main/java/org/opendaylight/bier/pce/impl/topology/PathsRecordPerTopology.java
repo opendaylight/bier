@@ -13,8 +13,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.mina.util.ConcurrentHashSet;
-import org.opendaylight.bier.pce.impl.provider.PcePathImpl;
 import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
+import org.opendaylight.bier.pce.impl.provider.PcePathImpl;
 
 
 public class PathsRecordPerTopology {

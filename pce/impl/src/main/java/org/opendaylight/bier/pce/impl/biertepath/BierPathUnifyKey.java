@@ -93,7 +93,7 @@ public class BierPathUnifyKey {
     public String toString() {
         String str;
         str = "channel-name:" + channelName
-                +" bfirNode:" + bfirNode
+                + " bfirNode:" + bfirNode
                 + " bferNode:" + bferNode
                 + "\n";
 

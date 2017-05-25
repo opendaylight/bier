@@ -13,13 +13,6 @@ package org.opendaylight.bier.pce.impl.provider;
 public class PceResult {
     private boolean calcFail = false;
 
-    public static final PceResult nullPceResult = new PceResult();
-
-
-    public void clearCalcPathResult() {
-        calcFail = false;
-    }
-
     public void setCalcFail(boolean calcFail) {
         this.calcFail = calcFail;
     }

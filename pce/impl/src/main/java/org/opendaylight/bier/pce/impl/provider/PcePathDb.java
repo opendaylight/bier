@@ -12,12 +12,12 @@ import org.opendaylight.bier.pce.impl.biertepath.BierTeInstance;
 import org.opendaylight.bier.pce.impl.biertepath.SingleBierPath;
 import org.opendaylight.bier.pce.impl.util.ComUtility;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.BierTEData;
-import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.BierTEDataBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.BferBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.BferKey;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.bfer.BierPathBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.BierTEData;
+import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.BierTEDataBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstance;
 import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstanceBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstanceKey;
@@ -39,7 +39,7 @@ public class PcePathDb {
     }
 
     public void bierTeWriteDbRoot() {
-        dataBroker.mergeData(LogicalDatastoreType.CONFIGURATION, buildBierTeDbRootPath(),
+        dataBroker.mergeData(LogicalDatastoreType.OPERATIONAL, buildBierTeDbRootPath(),
                 new BierTEDataBuilder().build());
     }
 
@@ -49,22 +49,24 @@ public class PcePathDb {
     }
 
 
+/*
     public BierTeInstance BierTeInstanceConvert(BierTEInstance dbData) {
         if (null == dbData) {
             return null;
         }
         return new BierTeInstance(dbData);
     }
+*/
 
 
 
     public void writeBierInstance(BierTeInstance bierTeInstance) {
-        dataBroker.mergeData(LogicalDatastoreType.CONFIGURATION,
+        dataBroker.mergeData(LogicalDatastoreType.OPERATIONAL,
                 buildBierTeInstancePath(bierTeInstance.getChannelName()),bierTeInstanceCreator(bierTeInstance));
     }
 
     public BierTEInstance readBierInstance(String channelName) {
-        return dataBroker.readData(LogicalDatastoreType.CONFIGURATION,buildBierTeInstancePath(channelName));
+        return dataBroker.readData(LogicalDatastoreType.OPERATIONAL,buildBierTeInstancePath(channelName));
     }
 
     private InstanceIdentifier<BierTEInstance> buildBierTeInstancePath(String channelName) {
@@ -87,7 +89,7 @@ public class PcePathDb {
     }
 
     public void writeBierPath(SingleBierPath singleBierPath) {
-        dataBroker.mergeData(LogicalDatastoreType.CONFIGURATION,buildBierPathDbPath(singleBierPath.getChannelName(),
+        dataBroker.mergeData(LogicalDatastoreType.OPERATIONAL,buildBierPathDbPath(singleBierPath.getChannelName(),
                 singleBierPath.getBferNodeId()),bierPathsCreator(singleBierPath));
     }
 
@@ -104,12 +106,12 @@ public class PcePathDb {
     }
 
     public void removeBierTeInstance(BierTeInstance bierTeInstance) {
-        dataBroker.deleteData(LogicalDatastoreType.CONFIGURATION,
+        dataBroker.deleteData(LogicalDatastoreType.OPERATIONAL,
                 buildBierTeInstancePath(bierTeInstance.getChannelName()));
     }
 
     public void removeBierPath(String channelname, String bferNode) {
-        dataBroker.deleteData(LogicalDatastoreType.CONFIGURATION,
+        dataBroker.deleteData(LogicalDatastoreType.OPERATIONAL,
                 buildBierPathDbPath(channelname,bferNode));
     }
 }

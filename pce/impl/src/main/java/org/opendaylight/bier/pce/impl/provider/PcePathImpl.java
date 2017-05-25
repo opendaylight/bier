@@ -8,19 +8,18 @@
 
 package org.opendaylight.bier.pce.impl.provider;
 
+import com.google.common.util.concurrent.Futures;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
 import org.opendaylight.bier.pce.impl.biertepath.BierTeInstance;
 import org.opendaylight.bier.pce.impl.biertepath.SingleBierPath;
-import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
-import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
 import org.opendaylight.bier.pce.impl.util.ComUtility;
 import org.opendaylight.bier.pce.impl.util.RpcReturnUtils;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.BierPceService;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateBierPathOutput;
@@ -35,16 +34,11 @@ import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.path.output.BierPathBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.BierTEData;
-import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstance;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.Futures;
-
 
 public class PcePathImpl implements BierPceService {
     private static final Logger LOG = LoggerFactory.getLogger(PcePathImpl.class);
@@ -55,9 +49,9 @@ public class PcePathImpl implements BierPceService {
     private PcePathImpl() {
     }
 
-    public void recoveryDb() {
+/*    public void recoveryDb() {
         bierPathDbRecovery();
-    }
+    }*/
 
     public void destroy() {
         for (BierTeInstance bierTeInstance : bierTeInstances.values()) {
@@ -82,8 +76,8 @@ public class PcePathImpl implements BierPceService {
     @Override
     public Future<RpcResult<CreateBierPathOutput>> createBierPath(
             CreateBierPathInput input) {
-        if (input == null || input.getChannelName() == null || input.getBfirNodeId() == null ||
-                input.getBfer()== null || input.getBfer().isEmpty()) {
+        if (input == null || input.getChannelName() == null || input.getBfirNodeId() == null
+                || input.getBfer() == null || input.getBfer().isEmpty()) {
             return RpcReturnUtils.returnErr("Unlegal argument!");
         }
 
@@ -139,7 +133,7 @@ public class PcePathImpl implements BierPceService {
                 bierTeInstances.remove(input.getChannelName());
             } else {
                 for (org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328
-                        .remove.bier.path.input.Bfer bfer : input.getBfer()) {
+                         .remove.bier.path.input.Bfer bfer : input.getBfer()) {
                     SingleBierPath bierPath = bierTeInstance.getBierPath(new BierPathUnifyKey(input.getChannelName(),
                             input.getBfirNodeId(),bfer.getBferNodeId()));
                     if (bierPath != null) {
@@ -158,7 +152,7 @@ public class PcePathImpl implements BierPceService {
         return Futures.immediateFuture(RpcResultBuilder
                 .success(output.build()).build());
     }
-
+/*
     public void bierPathDbRecovery() {
         BierTEData bierTeData;
         try {
@@ -172,7 +166,8 @@ public class PcePathImpl implements BierPceService {
         } catch (ExecutionException e) {
             LOG.debug("bierTeDbRecovery read failed " + e);
         }
-    }
+    }*/
+/*
 
     private void bierTeRecoveryDataFromDb(BierTEData bierteData) throws ExecutionException {
         if ((null == bierteData) || (bierteData.getBierTEInstance().isEmpty())) {
@@ -191,6 +186,7 @@ public class PcePathImpl implements BierPceService {
             }
         }
     }
+*/
 
 
 
@@ -210,7 +206,8 @@ public class PcePathImpl implements BierPceService {
 
         }
 
-        BierPathUnifyKey pathKey = new BierPathUnifyKey(input.getChannelName(),input.getBfirNodeId(), input.getBferNodeId());
+        BierPathUnifyKey pathKey = new BierPathUnifyKey(input.getChannelName(),input.getBfirNodeId(),
+                input.getBferNodeId());
         SingleBierPath bierPath = bierTeInstance.getBierPath(pathKey);
         if (bierPath == null) {
             return RpcReturnUtils.returnErr("bier path does not exists!");
@@ -227,7 +224,7 @@ public class PcePathImpl implements BierPceService {
 
     @Override
     public Future<RpcResult<QueryBierInstancePathOutput>> queryBierInstancePath(QueryBierInstancePathInput input) {
-        if (input.getChannelName() == null ) {
+        if (input.getChannelName() == null) {
             return RpcReturnUtils.returnErr("channel-name is null!");
         }
         LOG.debug(input.toString());
@@ -250,6 +247,10 @@ public class PcePathImpl implements BierPceService {
                 bierTeInstance.refreshPath();
             }
         }
+    }
+
+    public void writeDbRoot() {
+        pcePathDb.bierTeWriteDbRoot();
     }
 }
 

@@ -8,14 +8,14 @@
 
 package org.opendaylight.bier.pce.impl.util;
 
+
+import com.google.common.util.concurrent.Futures;
+
 import java.util.concurrent.Future;
 
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
-
-import com.google.common.util.concurrent.Futures;
-
 
 
 public class RpcReturnUtils {

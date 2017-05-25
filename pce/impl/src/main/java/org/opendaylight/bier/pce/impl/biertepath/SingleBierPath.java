@@ -11,17 +11,16 @@ package org.opendaylight.bier.pce.impl.biertepath;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.opendaylight.bier.pce.impl.pathcore.BierTesRecordPerPort;
 import org.opendaylight.bier.pce.impl.pathcore.MetricStrategy;
 import org.opendaylight.bier.pce.impl.pathcore.MetricTransformer;
 import org.opendaylight.bier.pce.impl.pathcore.MetricTransformerFactory;
 import org.opendaylight.bier.pce.impl.pathcore.PathCompator;
 import org.opendaylight.bier.pce.impl.pathcore.PathProvider;
-import org.opendaylight.bier.pce.impl.pathcore.BierTesRecordPerPort;
 import org.opendaylight.bier.pce.impl.provider.PcePathDb;
 import org.opendaylight.bier.pce.impl.provider.PceResult;
 import org.opendaylight.bier.pce.impl.topology.PathsRecordPerTopology;
 import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
-import org.opendaylight.bier.pce.impl.util.ComUtility;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.input.Bfer;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.slf4j.Logger;
@@ -44,13 +43,14 @@ public class SingleBierPath implements IBierTe {
     public SingleBierPath(String bfirNode, Bfer bfer, String topoId,String channelName) {
         this.bfirNodeId = bfirNode;
         this.bferNodeId = bfer.getBferNodeId();
-        this.topoId = (topoId != null) ? topoId : TopologyProvider.defaultTopoIdString;
+        this.topoId = (topoId != null) ? topoId : TopologyProvider.DEFAULT_TOPO_ID_STRING;
 
         this.channelName = channelName;
         this.bierPathUnifyKey = getBierPathUnifyKey(channelName,bfirNodeId, bferNodeId);
     }
-
-    public SingleBierPath(String bfirNode, org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer bfer, String topoId,String channelName) {
+/*
+    public SingleBierPath(String bfirNode, org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer bfer,
+                          String topoId,String channelName) {
         this.bfirNodeId = bfirNode;
         this.bferNodeId = bfer.getBferNodeId();
         this.topoId = topoId;
@@ -59,20 +59,20 @@ public class SingleBierPath implements IBierTe {
         this.bierPathUnifyKey = getBierPathUnifyKey(channelName,bfirNodeId, bferNodeId);
         this.pathMetric = bfer.getBierPath().getPathMetric();
         PathsRecordPerTopology.getInstance().add(topoId, bierPathUnifyKey);
-    }
+    }*/
 
 
     public PceResult calcPath(boolean failRollback, List<BierLink> tryToOverlapPath, String topoId) {
-        PceResult result = new PceResult();
-
-        PathProvider<MetricTransformer> pathProvider = new PathProvider(bfirNodeId, bierPathUnifyKey, bferNodeId, topoId,
-                new MetricStrategy<String, BierLink>(), new MetricTransformerFactory());
+        PathProvider<MetricTransformer> pathProvider = new PathProvider(bfirNodeId, bierPathUnifyKey, bferNodeId,
+                topoId, new MetricStrategy<String, BierLink>(), new MetricTransformerFactory());
 
         pathProvider.setOldPath(path);
         pathProvider.setFailRollback(failRollback);
         if ((tryToOverlapPath != null) && (!tryToOverlapPath.isEmpty())) {
             pathProvider.addTryToOverlapPath(tryToOverlapPath);
         }
+
+        PceResult result = new PceResult();
         pathProvider.calcPath(result);
         if (failRollback && (result.isCalcFail())) {
             return result;
@@ -110,23 +110,15 @@ public class SingleBierPath implements IBierTe {
         return bfirNodeId;
     }
 
-
     @Override
     public void destroy() {
         PathsRecordPerTopology.getInstance().remove(topoId, bierPathUnifyKey);
         BierTesRecordPerPort.getInstance().update(new BierPathUnifyKey(bierPathUnifyKey), path, null);
     }
 
-     private static BierPathUnifyKey getBierPathUnifyKey(String channelName,String bfirNodeId, String bferNodeId) {
+    private static BierPathUnifyKey getBierPathUnifyKey(String channelName,String bfirNodeId, String bferNodeId) {
         return new BierPathUnifyKey(channelName,bfirNodeId, bferNodeId);
     }
-
-    @Override
-    public BierPathUnifyKey getBierPathUnifyKey() {
-        return this.bierPathUnifyKey;
-    }
-
-
 
     public String getBferNodeId() {
         return bferNodeId;
@@ -147,7 +139,8 @@ public class SingleBierPath implements IBierTe {
             writeDb();
             if (!PathCompator.isPathEqual(oldPath, path)) {
                 this.pathUpdateFlag = true;
-                LOG.info(bierPathUnifyKey.toString() + " BierPath change: old path--" + oldPath + "; new path--" + path);
+                LOG.info(bierPathUnifyKey.toString() + " BierPath change: old path--"
+                        + oldPath + "; new path--" + path);
             }
         }
     }
