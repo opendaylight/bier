@@ -1,0 +1,27 @@
+module bier-pce-data {
+    yang-version 1;
+    namespace "urn:bier:pcedata";
+    prefix "bier-pce-data";
+
+    import bier-pce {prefix bier-pce; revision-date 2017-03-28;}
+
+    revision "2017-03-28" {
+        description "Initial revision of bier pce data model";
+    }
+
+
+    container BierTEData {
+          description "bier te data ";
+              list BierTEInstance {
+                  key "channel-name";
+                  leaf channel-name {
+                      type string;
+                  }
+                  leaf topology-id {
+                      type string;
+                  }
+                  uses bier-pce:BierPath;
+          }
+    }
+
+}

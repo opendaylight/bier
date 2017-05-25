@@ -74,7 +74,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <modules>
         <module>common</module>
         <module>bierman</module>
-        <module>channel</module>
+        <module>channel</module>		
+        <module>pce</module>
         <module>sbi-adapter</module>
         <module>service</module>
         <module>drivers</module>

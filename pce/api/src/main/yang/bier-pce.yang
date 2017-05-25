@@ -1,0 +1,161 @@
+module bier-pce {
+    yang-version 1;
+    namespace "urn:bier:pce";
+    prefix "bier-pce";
+
+    import bier-topology {prefix topo; }
+
+    revision "2017-03-28" {
+        description "Initial revision of bier-pce model";
+    }
+
+
+
+
+
+    grouping links {
+        list path-link {
+            uses topo:bier-link;
+        }
+    	leaf path-metric {
+            type uint32;
+        }
+    }
+
+    grouping path-key {
+        leaf bfir-node-id {
+            type string;
+        }
+        leaf bfer-node-id {
+            type string;
+        }
+    }
+
+
+
+    grouping BierPath {
+
+         leaf bfir-node-id {
+             type string;
+         }
+         list bfer {
+             key "bfer-node-id";
+             leaf bfer-node-id {
+                 type string;
+             }
+             container bier-path {
+                 uses links;
+             }
+         }
+    }
+
+
+
+    rpc create-bier-path {
+        input {
+            leaf topology-id {
+                type string;
+            }
+            leaf channel-name {
+                type string;
+            }
+            leaf bfir-node-id {
+                type string;
+            }
+            list bfer {
+                leaf bfer-node-id {
+                    type string;
+                }
+            }
+			leaf save-create-fail {
+			    type boolean;
+			    default true;
+			}
+
+        }
+
+        output {
+            leaf channel-name {
+                    type string;
+                }
+            uses BierPath;
+		}
+	}
+
+
+
+    rpc remove-bier-path {
+        input {
+            leaf channel-name {
+                type string;
+            }
+            leaf bfir-node-id {
+                 type string;
+            }
+            list bfer {
+                leaf bfer-node-id {
+                    type string;
+                }
+            }
+
+        }
+        output {
+            leaf channel-name {
+                type string;
+            }
+            uses BierPath;
+        }
+    }
+
+
+
+	
+    notification bier-path-update {
+        description
+        "Indicates that bier path is changed.";
+        leaf channel-name {
+            type string;
+        }
+
+        uses BierPath;
+    }
+
+
+
+    rpc query-bier-path {
+        input {
+            leaf channel-name {
+                type string;
+            }
+
+            leaf bfir-node-id {
+                 type string;
+            }
+            leaf bfer-node-id {
+                type string;
+            }
+        }
+        output {
+            container bier-path {
+                uses links;
+            }
+        }
+    }
+
+    rpc query-bier-instance-path {
+        input {
+            leaf channel-name {
+                type string;
+}
+        }
+        output {
+            list link {
+                leaf link-id {
+                    type string;
+                }
+            }
+        }
+    }
+
+
+}
