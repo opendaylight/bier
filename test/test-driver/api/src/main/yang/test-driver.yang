@@ -14,6 +14,9 @@ module test-driver {
     import ietf-bier-te {
         prefix bier-te;
     }
+    import bier-te-path {
+        prefix bier-te-path;
+    }
 
 	organization "zte";
 	revision 2016-12-19 {
@@ -175,6 +178,9 @@ module test-driver {
         leaf ingress-bfr-id {
             type bier:bfr-id;
         }
+        leaf src-tp {
+            type string;
+        }
         list egress-node {
             key "node-id";
             leaf node-id {
@@ -183,7 +189,16 @@ module test-driver {
             leaf egress-bfr-id {
                 type bier:bfr-id;
             }
-          }
+            list rcv-tp {
+                leaf tp {
+                    type string;
+                }
+            }
+        }
+
+        leaf bier-forwarding-type {
+            type bier-channel:bier-forwarding-type;
+        }
 
         }
         output {
@@ -267,5 +282,50 @@ module test-driver {
         }
 	}
 
+    rpc set-label-range {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+
+            leaf write-type {
+                mandatory true;
+                type config-type;
+            }
+
+            leaf lable-base {
+                type uint32;
+            }
+            leaf lable-range {
+                type uint32;
+            }
+        }
+        output {
+           uses bier-common:configure-result;
+        }
+	}
+
+    rpc set-bier-te-bitstring {
+        input {
+             leaf node-name {
+                 mandatory true;
+                 type string;
+                 description
+                     "Name of the mounted node to be displayed";
+             }
+
+            leaf write-type {
+                mandatory true;
+                type config-type;
+            }
+            uses bier-te-path:te-path;
+        }
+        output {
+           uses bier-common:configure-result;
+        }
+	}
 
 }				

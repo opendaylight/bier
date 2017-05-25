@@ -36,14 +36,17 @@ public class BierTeBitstringWriterImpl  implements BierTeBitstringWriter {
         this.netconfDataOperator = netconfDataOperator;
     }
 
+    public InstanceIdentifier<Path> getTePathIid(TePath tePath) {
+        return InstanceIdentifier.create(BierTePath.class)
+                .child(Path.class,new PathKey(tePath.getPathId()));
+
+    }
+
     public CheckedFuture<Void, TransactionCommitFailedException> writeBierTeBitstring(ConfigurationType type,
                                                                                       String nodeId,
                                                                                       TePath tePath,
                                                                                       ConfigurationResult result) {
 
-        InstanceIdentifier<Path> bierTePathIid =
-                InstanceIdentifier.create(BierTePath.class)
-                        .child(Path.class,new PathKey(tePath.getPathId()));
         Path path = new PathBuilder(tePath).build();
 
 
@@ -52,7 +55,7 @@ public class BierTeBitstringWriterImpl  implements BierTeBitstringWriter {
             return netconfDataOperator.write(
                     DataWriter.OperateType.DELETE,
                     nodeId,
-                    bierTePathIid,
+                    getTePathIid(tePath),
                     null,
                     result);
         }
@@ -60,7 +63,7 @@ public class BierTeBitstringWriterImpl  implements BierTeBitstringWriter {
         return netconfDataOperator.write(
                 DataWriter.OperateType.MERGE,
                 nodeId,
-                bierTePathIid,
+                getTePathIid(tePath),
                 path,
                 result
         );

@@ -21,6 +21,8 @@ import java.util.concurrent.Future;
 import org.opendaylight.bier.adapter.api.BierConfigReader;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
+import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
+import org.opendaylight.bier.adapter.api.BierTeLabelRangeConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigReader;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
@@ -42,6 +44,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResultBuilder;
 
+
+import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.PathBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckBierGlobalInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckBierGlobalOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckBierGlobalOutputBuilder;
@@ -55,6 +59,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.ReadBierGloba
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.ReadBierGlobalOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.ReadBierGlobalOutputBuilder;
 
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetBierTeBitstringInput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetBierTeBitstringOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetBierTeBitstringOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetChannelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetChannelOutputBuilder;
@@ -70,6 +77,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetIpv4Config
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetIpv4ConfigOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetIpv4ConfigOutputBuilder;
 
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetLabelRangeInput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetLabelRangeOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetLabelRangeOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigOutputBuilder;
@@ -77,11 +87,15 @@ import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetTeBiftInpu
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetTeBiftOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetTeBiftOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.TestDriverService;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.set.channel.input.egress.node.RcvTp;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierTeLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
+
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobalBuilder;
@@ -92,6 +106,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4Builder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.routing.BierTeConfigBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -109,6 +124,8 @@ public class TestDriverProvider implements TestDriverService {
     private ChannelConfigWriter channelConfigWrite;
     private ChannelConfigReader channelConfigReader;
     private BierTeBiftWriter bierTeBiftWriter;
+    private BierTeLabelRangeConfigWriter bierTeLabelRangeConfigWriter;
+    private BierTeBitstringWriter bierTeBitstringWriter;
 
 
 
@@ -137,9 +154,18 @@ public class TestDriverProvider implements TestDriverService {
         this.channelConfigReader = channelConfigReader;
     }
 
+    public void setBierTeLabelRangeConfigWriter(BierTeLabelRangeConfigWriter bierTeLabelRangeConfigWriter) {
+        this.bierTeLabelRangeConfigWriter = bierTeLabelRangeConfigWriter;
+    }
+
     public void setBierTeBiftWriter(BierTeBiftWriter bierTeBiftWriter) {
         this.bierTeBiftWriter = bierTeBiftWriter;
     }
+
+    public void setBierTeBitstringWriter(BierTeBitstringWriter bierTeBitstringWriter) {
+        this.bierTeBitstringWriter = bierTeBitstringWriter;
+    }
+
 
 
     /**
@@ -571,36 +597,58 @@ public class TestDriverProvider implements TestDriverService {
 
 
         ConfigurationResult result = channelConfigWrite.writeChannel(type,
-                    new ChannelBuilder()
-                            .setDstGroup(input.getDstGroup())
-                            .setEgressNode(Lists.transform(input.getEgressNode(), new Function<
+                new ChannelBuilder()
+                        .setDstGroup(input.getDstGroup())
+                        .setSrcTp(input.getSrcTp())
+                        .setBierForwardingType(input.getBierForwardingType())
+                        .setEgressNode(Lists.transform(input.getEgressNode(), new Function<
                                         org.opendaylight.yang.gen.v1.urn.bier.test.driver
                                                 .rev161219.set.channel.input.EgressNode,
                                         EgressNode
                                         >() {
-                                    @java.lang.Override
-                                    public EgressNode apply(org.opendaylight.yang.gen.v1.urn
-                                                                    .bier.test.driver.rev161219
-                                                                    .set.channel.input
-                                                                    .EgressNode enode) {
-                                        return new EgressNodeBuilder()
-                                                .setEgressBfrId(new BfrId(enode.getEgressBfrId().getValue()))
-                                                .setNodeId(enode.getNodeId())
-                                                .build();
+                            @java.lang.Override
+                            public EgressNode apply(org.opendaylight.yang.gen.v1.urn
+                                                            .bier.test.driver.rev161219
+                                                            .set.channel.input
+                                                            .EgressNode enode) {
+
+                                EgressNodeBuilder egressNodeBuilder = new EgressNodeBuilder();
+
+
+                                if (enode.getRcvTp() != null) {
+                                    ArrayList<org.opendaylight.yang.gen.v1.urn.bier
+                                            .channel.rev161102.bier.network.channel
+                                            .bier.channel.channel.egress.node.RcvTp> rcvTps = new ArrayList<>();
+
+                                    for (RcvTp rcvTp : enode.getRcvTp()) {
+                                        rcvTps.add(new org.opendaylight.yang.gen.v1.urn.bier
+                                                .channel.rev161102.bier.network.channel
+                                                .bier.channel.channel.egress.node.RcvTpBuilder()
+                                                .setTp(rcvTp.getTp())
+                                                .build());
                                     }
+                                    egressNodeBuilder.setRcvTp(rcvTps);
+
                                 }
+                                return new EgressNodeBuilder()
+                                        .setEgressBfrId(new BfrId(enode.getEgressBfrId().getValue()))
+                                        .setNodeId(enode.getNodeId())
+                                        .build();
+                            }
+                        }
 
-                            ))
+                        ))
 
-                            .setGroupWildcard(input.getGroupWildcard())
-                            .setIngressBfrId(input.getIngressBfrId())
-                            .setIngressNode(input.getIngressNode())
-                            .setSourceWildcard(input.getSourceWildcard())
-                            .setSrcIp(input.getSrcIp())
-                            .setSubDomainId(input.getSubDomainId()).build()
+                        .setGroupWildcard(input.getGroupWildcard())
+                        .setIngressBfrId(input.getIngressBfrId())
+                        .setIngressNode(input.getIngressNode())
+                        .setSourceWildcard(input.getSourceWildcard())
+                        .setSrcIp(input.getSrcIp())
+                        .setSubDomainId(input.getSubDomainId())
+                        .build()
 
 
-            );
+        );
 
         SetChannelOutput output =
                 new SetChannelOutputBuilder().setConfigureResult(buildResult(result)).build();
@@ -713,5 +761,35 @@ public class TestDriverProvider implements TestDriverService {
         return RpcResultBuilder.success(output).buildFuture();
     }
 
+    @Override
+    public Future<RpcResult<SetLabelRangeOutput>> setLabelRange(SetLabelRangeInput input) {
+        ConfigurationType type =
+                getConfigurationType(input.getWriteType());
+        ConfigurationResult result = bierTeLabelRangeConfigWriter.writeBierTeLabelRange(type, input.getNodeName(),
+                new BierTeLableRangeBuilder()
+                        .setLabelBase(new MplsLabel(input.getLableBase()))
+                        .setLabelRangeSize(new BierTeLabelRangeSize(input.getLableRange()))
+                        .build());
+        SetLabelRangeOutput output =
+                new SetLabelRangeOutputBuilder().setConfigureResult(buildResult(result)).build();
+        return RpcResultBuilder.success(output).buildFuture();
+    }
 
+
+    @Override
+    public Future<RpcResult<SetBierTeBitstringOutput>> setBierTeBitstring(SetBierTeBitstringInput input) {
+        ConfigurationType type =
+                getConfigurationType(input.getWriteType());
+        ConfigurationResult result = bierTeBitstringWriter.writeBierTeBitstring(type, input.getNodeName(),
+                new PathBuilder()
+                        .setPathId(input.getPathId())
+                        .setSubdomainId(input.getSubdomainId())
+                        .setBitstringlength(input.getBitstringlength())
+                        .setSi(input.getSi())
+                        .setBitstring(input.getBitstring())
+                        .build());
+        SetBierTeBitstringOutput output =
+                new SetBierTeBitstringOutputBuilder().setConfigureResult(buildResult(result)).build();
+        return RpcResultBuilder.success(output).buildFuture();
+    }
 }

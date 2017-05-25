@@ -12,6 +12,7 @@
   <artifactId>bier-driver-common-util</artifactId>
   <version>0.2.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
+  <name>ODL :: bier :: ${project.artifactId}</name>
 
   <properties>
     <ietf.topology.version>2013.10.21.11.0-SNAPSHOT</ietf.topology.version>

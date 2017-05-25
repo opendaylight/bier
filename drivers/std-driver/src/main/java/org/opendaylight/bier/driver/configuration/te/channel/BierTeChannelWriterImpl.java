@@ -18,10 +18,8 @@ import org.opendaylight.bier.driver.common.util.DataWriter;
 import org.opendaylight.bier.driver.common.util.IidBuilder;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.MulticastInformation;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.PureMulticast;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.PureMulticastBuilder;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.PureMulticastKey;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.pure.multicast.MulticastTransportBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.transport.BierTeBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.transport.bier.te.Path;
@@ -47,15 +45,8 @@ public class BierTeChannelWriterImpl implements BierTeChannelWriter {
                                                                                       List<Long> pathId,
                                                                                       ConfigurationResult result) {
 
-        InstanceIdentifier<PureMulticast> pureMulticastIId =
-                InstanceIdentifier.create(MulticastInformation.class)
-                        .child(org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf
-                                .multicast.information.rev161028.multicast.information.PureMulticast.class)
-                        .child(PureMulticast.class, new PureMulticastKey(channel.getDstGroup(),
-                                channel.getGroupWildcard(),
-                                channel.getSrcIp(),
-                                channel.getSourceWildcard(),
-                                IidBuilder.DEFAULT_VPN_ID));
+        InstanceIdentifier<PureMulticast> pureMulticastIId = IidBuilder.buildPureMulticastIId(channel);
+
 
         List<Path> pathList = new ArrayList<>();
         for (Long path : pathId) {

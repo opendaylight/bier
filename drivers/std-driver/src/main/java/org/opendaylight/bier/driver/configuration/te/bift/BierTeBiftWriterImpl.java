@@ -69,25 +69,47 @@ public class BierTeBiftWriterImpl implements BierTeBiftWriter {
 
         BierTeConfig bierTeConfig = new BierTeConfigBuilder().setTeSubdomain(teInfo.getTeSubdomain()).build();
 
-        if (type == ConfigurationType.DELETE) {
 
-            LOG.info("delete te bift item :  {} ,node : {} !",teInfo,nodeId);
 
-            return netconfDataOperator.write(DataWriter.OperateType.DELETE,
-                    nodeId,
-                    getTeFIndexIId(teInfo),
-                    null,
-                    result
-            );
+        switch (type) {
+            case DELETE:
+                return netconfDataOperator.write(DataWriter.OperateType.DELETE,
+                        nodeId,
+                        getTeFIndexIId(teInfo),
+                        null,
+                        result
+                );
+
+            case MODIFY: {
+                netconfDataOperator.write(DataWriter.OperateType.DELETE,
+                        nodeId,
+                        getTeFIndexIId(teInfo),
+                        null,
+                        result
+                );
+
+                return netconfDataOperator.write(DataWriter.OperateType.MERGE,
+                        nodeId,
+                        BIER_TE_CFG_IID,
+                        bierTeConfig,
+                        result
+                );
+
+            }
+            case ADD:
+                return netconfDataOperator.write(DataWriter.OperateType.MERGE,
+                        nodeId,
+                        BIER_TE_CFG_IID,
+                        bierTeConfig,
+                        result
+                );
+
+            default: {
+                LOG.info("Invalid config type : {}", type);
+                return null;
+            }
         }
 
-        LOG.info("merge te bift item :  {} ,node : {} !",teInfo,nodeId);
-        return netconfDataOperator.write(DataWriter.OperateType.MERGE,
-                nodeId,
-                BIER_TE_CFG_IID,
-                bierTeConfig,
-                result
-        );
 
 
     }

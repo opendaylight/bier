@@ -28,14 +28,18 @@ public class IidConstants {
                     .child(Topology.class,
                             new TopologyKey(new TopologyId(TopologyNetconf.QNAME.getLocalName())));
 
+    public static final String TOPOLOGY_ID = "example-linkstate-topology";
+
     public static final InstanceIdentifier<BierTopology> BIER_TOPO_IID =
             InstanceIdentifier
                     .create(BierNetworkTopology.class)
-                    .child(BierTopology.class, new BierTopologyKey("flow:1"));
+                    .child(BierTopology.class, new BierTopologyKey(TOPOLOGY_ID));
 
     public static final InstanceIdentifier<BierChannel> BIER_CHANNEL_IID =
             InstanceIdentifier.create(BierNetworkChannel.class)
-                    .child(BierChannel.class, new BierChannelKey("flow:1"));
+                    .child(BierChannel.class, new BierChannelKey(TOPOLOGY_ID));
+
+
 
 
 }

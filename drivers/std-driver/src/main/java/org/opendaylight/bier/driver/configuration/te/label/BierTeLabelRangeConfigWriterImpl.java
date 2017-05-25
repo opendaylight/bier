@@ -53,9 +53,9 @@ public class BierTeLabelRangeConfigWriterImpl implements BierTeLabelRangeConfigW
         this.netconfDataOperator = netconfDataOperator;
     }
 
-    private InstanceIdentifier<LabelBlock> getLableBlockIid(String index) {
+    public InstanceIdentifier<Config> getLableBlockConfigIid(String index) {
         return MPLS_LABEL_BLOCKS_IID.child(LabelBlock.class,
-                new LabelBlockKey(index));
+                new LabelBlockKey(index)).child(Config.class);
 
     }
 
@@ -84,7 +84,7 @@ public class BierTeLabelRangeConfigWriterImpl implements BierTeLabelRangeConfigW
 
             return netconfDataOperator.write(DataWriter.OperateType.DELETE,
                     nodeId,
-                    getLableBlockIid(index).child(Config.class),
+                    getLableBlockConfigIid(index),
                     config,
                     result
             );
@@ -93,7 +93,7 @@ public class BierTeLabelRangeConfigWriterImpl implements BierTeLabelRangeConfigW
         LOG.info("merge te label range  : min : {} , max : {} ,node : {} !",min,max,nodeId);
         return netconfDataOperator.write(DataWriter.OperateType.MERGE,
                 nodeId,
-                getLableBlockIid(index).child(Config.class),
+                getLableBlockConfigIid(index),
                 config,
                 result
         );
