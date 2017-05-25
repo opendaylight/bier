@@ -17,7 +17,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-netconf/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.netconf/features-netconf-connector/{{VERSION}}/xml/features</repository>
-  <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/{{VERSION}}/xml/features</repository>
   <repository>mvn:org.opendaylight.bgpcep/features-bgp/{{VERSION}}/xml/features</repository>
 
   <feature name='odl-bier-all' version='${project.version}' description="OpenDaylight :: Bier :: All">
@@ -51,8 +50,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version="${restconf.version}">odl-restconf</feature>
     <feature version="${restconf.version}">odl-mdsal-apidocs</feature>
     <feature version="${dluxapps.version}">odl-dluxapps-yangman</feature>
-    <feature version='${openflowplugin.version}'>odl-openflowplugin-southbound</feature>
-    <feature version='${openflowplugin.version}'>odl-openflowplugin-flow-services</feature>
     <feature version='${bgpcep.version}'>odl-bgpcep-bgp-all</feature>
     <feature version='${project.version}'>odl-bier-std-driver</feature>
     <bundle>mvn:org.opendaylight.bier/bierman-api/{{VERSION}}</bundle>

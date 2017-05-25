@@ -44,7 +44,7 @@ public class BierTopologyTestDataInit {
     public static void initTopo(DataBroker dataBroker) {
         Topology topology = constructTopology();
 
-        // write to openflow datastore
+        // write to datastore
         final TopologyKey key = new TopologyKey(new TopologyId(TopologyId));
         final InstanceIdentifier<Topology> path = InstanceIdentifier.create(
                 NetworkTopology.class).child(Topology.class, key);

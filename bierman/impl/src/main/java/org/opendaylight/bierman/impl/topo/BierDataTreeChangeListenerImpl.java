@@ -13,7 +13,6 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.openflowplugin.common.wait.SimpleTaskRetryLooper;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChange;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
@@ -34,10 +33,6 @@ public abstract class BierDataTreeChangeListenerImpl<T extends DataObject>
     private static final Logger LOG =
             LoggerFactory.getLogger(BierDataTreeChangeListenerImpl.class);
 
-    private static final long STARTUP_LOOP_TICK = 500L;
-
-    private static final int STARTUP_LOOP_MAX_RETRIES = 8;
-
     protected static final String TOPOLOGY_IID = "example-linkstate-topology";
 
     protected  static final BierDataAdapter BIER_TOPOLOGY_ADAPTER = new BierDataAdapter();
@@ -50,7 +45,6 @@ public abstract class BierDataTreeChangeListenerImpl<T extends DataObject>
                                           final InstanceIdentifier<T> ii) {
         final DataTreeIdentifier<T> identifier = new DataTreeIdentifier(LogicalDatastoreType.OPERATIONAL, ii);
         this.dataBroker = dataBroker;
-        final SimpleTaskRetryLooper looper = new SimpleTaskRetryLooper(STARTUP_LOOP_TICK, STARTUP_LOOP_MAX_RETRIES);
         listenerRegistration = dataBroker.registerDataTreeChangeListener(identifier,
                 BierDataTreeChangeListenerImpl.this);
     }

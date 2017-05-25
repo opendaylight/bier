@@ -193,7 +193,7 @@ public class BierLinkChangeListenerImpl
         LinkChange notification = new LinkChangeBuilder().setTopoId(TOPOLOGY_IID)
                 .setOldLink(oldLinkBuilder.build())
                 .setNewLink(newLinkBuilder.build()).build();
-        LOG.info("notify LinkChange: old link--" + oldLink + "; new link--" +newLink);
+        LOG.info("notify LinkChange: old link--" + oldLink + "; new link--" + newLink);
         NotificationProvider.getInstance().notify(notification);
     }
 
