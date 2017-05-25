@@ -73,6 +73,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <classifier>features</classifier>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>odl-bier-te-pce</artifactId>
+            <version>${project.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>service-api</artifactId>
             <version>${project.version}</version>

@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.service.impl;
+package org.opendaylight.bier.service.impl;
 
 
 import java.util.ArrayList;
@@ -27,6 +27,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannelBuilder;
@@ -87,8 +88,8 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
     public void setUp() {
         bierConfigWriterMock = new BierConfigWriterMock();
         channelConfigWriterMock = new ChannelConfigWriterMock();
-        netconfStateChangeListener = new NetconfStateChangeListener(getDataBroker(), bierConfigWriterMock,
-                channelConfigWriterMock);
+        netconfStateChangeListener = new NetconfStateChangeListener(getDataBroker(),
+                bierConfigWriterMock, channelConfigWriterMock);
     }
 
     @Test
@@ -98,7 +99,7 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
         addNodeToDatastore("3", null);
         addChannelToDatastore(constructBierChannel("flow:1", "channel-1", "10.84.220.5",
                 "102.112.20.40", 1, 1, (short)30, (short)40, 2, "2",
-                constructEgressNodeList(1, "1")));
+                constructEgressNodeList(1, "1"), BierForwardingType.Bier));
         netconfStateChangeListener.onDataTreeChanged(setNodeData(constructNodeBefore("1"), constructNodeAfter("1"),
                 ModificationType.SUBTREE_MODIFIED));
         netconfStateChangeListener.onDataTreeChanged(setNodeData(constructNodeBefore("2"), constructNodeAfter("2"),
@@ -159,7 +160,7 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
 
     private BierChannel constructBierChannel(String bierChannelKey, String name, String srcIp, String dstGroup,
                                              int domainId, int subDomainId, short srcWild, short groupWild, int bfrId,
-                                             String ingress, List<EgressNode> egressList) {
+                                             String ingress, List<EgressNode> egressList, BierForwardingType type) {
         ChannelBuilder channelBuilder = new ChannelBuilder();
         channelBuilder.setName(name);
         channelBuilder.setKey(new ChannelKey(name));
@@ -172,6 +173,7 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
         channelBuilder.setIngressBfrId(new BfrId(bfrId));
         channelBuilder.setIngressNode(ingress);
         channelBuilder.setEgressNode(egressList);
+        channelBuilder.setBierForwardingType(type);
         List<Channel> channelList = new ArrayList<>();
         channelList.add(channelBuilder.build());
         BierChannelBuilder bierChannelBuilder = new BierChannelBuilder();

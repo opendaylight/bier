@@ -52,6 +52,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </dependency>
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
+      <artifactId>ietf-bier-te-2016-10-13</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.bier</groupId>
       <artifactId>ietf-multicast-information-2016-10-28</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -68,6 +73,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>bier-adapter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.bier</groupId>
+      <artifactId>pce-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -96,7 +106,5 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-
-
   </dependencies>
 </project>

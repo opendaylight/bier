@@ -5,16 +5,19 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.service.impl;
+package org.opendaylight.bier.service.impl;
+
 
 import org.opendaylight.bier.adapter.api.BierConfigReader;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
+import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
+import org.opendaylight.bier.adapter.api.BierTeChannelWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
+import org.opendaylight.bier.service.impl.activate.driver.ActivateNetconfConnetion;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
-import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
-import org.opendaylight.service.impl.activate.driver.ActivateNetconfConnetion;
-import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.BierServiceApiService;
+import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,22 +26,32 @@ public class ServiceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceProvider.class);
 
     private final DataBroker dataBroker;
-    private final RpcProviderRegistry rpcRegistry;
+    private final RpcConsumerRegistry rpcConsumerRegistry;
     private final NotificationPublishService notificationService;
     private final ChannelConfigWriter bierChannelWriter;
+    private final BierTeChannelWriter teChannelWriter;
     private final BierConfigWriter bierConfigWriter;
+    private final BierTeBiftWriter bierTeBiftWriter;
+    private final BierTeBitstringWriter bierTeBitstringWriter;
     private BierConfigReader bierConfigReader;
 
     private ServiceManager serviceManager;
 
-    public ServiceProvider(final DataBroker dataBroker,final RpcProviderRegistry rpcRegistry,
+    public ServiceProvider(final DataBroker dataBroker,
+                           final RpcConsumerRegistry rpcConsumerRegistry,
                            final NotificationPublishService notificationService,
-                           final BierConfigWriter bierConfigWriter, final ChannelConfigWriter channelConfigWriter) {
+                           final BierConfigWriter bierConfigWriter, final ChannelConfigWriter channelConfigWriter,
+                           final BierTeChannelWriter teChannelWriter,
+                           final BierTeBiftWriter bierTeBiftWriter,
+                           final BierTeBitstringWriter bierTeBitstringWriter) {
         this.dataBroker = dataBroker;
-        this.rpcRegistry = rpcRegistry;
+        this.rpcConsumerRegistry = rpcConsumerRegistry;
         this.notificationService = notificationService;
         this.bierConfigWriter = bierConfigWriter;
         this.bierChannelWriter = channelConfigWriter;
+        this.teChannelWriter = teChannelWriter;
+        this.bierTeBiftWriter = bierTeBiftWriter;
+        this.bierTeBitstringWriter = bierTeBitstringWriter;
     }
 
     public void setBierConfigReader(BierConfigReader bierConfigReader) {
@@ -50,8 +63,8 @@ public class ServiceProvider {
      */
     public void init() {
         LOG.info("ServiceProvider Session Initiated");
-        serviceManager = new ServiceManager(dataBroker, notificationService, bierConfigWriter, bierChannelWriter);
-        rpcRegistry.addRpcImplementation(BierServiceApiService.class,serviceManager);
+        serviceManager = new ServiceManager(dataBroker, notificationService, rpcConsumerRegistry, bierConfigWriter,
+                bierChannelWriter, teChannelWriter, bierTeBiftWriter,bierTeBitstringWriter);
         ActivateNetconfConnetion activateNetconfConnetion = new ActivateNetconfConnetion(dataBroker,bierConfigReader);
     }
 

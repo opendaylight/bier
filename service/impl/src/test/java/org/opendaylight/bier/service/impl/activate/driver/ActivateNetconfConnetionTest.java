@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package test.org.opendaylight.service.impl.activate.driver;
+package test.org.opendaylight.bier.service.impl.activate.driver;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.eq;
@@ -20,10 +20,10 @@ import java.util.Collections;
 import org.junit.Test;
 
 import org.opendaylight.bier.adapter.api.BierConfigReader;
+import org.opendaylight.bier.service.impl.activate.driver.ActivateNetconfConnetion;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
-import org.opendaylight.service.impl.activate.driver.ActivateNetconfConnetion;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeBuilder;

@@ -12,7 +12,4 @@ module bier-service-api {
                 type string;
             }
     	}
-
-     rpc test-notification-publish {
-     	}
 }
