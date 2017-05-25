@@ -70,6 +70,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTeSubdo
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierTeLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainKey;
@@ -90,6 +91,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.par
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBpKey;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierEncapsulationMpls;
+
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierMplsLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Bsl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.IgpType;
@@ -546,7 +548,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void configureTeNodeTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         ConfigureTeNodeOutput output = configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",1,"1");
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
@@ -595,7 +597,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void configureTeLabelTest() throws Exception {
-        ConfigureTeLabelOutput output = configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        ConfigureTeLabelOutput output = configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
         QueryNodeOutput queryOutput = queryNode();
@@ -607,7 +609,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void configureTeLabelTest1() throws Exception {
-        ConfigureTeLabelOutput output = configureTeLabel(null,new BierMplsLabelRangeSize((short)5),"1");
+        ConfigureTeLabelOutput output = configureTeLabel(null,new BierTeLabelRangeSize(5L),"1");
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("label-base is null!"));
     }
@@ -740,7 +742,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void deleteTeBslTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         configureTeNode(1,1,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
@@ -785,7 +787,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         configureDomain(1);
         configureSubdomain(1,1);
         // add two te-bsl   64bit and 128bit
-        configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         configureTeNode(1,1,"1");
         configureTeNode1(1,1,"1");
         QueryNodeOutput queryOutput = queryNode();
@@ -853,7 +855,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void deleteTeSiTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         configureTeNode(1,1,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
@@ -897,7 +899,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void deleteTeSiTest1() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         configureTeNode(1,1,"1");
         configureTeNode2(1,1,"1");
         QueryNodeOutput queryOutput = queryNode();
@@ -965,7 +967,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void deleteTeBpTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         configureTeNode(1,1,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
@@ -1009,7 +1011,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void deleteTeBpTest1() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         configureTeNode(1,1,"1");
         configureTeNode3(1,1,"1");
         QueryNodeOutput queryOutput = queryNode();
@@ -1377,7 +1379,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
 
     @Test
     public void deleteTeLabelTest() throws Exception {
-        ConfigureTeLabelOutput output = configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        ConfigureTeLabelOutput output = configureTeLabel(new MplsLabel(1L), new BierTeLabelRangeSize(5L), "1");
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
 
         QueryNodeOutput queryOutput = queryNode();
@@ -1493,7 +1495,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void queryTeSubDomainNodeTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        configureTeLabel(new MplsLabel(1L),new BierMplsLabelRangeSize((short)5),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
         configureTeNode(1,1,"1");
 
         QueryTeSubdomainNodeOutput output = queryTeSubdomainNode(1,1);
@@ -2078,7 +2080,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         return output.getResult();
     }
 
-    private ConfigureTeLabelOutput configureTeLabel(MplsLabel labelBase,BierMplsLabelRangeSize labelRangeSize,
+    private ConfigureTeLabelOutput configureTeLabel(MplsLabel labelBase,BierTeLabelRangeSize labelRangeSize,
                                                     String nodeId) throws Exception {
         ConfigureTeLabelInputBuilder inputBuilder = new ConfigureTeLabelInputBuilder();
         inputBuilder.setTopologyId("example-linkstate-topology");

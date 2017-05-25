@@ -29,7 +29,14 @@ module bier-topology {
        description
          "This identity represents MPLS encapsulation for bier.";
      }
-  
+
+	typedef bier-te-label-range-size{
+		type uint32;
+		description
+			"The type for BIER-TE label range size.";
+	}
+
+
   container bier-network-topology {
     list bier-topology {
       key "topology-id";
@@ -183,7 +190,7 @@ module bier-topology {
 			  type mpls:mpls-label;
 			}
 			leaf label-range-size{
-			  type bier:bier-mpls-label-range-size;
+			  type bier-te-label-range-size;
 			}
 		}
 	}

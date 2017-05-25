@@ -24,6 +24,7 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierTeLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
@@ -53,7 +54,6 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.par
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBp;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierEncapsulationMpls;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierMplsLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Bsl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Si;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
@@ -1678,12 +1678,41 @@ public class BierDataManager {
         return true;
     }
 
+    public List<Long> checkFtLabel(String topologyId,String nodeId) {
+        List<Long> labelList = new ArrayList<Long>();
+        BierNode existNode = getNodeData(topologyId, nodeId);
+        if (existNode.getBierTeNodeParams() == null) {
+            return labelList;
+        }
+        List<TeDomain> teDomainList = existNode.getBierTeNodeParams().getTeDomain();
+        if (teDomainList == null) {
+            return labelList;
+        }
+        int teDomainSize = teDomainList.size();
+        for (int iloop = 0; iloop < teDomainSize; ++iloop) {
+            List<TeSubDomain> teSubDomainList = teDomainList.get(iloop).getTeSubDomain();
+            if (teSubDomainList == null) {
+                return labelList;
+            }
+            int teSubDomainSize = teSubDomainList.size();
+            for (int jloop = 0; jloop < teSubDomainSize; ++jloop) {
+                List<TeBsl> teBslList = teSubDomainList.get(jloop).getTeBsl();
+                if (teBslList == null) {
+                    return labelList;
+                }
+                labelList = checkFtLabel(teBslList,labelList);
+            }
+        }
+        return labelList;
+    }
+
+
     public Long buildFtLabel(String topologyId,BierNode node) {
         BierNode existNode = getNodeData(topologyId, node.getNodeId());
         MplsLabel labelBaseData = existNode.getBierTeLableRange().getLabelBase();
-        BierMplsLabelRangeSize labelRangeSizeData = existNode.getBierTeLableRange().getLabelRangeSize();
+        BierTeLabelRangeSize labelRangeSizeData = existNode.getBierTeLableRange().getLabelRangeSize();
         Long labelBase = labelBaseData.getValue();
-        Short labelRangeSize = labelRangeSizeData.getValue();
+        Long labelRangeSize = labelRangeSizeData.getValue();
         Long labelMax = labelBase + labelRangeSize;
         Long buildLabel = labelBase;
         List<Long> exisitFtLabel = checkFtLabel(topologyId, node.getNodeId());
@@ -1724,33 +1753,6 @@ public class BierDataManager {
         return true;
     }
 
-    public List<Long> checkFtLabel(String topologyId,String nodeId) {
-        List<Long> labelList = new ArrayList<Long>();
-        BierNode existNode = getNodeData(topologyId, nodeId);
-        if (existNode.getBierTeNodeParams() == null) {
-            return labelList;
-        }
-        List<TeDomain> teDomainList = existNode.getBierTeNodeParams().getTeDomain();
-        if (teDomainList == null) {
-            return labelList;
-        }
-        int teDomainSize = teDomainList.size();
-        for (int iloop = 0; iloop < teDomainSize; ++iloop) {
-            List<TeSubDomain> teSubDomainList = teDomainList.get(iloop).getTeSubDomain();
-            if (teSubDomainList == null) {
-                return labelList;
-            }
-            int teSubDomainSize = teSubDomainList.size();
-            for (int jloop = 0; jloop < teSubDomainSize; ++jloop) {
-                List<TeBsl> teBslList = teSubDomainList.get(jloop).getTeBsl();
-                if (teBslList == null) {
-                    return labelList;
-                }
-                labelList = checkFtLabel(teBslList,labelList);
-            }
-        }
-        return labelList;
-    }
 
     public List<Long> checkFtLabel(List<TeBsl> teBslList,List<Long> labelList) {
         int teBslSize = teBslList.size();
@@ -2174,7 +2176,7 @@ public class BierDataManager {
             errorMsg = "label-base is null!";
             return errorMsg;
         }
-        BierMplsLabelRangeSize labelRangeSize = teLableRangeBuilder.getLabelRangeSize();
+        BierTeLabelRangeSize labelRangeSize = teLableRangeBuilder.getLabelRangeSize();
         if (labelRangeSize == null) {
             errorMsg = "label-range-size is null!";
             return errorMsg;

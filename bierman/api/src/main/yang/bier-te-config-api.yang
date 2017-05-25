@@ -57,7 +57,7 @@ module bier-te-config-api {
 			      type mpls:mpls-label;
 			  }
 			  leaf label-range-size{
-			     type bier:bier-mpls-label-range-size;
+			     type bier-topology:bier-te-label-range-size;
 			  }
 		}
 		output {
