@@ -5,16 +5,19 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.service.impl;
+package org.opendaylight.bier.service.impl;
 
 import com.google.common.base.Optional;
 import java.util.List;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
+import org.opendaylight.bier.service.impl.bierconfig.BierChannelConfigProcess;
+import org.opendaylight.bier.service.impl.bierconfig.BierNodeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannelKey;
@@ -33,7 +36,7 @@ public class NodeOnlineBierConfigProcess {
 
     private static final Logger LOG = LoggerFactory.getLogger(NodeOnlineBierConfigProcess.class);
 
-    private DataBroker dataBroker;
+    private final DataBroker dataBroker;
     private BierNodeChangeListener bierNodeChangeListener;
     private BierChannelConfigProcess bierChannelConfigProcess;
 
@@ -100,14 +103,10 @@ public class NodeOnlineBierConfigProcess {
                 LOG.info("get bierChannel from networkChannel success,bierChannel is {}",channel);
             }
         } catch (ReadFailedException e) {
-            LOG.error("Get bierChannel from networkChannel is null");
+            LOG.error("Get bierChannel from networkChannel failed");
         }
-        if (null == channel) {
-            LOG.info("BierChannel is null");
-        } else if (null == channel.getChannel()) {
-            LOG.info("ChannelList is null");
-        } else if (0 == channel.getChannel().size()) {
-            LOG.info("ChannelList has no element");
+        if (null == channel || null == channel.getChannel() || 0 == channel.getChannel().size()) {
+            return;
         } else {
             LOG.info("process find channel contain this node and send");
             findChannelContainThisNodeAndSend(channel.getChannel(),nodeId);
@@ -116,9 +115,11 @@ public class NodeOnlineBierConfigProcess {
 
     private void findChannelContainThisNodeAndSend(List<Channel> channelList,String nodeId) {
         for (Channel channel : channelList) {
-            if (null == channel.getIngressNode()) {
+            if (null == channel.getIngressNode() || channel.getBierForwardingType().equals(BierForwardingType.BierTe)) {
                 LOG.info("IngressNode is null");
-            } else if (channel.getIngressNode().equals(nodeId)) {
+                return;
+            }
+            if (channel.getIngressNode().equals(nodeId)) {
                 LOG.info("IngressNode: {} is match, process send channel",channel.getIngressNode());
                 bierChannelConfigProcess.processAddedChannel(channel);
             } else {

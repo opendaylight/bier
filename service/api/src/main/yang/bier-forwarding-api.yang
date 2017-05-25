@@ -1,0 +1,27 @@
+module bier-forwarding-api {
+    yang-version 1;
+    namespace "urn:bier:forwarding:api";
+    prefix "bier-forwarding-api";
+
+    import bier-common {
+        prefix bier-common;
+    }
+
+    organization "zte";
+    revision "2017-04-18" {
+        description "Initial revision.";
+    }
+
+    rpc configure-bift {
+        output {
+             uses bier-common:configure-result;
+        }
+    }
+
+    notification report-message {
+        leaf failure-reason {
+             type string;
+        }
+    }
+
+}

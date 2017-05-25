@@ -14,7 +14,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <reference id="dataBroker"
     interface="org.opendaylight.controller.md.sal.binding.api.DataBroker"
     odl:type="default" />
-  <reference id="rpcRegistry"
+  <reference id="rpcConsumerRegistry"
              interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry" />
   <reference id="notificationService"
              interface="org.opendaylight.controller.md.sal.binding.api.NotificationPublishService"/>
@@ -22,19 +22,37 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
              interface="org.opendaylight.bier.adapter.api.BierConfigWriter"/>
   <reference id="channelConfigWriter"
              interface="org.opendaylight.bier.adapter.api.ChannelConfigWriter"/>
+  <reference id="teChannelWriter"
+             interface="org.opendaylight.bier.adapter.api.BierTeChannelWriter"/>
   <reference id="bierConfigReader"
              interface="org.opendaylight.bier.adapter.api.BierConfigReader"/>
-             
-    
+  <reference id="bierTeBiftWriter"
+             interface="org.opendaylight.bier.adapter.api.BierTeBiftWriter" />
+  <reference id="bierTeBitstringWriter"
+             interface="org.opendaylight.bier.adapter.api.BierTeBitstringWriter" />
+
   <bean id="provider"
-    class="org.opendaylight.service.impl.ServiceProvider"
+    class="org.opendaylight.bier.service.impl.ServiceProvider"
     init-method="init" destroy-method="close">
     <argument ref="dataBroker" />
-    <argument ref="rpcRegistry" />
+    <argument ref="rpcConsumerRegistry" />
     <argument ref="notificationService" />
     <argument ref="bierConfigWriter" />
     <argument ref="channelConfigWriter" />
+    <argument ref="teChannelWriter" />
+    <argument ref="bierTeBiftWriter" />
+    <argument ref="bierTeBitstringWriter" />
     <property name="bierConfigReader" ref="bierConfigReader"/>
   </bean>
+
+  <bean id="pceListener" class="org.opendaylight.bier.service.impl.teconfig.BierPathUpdateProcess">
+    <argument ref="dataBroker" />
+    <argument ref="rpcConsumerRegistry" />
+    <argument ref="teChannelWriter" />
+    <argument ref="bierTeBiftWriter" />
+    <argument ref="bierTeBitstringWriter" />
+  </bean>
+
+  <odl:notification-listener ref="pceListener"/>
 
 </blueprint>

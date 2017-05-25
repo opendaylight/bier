@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.service.impl;
+package org.opendaylight.bier.service.impl.bierconfig;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,9 +14,14 @@ import java.util.concurrent.ExecutionException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
+import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
+import org.opendaylight.bier.adapter.api.BierTeChannelWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
+import org.opendaylight.bier.service.impl.ChannelChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification.ModificationType;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
@@ -24,6 +29,8 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannelKey;
@@ -63,11 +70,20 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
 
     private ChannelConfigWriterMock channelConfigWriterMock;
     private ChannelChangeListener channelChangeListener;
+    @Mock
+    private RpcConsumerRegistry rpcConsumerRegistry;
+    @Mock
+    private BierTeChannelWriter teChannelWriter;
+    @Mock
+    private BierTeBiftWriter bierTeBiftWriter;
+    @Mock
+    private BierTeBitstringWriter bierTeBitstringWriter;
 
     @Before
     public void setUp() {
         channelConfigWriterMock = new ChannelConfigWriterMock();
-        channelChangeListener = new ChannelChangeListener(getDataBroker(),channelConfigWriterMock);
+        channelChangeListener = new ChannelChangeListener(getDataBroker(), rpcConsumerRegistry,
+                channelConfigWriterMock, teChannelWriter, bierTeBiftWriter, bierTeBitstringWriter);
     }
 
     private static class DataTreeModificationMock implements DataTreeModification<Channel> {
@@ -303,8 +319,9 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
     }
 
 
-    private Channel constructChannel(String name,String srcIp,String dstGroup,int domainId,int subDomainId,
-            short srcWild,short groupWild,int bfrId,String ingress,List<EgressNode> egressList) {
+    private Channel constructChannel(String name, String srcIp, String dstGroup, int domainId, int subDomainId,
+                                     short srcWild, short groupWild, int bfrId, String ingress,
+                                     List<EgressNode> egressList, BierForwardingType type) {
         ChannelBuilder  builder = new ChannelBuilder();
         builder.setName(name);
         builder.setKey(new ChannelKey(name));
@@ -316,6 +333,7 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
         builder.setGroupWildcard(groupWild);
         builder.setIngressBfrId(new BfrId(bfrId));
         builder.setIngressNode(ingress);
+        builder.setBierForwardingType(type);
         if (null != egressList && !egressList.isEmpty()) {
             builder.setEgressNode(egressList);
         }
@@ -366,14 +384,14 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
     public void channelListenerTset() {
         //Test Add channel
         Channel channelAdd = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
-                (short)30,(short)40,4,null,null);
+                (short)30,(short)40,4,null,null, BierForwardingType.Bier);
         channelChangeListener.onDataTreeChanged(setChannelData(null,channelAdd,ModificationType.WRITE));
         Assert.assertNull(channelConfigWriterMock.getChannelFromList(channelAdd.getName()));
         Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelAdd.getName()));
 
         //Test Modify channel
         Channel channelModify = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
-                (short)30,(short)40,5,null,null);
+                (short)30,(short)40,5,null,null, BierForwardingType.Bier);
         channelChangeListener.onDataTreeChanged(setChannelData(channelAdd,
                 channelModify,ModificationType.SUBTREE_MODIFIED));
         Assert.assertNull(channelConfigWriterMock.getChannelFromList(channelModify.getName()));
@@ -385,7 +403,7 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
         addNodeToDatastore("node-1",1,2,5);
         addNodeToDatastore("node-2",1,2,6);
         Channel channelDeploy = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
-                (short)30,(short)40,5,"node-1",egressList);
+                (short)30,(short)40,5,"node-1",egressList, BierForwardingType.Bier);
         channelChangeListener.onDataTreeChanged(setChannelData(channelModify,
                 channelDeploy,ModificationType.SUBTREE_MODIFIED));
         assertChannelData(channelDeploy,channelConfigWriterMock.getChannelFromList(channelDeploy.getName()));
@@ -393,7 +411,7 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
 
         //Test Modify-Deploy channel
         Channel channelModifyDeploy = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,3,
-                (short)30,(short)40,5,"node-1",egressList);
+                (short)30,(short)40,5,"node-1",egressList, BierForwardingType.Bier);
         addNodeToDatastore("node-1",1,3,5);
         addNodeToDatastore("node-2",1,3,6);
         channelChangeListener.onDataTreeChanged(
@@ -406,7 +424,7 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
         egressList.add(constructEgressNode(7,"node-3"));
         addNodeToDatastore("node-3",1,3,7);
         Channel channelModify2 = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,3,
-                (short)30,(short)40,5,"node-1",egressList);
+                (short)30,(short)40,5,"node-1",egressList, BierForwardingType.Bier);
         channelChangeListener.onDataTreeChanged(
                 setChannelData(channelModifyDeploy,channelModify2,ModificationType.SUBTREE_MODIFIED));
         assertChannelData(channelModify2,channelConfigWriterMock.getChannelFromList(channelModify2.getName()));
@@ -416,7 +434,7 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
         List<EgressNode> egressList2 = new ArrayList<>();
         egressList2.add(constructEgressNode(6,"node-2"));
         Channel channelDeleteEgress = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,3,
-                (short)30,(short)40,5,"node-1",egressList2);
+                (short)30,(short)40,5,"node-1",egressList2, BierForwardingType.Bier);
         channelChangeListener.onDataTreeChanged(
                 setChannelData(channelModify2,channelDeleteEgress,ModificationType.SUBTREE_MODIFIED));
         assertChannelData(channelDeleteEgress,
@@ -424,7 +442,7 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
         List<EgressNode> egressListDel = new ArrayList<>();
         egressListDel.add(constructEgressNode(7,"node-3"));
         Channel channelDeleteEgressNode = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,3,
-                (short)30,(short)40,5,"node-1",egressListDel);
+                (short)30,(short)40,5,"node-1",egressListDel, BierForwardingType.Bier);
         assertChannelData(channelDeleteEgressNode,
                 channelConfigWriterMock.getChannelEgressDelFromList(channelDeleteEgress.getName()));
 
