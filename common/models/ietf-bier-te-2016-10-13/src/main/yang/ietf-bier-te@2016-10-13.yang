@@ -101,18 +101,33 @@ module ietf-bier-te {
         choice te-adj-type {
             mandatory true;
             case connected {
+                leaf connected {
+                    type empty;
+                }
                 description "The type of adjacency is connected. Mostly connected interfaces.";
-                        }
+            }
             case routed {
+                leaf routed {
+                    type empty;
+                }
                 description "The type of adjacency is routed. Mostly not connected interfaces.";
             }
             case local-decap {
+                leaf local-decap {
+                    type empty;
+                }
                 description "Means that the packet should be decapsulated and forward out BIER domain.";
             }
             case ecmp {
+                leaf ecmp {
+                    type empty;
+                }
                 description "There is more than one path in the adjacency with equal cost.";
             }
             case other {
+                leaf other {
+                    type empty;
+                }
                 description "Means that the packet should be discarded.";
             }
             description "The collection of all possible adjacency type.";

@@ -55,7 +55,7 @@
         }
     }
 
-	grouping m-addr {
+    grouping m-addr {
         description "The vpn multicast information.";
         leaf vpn-id {
             type uint32;
@@ -219,7 +219,13 @@
     typedef bier-encap-type {
         type enumeration {
             enum "mpls" {
-                description "The mpls forwarding function is used in BIER.";
+                description "Bier forwarding depends on mpls.";
+            }
+            enum "non-mpls" {
+                description "Bier forwarding depends on non-mpls.";
+            }
+            enum "ipv6" {
+                description "Bier forwarding depends on ipv6.";
             }
         }
         description "The encapsulation type of BIER transportion.";
@@ -230,10 +236,8 @@
             type sub-domain-id;
             description "The subdomain id that this multicast flow belongs to.";
         }
-        choice encap-type {
-            case mpls {
-                description "The BIER forwarding depend on mpls.";
-            }
+        leaf encap-type {
+            type bier-encap-type;
             description "The encapsulation type in BIER.";
         }
          leaf bitstringlength {
@@ -257,12 +261,11 @@
     grouping transport-bier-te {
         description "The BIER TE transport information.";
 
-        choice encap-type {
-            case mpls {
-                description "The BIER forwarding depend on mpls.";
-            }
+        leaf encap-type {
+            type bier-encap-type;
             description "The encapsulation type in BIER.";
         }
+
         leaf ecmp {
             type boolean;
             description "The capability of ECMP.";
