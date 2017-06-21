@@ -178,7 +178,7 @@ module test-driver {
         leaf ingress-bfr-id {
             type bier:bfr-id;
         }
-        leaf src-tp {
+		leaf src-tp {
             type string;
         }
         list egress-node {

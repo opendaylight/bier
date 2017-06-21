@@ -39,8 +39,6 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.api.NotificationService;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
 import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.netconf.notification._1._0.rev080714.NotificationsService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
@@ -77,8 +75,6 @@ public class NetconfNodesListenerTest {
     private RpcConsumerRegistry rpcConsumerRegistry;
     private NotificationsService rpcService;
     private Optional<RpcConsumerRegistry> optionalRegistryObject;
-    private BindingAwareBroker.ConsumerContext consumerContext;
-    private BindingAwareBroker bindingAwareBroker;
     private NetconfDataOperator netconfDataOperator;
 
 
@@ -123,8 +119,6 @@ public class NetconfNodesListenerTest {
         mountPoint = mock(MountPoint.class);
         mountPointService = mock(MountPointService.class);
         optionalMountPointObject = mock(Optional.class);
-        consumerContext = mock(BindingAwareBroker.ConsumerContext.class);
-        bindingAwareBroker = mock(BindingAwareBroker.class);
         notificationService = mock(NotificationService.class);
         optionalNotificationObject = mock(Optional.class);
 
@@ -134,8 +128,6 @@ public class NetconfNodesListenerTest {
 
         final Optional<RpcConsumerRegistry> service = mountPoint.getService(RpcConsumerRegistry.class);
 
-        when(bindingAwareBroker.registerConsumer(any(BindingAwareConsumer.class))).thenReturn(consumerContext);
-        when(consumerContext.getSALService(any())).thenReturn(mountPointService);
         when(mountPointService.getMountPoint(any(InstanceIdentifier.class))).thenReturn(optionalMountPointObject);
         when(optionalMountPointObject.isPresent()).thenReturn(true);
         when(optionalMountPointObject.get()).thenReturn(mountPoint);
@@ -145,8 +137,8 @@ public class NetconfNodesListenerTest {
         when(optionalRegistryObject.get()).thenReturn(rpcConsumerRegistry);
         when(rpcConsumerRegistry.getRpcService(NotificationsService.class)).thenReturn(rpcService);
 
-        netconfDataOperator = new NetconfDataOperator(bindingAwareBroker);
-        netconfDataOperator.onSessionInitialized(consumerContext);
+        netconfDataOperator = new NetconfDataOperator(mountPointService);
+
 
 
     }

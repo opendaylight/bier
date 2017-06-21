@@ -18,6 +18,7 @@ import org.opendaylight.bier.driver.common.util.DataWriter;
 import org.opendaylight.bier.driver.common.util.IidBuilder;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.BierEncapType;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.PureMulticast;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.PureMulticastBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.pure.multicast.MulticastTransportBuilder;
@@ -42,16 +43,13 @@ public class BierTeChannelWriterImpl implements BierTeChannelWriter {
     public CheckedFuture<Void, TransactionCommitFailedException> writeBierTeChannel(ConfigurationType type,
                                                                                       String nodeId,
                                                                                       Channel channel,
-                                                                                      List<Long> pathId,
+                                                                                      List<Path> pathList,
                                                                                       ConfigurationResult result) {
 
         InstanceIdentifier<PureMulticast> pureMulticastIId = IidBuilder.buildPureMulticastIId(channel);
 
 
-        List<Path> pathList = new ArrayList<>();
-        for (Long path : pathId) {
-            pathList.add(new PathBuilder().setPathId(path).build());
-        }
+
 
 
         PureMulticast pureMulticast = new PureMulticastBuilder()
@@ -61,7 +59,7 @@ public class BierTeChannelWriterImpl implements BierTeChannelWriter {
                 .setSourceWildcard(channel.getSourceWildcard())
                 .setVpnId(IidBuilder.DEFAULT_VPN_ID)
                 .setMulticastTransport(new MulticastTransportBuilder()
-                        .setBierTe(new BierTeBuilder().setPath(pathList).build())
+                        .setBierTe(new BierTeBuilder().setPath(pathList).setEncapType(BierEncapType.Mpls).build())
                         .build())
                 .build();
 
@@ -108,13 +106,21 @@ public class BierTeChannelWriterImpl implements BierTeChannelWriter {
                                                     Channel channel,List<Long> pathId) {
         LOG.info("Config bier te channel, type--{}, channel--{},path--{}",type,channel,pathId);
         ConfigurationResult result = new ConfigurationResult(ConfigurationResult.Result.FAILED);
-        if ((pathId == null) || (pathId.isEmpty())) {
-            result.setFailureReason(ConfigurationResult.PATH_NULL + channel.toString());
-            LOG.info(ConfigurationResult.PATH_NULL + channel.toString());
-            return result;
+        List<Path> pathList = new ArrayList<>();
+
+        if (type != ConfigurationType.DELETE) {
+            if ((pathId == null) || (pathId.isEmpty())) {
+                result.setFailureReason(ConfigurationResult.PATH_NULL + channel.toString());
+                LOG.info(ConfigurationResult.PATH_NULL + channel.toString());
+                return result;
+            }
+            for (Long path : pathId) {
+                pathList.add(new PathBuilder().setPathId(path).build());
+            }
+
         }
 
-        writeBierTeChannel(type,nodeId,channel,pathId,result);
+        writeBierTeChannel(type,nodeId,channel,pathList,result);
         return result;
 
     }

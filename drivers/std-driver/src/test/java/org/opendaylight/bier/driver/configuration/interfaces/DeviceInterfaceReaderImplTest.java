@@ -26,8 +26,6 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPoint;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.Interfaces;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfacesBuilder;
@@ -44,8 +42,6 @@ public class DeviceInterfaceReaderImplTest extends AbstractConcurrentDataBrokerT
 
     private MountPoint mountPoint;
     private DataBroker dataBroker ;
-    private BindingAwareBroker bindingAwareBroker;
-    private BindingAwareBroker.ConsumerContext consumerContext;
     private MountPointService mountPointService;
     private Optional<MountPoint> optionalMountPointObject;
     private Optional<DataBroker> optionalDataBrokerObject;
@@ -67,14 +63,10 @@ public class DeviceInterfaceReaderImplTest extends AbstractConcurrentDataBrokerT
 
     private void buildMock() {
         mountPoint = mock(MountPoint.class);
-        bindingAwareBroker = mock(BindingAwareBroker.class);
-        consumerContext = mock(BindingAwareBroker.ConsumerContext.class);
         mountPointService = mock(MountPointService.class);
         optionalMountPointObject = mock(Optional.class);
         optionalDataBrokerObject = mock(Optional.class);
 
-        when(bindingAwareBroker.registerConsumer(any(BindingAwareConsumer.class))).thenReturn(consumerContext);
-        when(consumerContext.getSALService(any())).thenReturn(mountPointService);
         when(mountPointService.getMountPoint(any(InstanceIdentifier.class))).thenReturn(optionalMountPointObject);
         when(mountPoint.getService(eq(DataBroker.class))).thenReturn(optionalDataBrokerObject);
         // Mock getting mountpoint
@@ -88,9 +80,9 @@ public class DeviceInterfaceReaderImplTest extends AbstractConcurrentDataBrokerT
     }
 
     private void buildInstance() {
-        netconfDataOperator = new NetconfDataOperator(bindingAwareBroker);
+        netconfDataOperator = new NetconfDataOperator(mountPointService);
         deviceIfReader = new DeviceInterfaceReaderImpl(netconfDataOperator);
-        netconfDataOperator.onSessionInitialized(consumerContext);
+
     }
 
     private void buildIfData() {

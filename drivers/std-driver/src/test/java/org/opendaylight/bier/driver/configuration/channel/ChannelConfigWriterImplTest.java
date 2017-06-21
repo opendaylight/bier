@@ -36,8 +36,7 @@ import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 
 
 import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
+
 
 
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
@@ -70,8 +69,6 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
 
     private MountPoint mountPoint;
     private DataBroker dataBroker ;
-    private BindingAwareBroker bindingAwareBroker;
-    private BindingAwareBroker.ConsumerContext consumerContext;
     private MountPointService mountPointService;
     // Optionals
 
@@ -101,14 +98,10 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
 
     private void buildMock() {
         mountPoint = mock(MountPoint.class);
-        bindingAwareBroker = mock(BindingAwareBroker.class);
-        consumerContext = mock(BindingAwareBroker.ConsumerContext.class);
         mountPointService = mock(MountPointService.class);
         optionalMountPointObject = mock(Optional.class);
         optionalDataBrokerObject = mock(Optional.class);
 
-        when(bindingAwareBroker.registerConsumer(any(BindingAwareConsumer.class))).thenReturn(consumerContext);
-        when(consumerContext.getSALService(any())).thenReturn(mountPointService);
         when(mountPointService.getMountPoint(any(InstanceIdentifier.class))).thenReturn(optionalMountPointObject);
         when(mountPoint.getService(eq(DataBroker.class))).thenReturn(optionalDataBrokerObject);
         // Mock getting mountpoint
@@ -122,9 +115,9 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
     }
 
     private void buildInstance() {
-        netconfDataOperator = new NetconfDataOperator(bindingAwareBroker);
+        netconfDataOperator = new NetconfDataOperator(mountPointService);
         channelConfigWriter = new ChannelConfigWriterImpl(netconfDataOperator);
-        netconfDataOperator.onSessionInitialized(consumerContext);
+
     }
 
 

@@ -20,9 +20,6 @@ import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
-
 
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierConfiguration;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
@@ -35,9 +32,8 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetconfDataOperator implements BindingAwareConsumer {
+public class NetconfDataOperator  {
     private static final Logger LOG = LoggerFactory.getLogger(NetconfDataOperator.class);
-    private final BindingAwareBroker bindingAwareBroker;
     private MountPointService mountService = null;
 
 
@@ -46,29 +42,16 @@ public class NetconfDataOperator implements BindingAwareConsumer {
     public static final InstanceIdentifier<BierGlobal> BIER_GLOBAL_IID =
             ROUTING_IID.augmentation(BierConfiguration.class)
                     .child(Bier.class).child(BierGlobal.class);
-
-
-
-
-
-
     public static final int RETRY_WRITE_MAX = 3;
 
-    public NetconfDataOperator(BindingAwareBroker bindingAwareBroker) {
-        this.bindingAwareBroker = bindingAwareBroker;
+
+    public NetconfDataOperator(MountPointService mountService) {
+        this.mountService = mountService;
     }
 
-    public void init() {
-        bindingAwareBroker.registerConsumer(this);
-    }
 
-    @Override
-    public void onSessionInitialized(BindingAwareBroker.ConsumerContext session) {
 
-        LOG.info("session initialized ");
-        mountService = session.getSALService(MountPointService.class);
 
-    }
 
     public MountPoint getMountPoint(String nodeID) {
         ConfigurationResult result = new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);

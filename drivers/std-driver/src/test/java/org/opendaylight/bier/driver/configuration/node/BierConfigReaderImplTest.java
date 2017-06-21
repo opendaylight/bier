@@ -26,8 +26,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
-import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
+
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
@@ -37,8 +36,6 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 public class BierConfigReaderImplTest extends AbstractConcurrentDataBrokerTest {
     private MountPoint mountPoint;
     private DataBroker dataBroker ;
-    private BindingAwareBroker bindingAwareBroker;
-    private BindingAwareBroker.ConsumerContext consumerContext;
     private MountPointService mountPointService;
     // Optionals
     private Optional<MountPoint> optionalMountPointObject;
@@ -60,14 +57,10 @@ public class BierConfigReaderImplTest extends AbstractConcurrentDataBrokerTest {
 
     private void buildMock() {
         mountPoint = mock(MountPoint.class);
-        bindingAwareBroker = mock(BindingAwareBroker.class);
-        consumerContext = mock(BindingAwareBroker.ConsumerContext.class);
         mountPointService = mock(MountPointService.class);
         optionalMountPointObject = mock(Optional.class);
         optionalDataBrokerObject = mock(Optional.class);
 
-        when(bindingAwareBroker.registerConsumer(any(BindingAwareConsumer.class))).thenReturn(consumerContext);
-        when(consumerContext.getSALService(any())).thenReturn(mountPointService);
         when(mountPointService.getMountPoint(any(InstanceIdentifier.class))).thenReturn(optionalMountPointObject);
         when(mountPoint.getService(eq(DataBroker.class))).thenReturn(optionalDataBrokerObject);
         // Mock getting mountpoint
@@ -81,10 +74,10 @@ public class BierConfigReaderImplTest extends AbstractConcurrentDataBrokerTest {
     }
 
     private void buildInstance() {
-        netconfDataOperator = new NetconfDataOperator(bindingAwareBroker);
+        netconfDataOperator = new NetconfDataOperator(mountPointService);
         bierConfigWriter = new BierConfigWriterImpl(netconfDataOperator);
         bierConfigReader = new BierConfigReaderImpl(netconfDataOperator);
-        netconfDataOperator.onSessionInitialized(consumerContext);
+
     }
 
     @Test

@@ -8,14 +8,11 @@
 package org.opendaylight.bier.test.driver;
 
 import static org.junit.Assert.assertEquals;
-
 import static org.mockito.Matchers.any;
-
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -29,6 +26,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.opendaylight.bier.adapter.api.BierConfigReader;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
+import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
+import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
+import org.opendaylight.bier.adapter.api.BierTeLabelRangeConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigReader;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
@@ -45,6 +45,11 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.chan
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
+import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.TePath;
+import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.Path;
+import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.PathBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.te.path.Bitstring;
+import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.te.path.BitstringBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckBierGlobalInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckBierGlobalInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckChannelInput;
@@ -52,6 +57,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.CheckChannelI
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.ConfigType;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.ReadBierGlobalInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.ReadBierGlobalInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetBierTeBitstringInput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetBierTeBitstringInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetChannelInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetDomainConfigInput;
@@ -60,12 +67,19 @@ import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetEgressNode
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetEgressNodeInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetIpv4ConfigInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetIpv4ConfigInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetLabelRangeInput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetLabelRangeInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigInput;
 import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetSubdomainConfigInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetTeBiftInput;
+import org.opendaylight.yang.gen.v1.urn.bier.test.driver.rev161219.SetTeBiftInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierTeLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParamsBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRange;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
@@ -73,6 +87,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierMplsLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Bsl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.IgpType;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Si;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobalBuilder;
@@ -81,6 +96,15 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.AfBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4Builder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.BitString;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.routing.BierTeConfigBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.adj.type.TeAdjType;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.adj.type.te.adj.type.ConnectedBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.fwd.item.TeSiBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.fwd.item.te.si.TeFIndexBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.info.TeSubdomain;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.info.TeSubdomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.info.te.subdomain.TeBslBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
@@ -105,7 +129,12 @@ public class TestDriverProviderTest {
     ChannelConfigWriter channelConfigWriter;
     @Mock
     ChannelConfigReader channelConfigReader;
-
+    @Mock
+    BierTeBiftWriter bierTeBiftWriter;
+    @Mock
+    BierTeLabelRangeConfigWriter bierTeLabelRangeConfigWriter;
+    @Mock
+    BierTeBitstringWriter bierTeBitstringWriter;
 
     private TestDriverProvider testDriverProvider;
 
@@ -127,6 +156,26 @@ public class TestDriverProviderTest {
     private static final String EGRESS_NODE_ID1 = "device11";
     private static final String EGRESS_NODE_ID2 = "device22";
     private static final String CHANNEL_NAME = "channel_1";
+    private static final Integer SUBDOMAIN_ID = 1;
+
+    private static final Integer SI = 0;
+    private static final Integer BIT_POSITION = 1;
+    private static final Long IN_LABEL = 50L;
+    private static final Long OUT_LABEL = 51L;
+    private static final TeAdjType ADJ_TYPE = new ConnectedBuilder().build();
+    private static final Long LABLE_MIN = 16L;
+    private static final Long LABLE_RANGE_SIZE = 200L;
+
+
+    private static final Integer BP1 = 1;
+    private static final Integer BP2 = 2;
+    private static final Integer BP3 = 3;
+    private static final Long PATH_ID = 1L;
+    private static final SubDomainId SUB_DOMAIN_ID = new SubDomainId(100);
+    private static final Bsl PATH_BSL = Bsl._64Bit;
+    private static final Si PATH_SI = new Si(0);
+
+
 
     private void initInstance() {
         testDriverProvider = new TestDriverProvider(dataBroker);
@@ -134,6 +183,9 @@ public class TestDriverProviderTest {
         testDriverProvider.setBierConfigReader(bierConfigReader);
         testDriverProvider.setChannelConfigWriter(channelConfigWriter);
         testDriverProvider.setChannelConfigReader(channelConfigReader);
+        testDriverProvider.setBierTeBiftWriter(bierTeBiftWriter);
+        testDriverProvider.setBierTeLabelRangeConfigWriter(bierTeLabelRangeConfigWriter);
+        testDriverProvider.setBierTeBitstringWriter(bierTeBitstringWriter);
         testDriverProvider.setRpcRegistry(rpcRegistry);
 
 
@@ -1149,5 +1201,188 @@ public class TestDriverProviderTest {
                 testDriverProvider.checkChannel(input).get().getResult().getConfigureResult().getResult());
 
     }
+
+    private TeSubdomain teSubdomainBuilder() {
+        return new TeSubdomainBuilder()
+                        .setSubdomainId(new SubDomainId(SUBDOMAIN_ID))
+                        .setTeBsl(Collections.singletonList(new TeBslBuilder()
+                                .setFwdBsl(BSL)
+                                .setTeSi(Collections.singletonList(new TeSiBuilder()
+                                        .setFtLabel(new MplsLabel(IN_LABEL))
+                                        .setSi(new Si(SI))
+                                        .setTeFIndex(Collections.singletonList(new TeFIndexBuilder()
+                                                .setTeFIndex(new BitString(BIT_POSITION))
+                                                .setTeAdjType(ADJ_TYPE)
+                                                .setOutLabel(new MplsLabel(OUT_LABEL))
+                                                .build()))
+                                        .build()))
+
+                                .build()))
+                        .build();
+
+    }
+
+    private SetTeBiftInput buildTeBiftInput(ConfigType configType) {
+        return new SetTeBiftInputBuilder()
+                .setNodeName(NODE_ID)
+                .setTeSubdomain(Collections.singletonList(teSubdomainBuilder()))
+                .setWriteType(configType)
+                .build();
+    }
+
+    @Test
+    public void testTeBiftAdd() throws Exception {
+        initInstance();
+        when(bierTeBiftWriter.writeTeBift(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setTeBift(buildTeBiftInput(ConfigType.ADD));
+        verify(bierTeBiftWriter).writeTeBift(ConfigurationType.ADD, NODE_ID,
+                new BierTeConfigBuilder().setTeSubdomain(buildTeBiftInput(ConfigType.ADD).getTeSubdomain()).build());
+    }
+
+    @Test
+    public void testTeBiftModify() throws Exception {
+        initInstance();
+        when(bierTeBiftWriter.writeTeBift(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setTeBift(buildTeBiftInput(ConfigType.MODIFY));
+        verify(bierTeBiftWriter).writeTeBift(ConfigurationType.MODIFY, NODE_ID,
+                new BierTeConfigBuilder().setTeSubdomain(buildTeBiftInput(ConfigType.MODIFY).getTeSubdomain()).build());
+
+    }
+
+    @Test
+    public void testTeBiftDelete() throws Exception {
+        initInstance();
+        when(bierTeBiftWriter.writeTeBift(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setTeBift(buildTeBiftInput(ConfigType.DELETE));
+        verify(bierTeBiftWriter).writeTeBift(ConfigurationType.DELETE, NODE_ID,
+                new BierTeConfigBuilder().setTeSubdomain(buildTeBiftInput(ConfigType.DELETE).getTeSubdomain()).build());
+
+    }
+
+
+    private SetLabelRangeInput buildLabelRangeInput(ConfigType configType) {
+        return new SetLabelRangeInputBuilder()
+                .setNodeName(NODE_ID)
+                .setLableBase(LABLE_MIN)
+                .setLableRange(LABLE_RANGE_SIZE)
+                .setWriteType(configType)
+                .build();
+    }
+
+    private BierTeLableRange bierTeLableRangeBuild() {
+        return new BierTeLableRangeBuilder()
+                .setLabelBase(new MplsLabel(LABLE_MIN))
+                .setLabelRangeSize(new BierTeLabelRangeSize(LABLE_RANGE_SIZE))
+                .build();
+    }
+
+
+    @Test
+    public void testSetLabelRangeAdd() throws Exception {
+        initInstance();
+        when(bierTeLabelRangeConfigWriter.writeBierTeLabelRange(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setLabelRange(buildLabelRangeInput(ConfigType.ADD));
+        verify(bierTeLabelRangeConfigWriter).writeBierTeLabelRange(ConfigurationType.ADD, NODE_ID,
+                bierTeLableRangeBuild());
+    }
+
+    @Test
+    public void testSetLabelRangeModify() throws Exception {
+        initInstance();
+        when(bierTeLabelRangeConfigWriter.writeBierTeLabelRange(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setLabelRange(buildLabelRangeInput(ConfigType.MODIFY));
+        verify(bierTeLabelRangeConfigWriter).writeBierTeLabelRange(ConfigurationType.MODIFY, NODE_ID,
+                bierTeLableRangeBuild());
+    }
+
+
+
+    @Test
+    public void testSetLabelRangeDelete() throws Exception {
+        initInstance();
+        when(bierTeLabelRangeConfigWriter.writeBierTeLabelRange(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setLabelRange(buildLabelRangeInput(ConfigType.DELETE));
+        verify(bierTeLabelRangeConfigWriter).writeBierTeLabelRange(ConfigurationType.DELETE, NODE_ID,
+                bierTeLableRangeBuild());
+    }
+
+    private Bitstring buildBitstring(Integer bp) {
+        return new BitstringBuilder()
+                .setBitposition(new org.opendaylight.yang.gen.v1.urn.ietf.params.xml
+                        .ns.yang.ietf.bier.te.rev161013.BitString(BP1))
+                .build();
+
+    }
+
+    private List<Integer> getBpList(TePath tePath) {
+        ArrayList<Integer> bpList = new ArrayList<>();
+        List<Bitstring> bitstringList = tePath.getBitstring();
+        for (Bitstring bitstring : bitstringList) {
+            bpList.add(bitstring.getBitposition().getValue());
+        }
+        return bpList;
+
+
+    }
+
+    private List<Bitstring> buildBitstringList() {
+        ArrayList<Bitstring> bitstringArrayList = new ArrayList<>();
+        bitstringArrayList.add(buildBitstring(BP1));
+        bitstringArrayList.add(buildBitstring(BP2));
+        bitstringArrayList.add(buildBitstring(BP3));
+        return bitstringArrayList;
+    }
+
+    private Path buildPath() {
+
+        return new PathBuilder()
+                .setBitstring(buildBitstringList())
+                .setPathId(PATH_ID)
+                .setSubdomainId(SUB_DOMAIN_ID)
+                .setBitstringlength(PATH_BSL)
+                .setSi(PATH_SI)
+                .build();
+
+    }
+
+    private SetBierTeBitstringInput buildBierTeBitstringInput(ConfigType configType) {
+        return new SetBierTeBitstringInputBuilder()
+                .setNodeName(NODE_ID)
+                .setPathId(PATH_ID)
+                .setSi(PATH_SI)
+                .setSubdomainId(SUB_DOMAIN_ID)
+                .setBitstringlength(PATH_BSL)
+                .setWriteType(configType)
+                .setBitstring(buildBitstringList())
+                .build();
+    }
+
+    @Test
+    public void testSetBierTeBitstringAdd() throws Exception {
+        initInstance();
+        when(bierTeBitstringWriter.writeBierTeBitstring(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setBierTeBitstring(buildBierTeBitstringInput(ConfigType.ADD));
+        verify(bierTeBitstringWriter).writeBierTeBitstring(ConfigurationType.ADD, NODE_ID,
+                buildPath());
+    }
+
+    @Test
+    public void testSetBierTeBitstringModify() throws Exception {
+        initInstance();
+        when(bierTeBitstringWriter.writeBierTeBitstring(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setBierTeBitstring(buildBierTeBitstringInput(ConfigType.MODIFY));
+        verify(bierTeBitstringWriter).writeBierTeBitstring(ConfigurationType.MODIFY, NODE_ID,
+                buildPath());
+    }
+
+    @Test
+    public void testSetBierTeBitstringDelete() throws Exception {
+        initInstance();
+        when(bierTeBitstringWriter.writeBierTeBitstring(any(), any(), any())).thenReturn(result);
+        testDriverProvider.setBierTeBitstring(buildBierTeBitstringInput(ConfigType.DELETE));
+        verify(bierTeBitstringWriter).writeBierTeBitstring(ConfigurationType.DELETE, NODE_ID,
+                buildPath());
+    }
+
 
 }
