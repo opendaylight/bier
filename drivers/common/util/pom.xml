@@ -4,17 +4,17 @@
   <parent>
     <groupId>org.opendaylight.controller</groupId>
     <artifactId>config-parent</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.6.2-SNAPSHOT</version>
     <relativePath/>
   </parent>
 
   <groupId>org.opendaylight.bier</groupId>
   <artifactId>bier-driver-common-util</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.1.2-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <properties>
-    <ietf.topology.version>2013.10.21.10.1-SNAPSHOT</ietf.topology.version>
+    <ietf.topology.version>2013.10.21.10.2-SNAPSHOT</ietf.topology.version>
   </properties>
 
   <dependencies>
