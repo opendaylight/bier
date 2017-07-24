@@ -248,9 +248,9 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
         }
 
         BierNode nodeForBp = topoManager.getNodeData(input.getTopologyId(),input.getNodeId());
-        if (!topoManager.checkTpIdExist(input.getTopologyId(),input.getDomainId(),input.getSubDomainId(),
-                input.getBitstringlength(),input.getSi(),input.getTpId(),nodeForBp)) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"Te-Bp is not exist!"));
+        if (!topoManager.checkBitstringlengthExist(input.getTopologyId(),
+                input.getDomainId(),input.getSubDomainId(), input.getBitstringlength(),nodeForBp)) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,"Te-Bsl is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
         if (!topoManager.checkSiExist(input.getTopologyId(),input.getDomainId(),
@@ -259,9 +259,9 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
                     "Te-Si is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
-        if (!topoManager.checkBitstringlengthExist(input.getTopologyId(),
-                input.getDomainId(),input.getSubDomainId(), input.getBitstringlength(),nodeForBp)) {
-            builder.setConfigureResult(RpcUtil.getConfigResult(false,"Te-Bsl is not exist!"));
+        if (!topoManager.checkTpIdExist(input.getTopologyId(),input.getDomainId(),input.getSubDomainId(),
+                input.getBitstringlength(),input.getSi(),input.getTpId(),nodeForBp)) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,"Te-Bp is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
         if (!topoManager.delTeBpFromNode(input.getTopologyId(),input.getDomainId(),input.getSubDomainId(),
@@ -324,9 +324,9 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"input is null!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
-        String topologyId = input.getTopologyId();
+        String topoId = input.getTopologyId();
         String nodeId = input.getNodeId();
-        if (topologyId == null || topologyId.equals("") || nodeId == null || nodeId.equals("")) {
+        if (topoId == null || topoId.equals("") || nodeId == null || nodeId.equals("")) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"input param is error!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
@@ -337,7 +337,7 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        if (!topoManager.deleteTeLabel(topologyId,node)) {
+        if (!topoManager.deleteTeLabel(topoId,node)) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"delete Te Label form datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }

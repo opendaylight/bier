@@ -91,7 +91,6 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.par
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBpKey;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierEncapsulationMpls;
-
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierMplsLabelRangeSize;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Bsl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.IgpType;
@@ -612,6 +611,25 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         ConfigureTeLabelOutput output = configureTeLabel(null,new BierTeLabelRangeSize(5L),"1");
         Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
         Assert.assertTrue(output.getConfigureResult().getErrorCause().equals("label-base is null!"));
+
+        ConfigureTeLabelOutput output1 = configureTeLabel(new MplsLabel(100L),null,"1");
+        Assert.assertTrue(output1.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output1.getConfigureResult().getErrorCause().equals("label-range-size is null!"));
+
+        ConfigureTeLabelOutput output2 = configureTeLabel(new MplsLabel(1048575L),new BierTeLabelRangeSize(1L),"1");
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getConfigureResult().getErrorCause()
+                .equals("label-base plus label-range-size range [0‥1048575]"));
+
+        ConfigureTeLabelOutput output3 = configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(1L),null);
+        Assert.assertTrue(output3.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output3.getConfigureResult().getErrorCause().equals("input param is error!"));
+
+        ConfigureTeLabelOutput output4 = configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(1L),"7");
+        Assert.assertTrue(output4.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output4.getConfigureResult().getErrorCause().equals("node is not exist!"));
+
+
     }
 
     @Test
@@ -743,7 +761,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         configureDomain(1);
         configureSubdomain(1,1);
         configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
-        configureTeNode(1,1,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
         Assert.assertTrue(queryOutput.getNode().get(0).getBierTeNodeParams()
@@ -786,10 +804,9 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void deleteTeBslTest1() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        // add two te-bsl   64bit and 128bit
         configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
-        configureTeNode(1,1,"1");
-        configureTeNode1(1,1,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
+        configureTeNode(1,1,Bsl._128Bit,new Si(2),"192.168.54.14",128,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
         Assert.assertTrue(queryOutput.getNode().get(0).getBierTeNodeParams()
@@ -852,11 +869,39 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void deleteTeBslTest2() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureTeLabel(new MplsLabel(100L),new BierTeLabelRangeSize(5L),"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
+
+        DeleteTeBslOutput output = deleteTeBsl(1,1,null,Bsl._64Bit);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("input param is error!"));
+
+        DeleteTeBslOutput output1 = deleteTeBsl(1,1,"7",Bsl._64Bit);
+        Assert.assertTrue(output1.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output1.getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+
+        DeleteTeBslOutput output2 = deleteTeBsl(3,1,"1",Bsl._64Bit);
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
+
+        DeleteTeBslOutput output3 = deleteTeBsl(1,1,"1",Bsl._128Bit);
+        Assert.assertTrue(output3.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output3.getConfigureResult().getErrorCause()
+                .equals("Te-Bsl is not exist!"));
+    }
+
+    @Test
     public void deleteTeSiTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
         configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
-        configureTeNode(1,1,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
         Assert.assertTrue(queryOutput.getNode().get(0).getBierTeNodeParams()
@@ -900,8 +945,8 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         configureDomain(1);
         configureSubdomain(1,1);
         configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
-        configureTeNode(1,1,"1");
-        configureTeNode2(1,1,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(3),"192.168.54.15",256,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
         Assert.assertTrue(queryOutput.getNode().get(0).getBierTeNodeParams()
@@ -964,11 +1009,45 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void deleteTeSiTest2() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
+
+        DeleteTeSiOutput output = deleteTeSi(1,1,null,Bsl._64Bit,new Si(1));
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("input param is error!"));
+
+        DeleteTeSiOutput output1 = deleteTeSi(1,1,"7",Bsl._64Bit,new Si(1));
+        Assert.assertTrue(output1.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output1.getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+
+        DeleteTeSiOutput output2 = deleteTeSi(3,1,"1",Bsl._64Bit,new Si(1));
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
+
+        DeleteTeSiOutput output3 = deleteTeSi(1,1,"1",Bsl._128Bit,new Si(1));
+        Assert.assertTrue(output3.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output3.getConfigureResult().getErrorCause()
+                .equals("Te-Bsl is not exist!"));
+
+        DeleteTeSiOutput output4 = deleteTeSi(1,1,"1",Bsl._64Bit,new Si(2));
+        Assert.assertTrue(output4.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output4.getConfigureResult().getErrorCause()
+                .equals("Te-Si is not exist!"));
+
+    }
+
+    @Test
     public void deleteTeBpTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
         configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
-        configureTeNode(1,1,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
         Assert.assertTrue(queryOutput.getNode().get(0).getBierTeNodeParams()
@@ -1012,8 +1091,8 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         configureDomain(1);
         configureSubdomain(1,1);
         configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
-        configureTeNode(1,1,"1");
-        configureTeNode3(1,1,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.15",256,"1");
         QueryNodeOutput queryOutput = queryNode();
         Assert.assertTrue(queryOutput.getNode().size() == 1);
         Assert.assertTrue(queryOutput.getNode().get(0).getBierTeNodeParams()
@@ -1072,6 +1151,44 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         Assert.assertTrue(queryOutput.getNode().get(0).getBierTeNodeParams()
                 .getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0).getTeSi().get(0)
                 .getTeBp().get(0).getTpId().equals("192.168.54.13"));
+    }
+
+    @Test
+    public void deleteTeBpTest2() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
+
+        DeleteTeBpOutput output = deleteTeBp(1,1,null,Bsl._64Bit,new Si(1),"192.168.54.13");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("input param is error!"));
+
+        DeleteTeBpOutput output1 = deleteTeBp(1,1,"7",Bsl._64Bit,new Si(1),"192.168.54.13");
+        Assert.assertTrue(output1.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output1.getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+
+        DeleteTeBpOutput output2 = deleteTeBp(3,1,"1",Bsl._64Bit,new Si(1),"192.168.54.13");
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
+
+        DeleteTeBpOutput output3 = deleteTeBp(1,1,"1",Bsl._128Bit,new Si(1),"192.168.54.13");
+        Assert.assertTrue(output3.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output3.getConfigureResult().getErrorCause()
+                .equals("Te-Bsl is not exist!"));
+
+        DeleteTeBpOutput output4 = deleteTeBp(1,1,"1",Bsl._64Bit,new Si(2),"192.168.54.13");
+        Assert.assertTrue(output4.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output4.getConfigureResult().getErrorCause()
+                .equals("Te-Si is not exist!"));
+
+        DeleteTeBpOutput output5 = deleteTeBp(1,1,"1",Bsl._64Bit,new Si(1),"192.168.54.14");
+        Assert.assertTrue(output5.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output5.getConfigureResult().getErrorCause()
+                .equals("Te-Bp is not exist!"));
     }
 
     @Test
@@ -1410,6 +1527,20 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     }
 
     @Test
+    public void deleteTeLabelTest2() throws Exception {
+        DeleteTeLabelInputBuilder inputBuilder = new DeleteTeLabelInputBuilder();
+        inputBuilder.setTopologyId("example-linkstate-topology");
+        inputBuilder.setNodeId(null);
+        RpcResult<DeleteTeLabelOutput> output1 = bierTeConfigImpl.deleteTeLabel(inputBuilder.build()).get();
+        Assert.assertTrue(output1.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output1.getResult().getConfigureResult().getErrorCause().equals("input param is error!"));
+
+        RpcResult<DeleteTeLabelOutput> output2 = bierTeConfigImpl.deleteTeLabel(null).get();
+        Assert.assertTrue(output2.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getResult().getConfigureResult().getErrorCause().equals("input is null!"));
+    }
+
+    @Test
     public void querySubDomainNodeTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -1496,8 +1627,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         configureDomain(1);
         configureSubdomain(1,1);
         configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
-        configureTeNode(1,1,"1");
-
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
         QueryTeSubdomainNodeOutput output = queryTeSubdomainNode(1,1);
         Assert.assertTrue(output.getTeSubdomainNode().size() == 1);
         Assert.assertTrue(output.getTeSubdomainNode().get(0).getNodeId()
@@ -1542,8 +1672,7 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
     public void queryTeSubDomainLinkTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
-        configureTeNode(1,1,"1");
-
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
         QueryTeSubdomainLinkOutput output = queryTeSubdomainLink(1,1);
         Assert.assertTrue(output.getTeSubdomainLink().size() == 0);
     }
@@ -1892,193 +2021,6 @@ public class BierTopologyImplTest extends AbstractDataBrokerTest {
         return output.getResult();
     }
 
-    private ConfigureTeNodeOutput configureTeNode(int domainId,int subDomainId,String nodeId) throws Exception {
-        ConfigureTeNodeInputBuilder inputBuilder = new ConfigureTeNodeInputBuilder();
-        inputBuilder.setTopologyId("example-linkstate-topology");
-        inputBuilder.setNodeId(nodeId);
-
-        TeBpBuilder teBpBuilder = new TeBpBuilder();
-        teBpBuilder.setBitposition(64);
-        teBpBuilder.setTpId("192.168.54.13");
-        teBpBuilder.setKey(new TeBpKey(new java.lang.String("192.168.54.13")));
-        List<TeBp> teBpList = new ArrayList<TeBp>();
-        teBpList.add(teBpBuilder.build());
-
-        TeSiBuilder teSiBuilder = new TeSiBuilder();
-        teSiBuilder.setSi(new Si(1));
-        teSiBuilder.setKey(new TeSiKey(new Si(1)));
-        teSiBuilder.setTeBp(teBpList);
-        List<TeSi> teSiList = new ArrayList<TeSi>();
-        teSiList.add(teSiBuilder.build());
-
-        TeBslBuilder teBslBuilder = new TeBslBuilder();
-        teBslBuilder.setBitstringlength(Bsl._64Bit);
-        teBslBuilder.setKey(new TeBslKey(Bsl._64Bit));
-        teBslBuilder.setTeSi(teSiList);
-        List<TeBsl> teBslList = new ArrayList<>();
-        teBslList.add(teBslBuilder.build());
-
-        TeSubDomainBuilder subDomainBuilder = new TeSubDomainBuilder();
-        subDomainBuilder.setSubDomainId(new SubDomainId(subDomainId));
-        subDomainBuilder.setKey(new TeSubDomainKey(new SubDomainId(subDomainId)));
-        subDomainBuilder.setTeBsl(teBslList);
-        List<TeSubDomain> subDomainList = new ArrayList<TeSubDomain>();
-        subDomainList.add(subDomainBuilder.build());
-
-        TeDomainBuilder domainBuilder = new TeDomainBuilder();
-        domainBuilder.setDomainId(new DomainId(domainId));
-        domainBuilder.setKey(new TeDomainKey(new DomainId(domainId)));
-        domainBuilder.setTeSubDomain(subDomainList);
-        List<TeDomain> domainList = new ArrayList<TeDomain>();
-        domainList.add(domainBuilder.build());
-
-        inputBuilder.setTeDomain(domainList);
-
-        RpcResult<ConfigureTeNodeOutput> output = bierTeConfigImpl.configureTeNode(
-                inputBuilder.build()).get();
-        return output.getResult();
-    }
-
-    private ConfigureTeNodeOutput configureTeNode1(int domainId,int subDomainId,String nodeId) throws Exception {
-        ConfigureTeNodeInputBuilder inputBuilder = new ConfigureTeNodeInputBuilder();
-        inputBuilder.setTopologyId("example-linkstate-topology");
-        inputBuilder.setNodeId(nodeId);
-
-        TeBpBuilder teBpBuilder = new TeBpBuilder();
-        teBpBuilder.setBitposition(128);
-        teBpBuilder.setTpId("192.168.54.14");
-        teBpBuilder.setKey(new TeBpKey(new java.lang.String("192.168.54.14")));
-        List<TeBp> teBpList = new ArrayList<TeBp>();
-        teBpList.add(teBpBuilder.build());
-
-        TeSiBuilder teSiBuilder = new TeSiBuilder();
-        teSiBuilder.setSi(new Si(2));
-        teSiBuilder.setKey(new TeSiKey(new Si(2)));
-        teSiBuilder.setTeBp(teBpList);
-        List<TeSi> teSiList = new ArrayList<TeSi>();
-        teSiList.add(teSiBuilder.build());
-
-        TeBslBuilder teBslBuilder = new TeBslBuilder();
-        teBslBuilder.setBitstringlength(Bsl._128Bit);
-        teBslBuilder.setKey(new TeBslKey(Bsl._128Bit));
-        teBslBuilder.setTeSi(teSiList);
-        List<TeBsl> teBslList = new ArrayList<>();
-        teBslList.add(teBslBuilder.build());
-
-        TeSubDomainBuilder subDomainBuilder = new TeSubDomainBuilder();
-        subDomainBuilder.setSubDomainId(new SubDomainId(subDomainId));
-        subDomainBuilder.setKey(new TeSubDomainKey(new SubDomainId(subDomainId)));
-        subDomainBuilder.setTeBsl(teBslList);
-        List<TeSubDomain> subDomainList = new ArrayList<TeSubDomain>();
-        subDomainList.add(subDomainBuilder.build());
-
-        TeDomainBuilder domainBuilder = new TeDomainBuilder();
-        domainBuilder.setDomainId(new DomainId(domainId));
-        domainBuilder.setKey(new TeDomainKey(new DomainId(domainId)));
-        domainBuilder.setTeSubDomain(subDomainList);
-        List<TeDomain> domainList = new ArrayList<TeDomain>();
-        domainList.add(domainBuilder.build());
-
-        inputBuilder.setTeDomain(domainList);
-
-        RpcResult<ConfigureTeNodeOutput> output = bierTeConfigImpl.configureTeNode(
-                inputBuilder.build()).get();
-        return output.getResult();
-    }
-
-    private ConfigureTeNodeOutput configureTeNode2(int domainId,int subDomainId,String nodeId) throws Exception {
-        ConfigureTeNodeInputBuilder inputBuilder = new ConfigureTeNodeInputBuilder();
-        inputBuilder.setTopologyId("example-linkstate-topology");
-        inputBuilder.setNodeId(nodeId);
-
-        TeBpBuilder teBpBuilder = new TeBpBuilder();
-        teBpBuilder.setBitposition(256);
-        teBpBuilder.setTpId("192.168.54.15");
-        teBpBuilder.setKey(new TeBpKey(new java.lang.String("192.168.54.15")));
-        List<TeBp> teBpList = new ArrayList<TeBp>();
-        teBpList.add(teBpBuilder.build());
-
-        TeSiBuilder teSiBuilder = new TeSiBuilder();
-        teSiBuilder.setSi(new Si(3));
-        teSiBuilder.setKey(new TeSiKey(new Si(3)));
-        teSiBuilder.setTeBp(teBpList);
-        List<TeSi> teSiList = new ArrayList<TeSi>();
-        teSiList.add(teSiBuilder.build());
-
-        TeBslBuilder teBslBuilder = new TeBslBuilder();
-        teBslBuilder.setBitstringlength(Bsl._64Bit);
-        teBslBuilder.setKey(new TeBslKey(Bsl._64Bit));
-        teBslBuilder.setTeSi(teSiList);
-        List<TeBsl> teBslList = new ArrayList<>();
-        teBslList.add(teBslBuilder.build());
-
-        TeSubDomainBuilder subDomainBuilder = new TeSubDomainBuilder();
-        subDomainBuilder.setSubDomainId(new SubDomainId(subDomainId));
-        subDomainBuilder.setKey(new TeSubDomainKey(new SubDomainId(subDomainId)));
-        subDomainBuilder.setTeBsl(teBslList);
-        List<TeSubDomain> subDomainList = new ArrayList<TeSubDomain>();
-        subDomainList.add(subDomainBuilder.build());
-
-        TeDomainBuilder domainBuilder = new TeDomainBuilder();
-        domainBuilder.setDomainId(new DomainId(domainId));
-        domainBuilder.setKey(new TeDomainKey(new DomainId(domainId)));
-        domainBuilder.setTeSubDomain(subDomainList);
-        List<TeDomain> domainList = new ArrayList<TeDomain>();
-        domainList.add(domainBuilder.build());
-
-        inputBuilder.setTeDomain(domainList);
-
-        RpcResult<ConfigureTeNodeOutput> output = bierTeConfigImpl.configureTeNode(
-                inputBuilder.build()).get();
-        return output.getResult();
-    }
-
-    private ConfigureTeNodeOutput configureTeNode3(int domainId,int subDomainId,String nodeId) throws Exception {
-        ConfigureTeNodeInputBuilder inputBuilder = new ConfigureTeNodeInputBuilder();
-        inputBuilder.setTopologyId("example-linkstate-topology");
-        inputBuilder.setNodeId(nodeId);
-
-        TeBpBuilder teBpBuilder = new TeBpBuilder();
-        teBpBuilder.setBitposition(256);
-        teBpBuilder.setTpId("192.168.54.15");
-        teBpBuilder.setKey(new TeBpKey(new java.lang.String("192.168.54.15")));
-        List<TeBp> teBpList = new ArrayList<TeBp>();
-        teBpList.add(teBpBuilder.build());
-
-        TeSiBuilder teSiBuilder = new TeSiBuilder();
-        teSiBuilder.setSi(new Si(1));
-        teSiBuilder.setKey(new TeSiKey(new Si(1)));
-        teSiBuilder.setTeBp(teBpList);
-        List<TeSi> teSiList = new ArrayList<TeSi>();
-        teSiList.add(teSiBuilder.build());
-
-        TeBslBuilder teBslBuilder = new TeBslBuilder();
-        teBslBuilder.setBitstringlength(Bsl._64Bit);
-        teBslBuilder.setKey(new TeBslKey(Bsl._64Bit));
-        teBslBuilder.setTeSi(teSiList);
-        List<TeBsl> teBslList = new ArrayList<>();
-        teBslList.add(teBslBuilder.build());
-
-        TeSubDomainBuilder subDomainBuilder = new TeSubDomainBuilder();
-        subDomainBuilder.setSubDomainId(new SubDomainId(subDomainId));
-        subDomainBuilder.setKey(new TeSubDomainKey(new SubDomainId(subDomainId)));
-        subDomainBuilder.setTeBsl(teBslList);
-        List<TeSubDomain> subDomainList = new ArrayList<TeSubDomain>();
-        subDomainList.add(subDomainBuilder.build());
-
-        TeDomainBuilder domainBuilder = new TeDomainBuilder();
-        domainBuilder.setDomainId(new DomainId(domainId));
-        domainBuilder.setKey(new TeDomainKey(new DomainId(domainId)));
-        domainBuilder.setTeSubDomain(subDomainList);
-        List<TeDomain> domainList = new ArrayList<TeDomain>();
-        domainList.add(domainBuilder.build());
-
-        inputBuilder.setTeDomain(domainList);
-
-        RpcResult<ConfigureTeNodeOutput> output = bierTeConfigImpl.configureTeNode(
-                inputBuilder.build()).get();
-        return output.getResult();
-    }
 
     private ConfigureTeLabelOutput configureTeLabel(MplsLabel labelBase,BierTeLabelRangeSize labelRangeSize,
                                                     String nodeId) throws Exception {

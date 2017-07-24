@@ -44,6 +44,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNo
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRange;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeNodeParamsBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPoint;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPointBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPointKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomain;
@@ -654,6 +657,51 @@ public class BierDataManager {
         }
         LOG.error("Get bier node is faild!");
         return null;
+    }
+
+    public boolean deleteBierTerminationPoint(final String topologyId,String nodeId,String tpId) {
+        if (null == dataBroker || null == tpId) {
+            LOG.error("Del bier Termination Point input is error!");
+            return false;
+        }
+
+        BierDataProcess<BierTerminationPoint> processor =  new BierDataProcess<BierTerminationPoint>(dataBroker,
+                BierDataProcess.FLAG_WRITE,(new BierTerminationPointBuilder()).build());
+        final InstanceIdentifier<BierTerminationPoint> path = getBierTerminationPointPath(topologyId,nodeId,tpId);
+
+        processor.enqueueOperation(new BierDataOperation() {
+            @Override
+            public void writeOperation(ReadWriteTransaction transaction) {
+                transaction.delete(datastoreType,path);
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public ListenableFuture<Optional<Node>> readOperation(ReadWriteTransaction transaction) {
+                return null;
+            }
+        });
+
+        Future<ListenableFuture<BierTerminationPoint>> future = EXECUTOR.submit(processor);
+
+        try {
+            ListenableFuture<BierTerminationPoint> result = future.get();
+            if (null == result.get()) {
+                LOG.error("Del bier termination point failed!");
+                return false;
+            }
+
+            LOG.info("Del bier termination point succeed!");
+            return true;
+        } catch (InterruptedException e) {
+            LOG.error("Del bier termination point is Interrupted by", e);
+        } catch (ExecutionException e) {
+            LOG.error("Del bier termination point is faild cause by", e);
+        }
+
+
+        LOG.error("Del bier termination point failed!");
+        return false;
     }
 
     public boolean delTeBslFromNode(String topologyId,final DomainId domainId,
@@ -1644,6 +1692,14 @@ public class BierDataManager {
         return path;
     }
 
+    public InstanceIdentifier<BierTerminationPoint> getBierTerminationPointPath(String topologyId,String nodeId,
+                                                                                String tpId) {
+        InstanceIdentifier<BierNode> nodePath = getNodePath(topologyId,nodeId);
+        InstanceIdentifier<BierTerminationPoint> path = nodePath.child(BierTerminationPoint.class,
+                new BierTerminationPointKey(tpId));
+        return path;
+    }
+
     public InstanceIdentifier<BierTeLableRange> getLabelPath(String topologyId,String nodeId) {
         InstanceIdentifier<BierNode> nodePath = getNodePath(topologyId,nodeId);
         InstanceIdentifier<BierTeLableRange> path = nodePath.child(BierTeLableRange.class);
@@ -1706,6 +1762,21 @@ public class BierDataManager {
         return labelList;
     }
 
+    public List<Long> checkFtLabel(List<TeBsl> teBslList,List<Long> labelList) {
+        int teBslSize = teBslList.size();
+        for (int kloop = 0; kloop < teBslSize; ++kloop) {
+            List<TeSi> teSiList = teBslList.get(kloop).getTeSi();
+            if (teSiList == null) {
+                return labelList;
+            }
+            int teSiSize = teSiList.size();
+            for (int lloop = 0; lloop < teSiSize; ++lloop) {
+                Long ftLabel = teSiList.get(lloop).getFtLabel().getValue();
+                labelList.add(ftLabel);
+            }
+        }
+        return labelList;
+    }
 
     public Long buildFtLabel(String topologyId,BierNode node) {
         BierNode existNode = getNodeData(topologyId, node.getNodeId());
@@ -1753,22 +1824,6 @@ public class BierDataManager {
         return true;
     }
 
-
-    public List<Long> checkFtLabel(List<TeBsl> teBslList,List<Long> labelList) {
-        int teBslSize = teBslList.size();
-        for (int kloop = 0; kloop < teBslSize; ++kloop) {
-            List<TeSi> teSiList = teBslList.get(kloop).getTeSi();
-            if (teSiList == null) {
-                return labelList;
-            }
-            int teSiSize = teSiList.size();
-            for (int lloop = 0; lloop < teSiSize; ++lloop) {
-                Long ftLabel = teSiList.get(lloop).getFtLabel().getValue();
-                labelList.add(ftLabel);
-            }
-        }
-        return labelList;
-    }
 
     public boolean checkTpId(String topologyId,BierNode node) {
         BierNode existNode = getNodeData(topologyId, node.getNodeId());
@@ -2161,6 +2216,14 @@ public class BierDataManager {
                             errorMsg = "te-bp is null or empty!";
                             return errorMsg;
                         }
+                        int teBpSize = teBpList.size();
+                        for (int bpLoop = 0; bpLoop < teBpSize; bpLoop++) {
+                            TeBp teBp = teBpList.get(bpLoop);
+                            if (teBp.getTpId() == null || teBp.getBitposition() == null) {
+                                errorMsg = "tp-id or bitposition is null or empty!";
+                                return errorMsg;
+                            }
+                        }
                     }
                 }
             }
@@ -2179,6 +2242,12 @@ public class BierDataManager {
         BierTeLabelRangeSize labelRangeSize = teLableRangeBuilder.getLabelRangeSize();
         if (labelRangeSize == null) {
             errorMsg = "label-range-size is null!";
+            return errorMsg;
+        }
+
+        Long plus = labelBase.getValue() + labelRangeSize.getValue();
+        if (plus < 0L || plus > 1048575L) {
+            errorMsg = "label-base plus label-range-size range [0‥1048575]";
             return errorMsg;
         }
 

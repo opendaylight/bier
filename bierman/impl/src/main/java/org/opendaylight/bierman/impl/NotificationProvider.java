@@ -7,7 +7,6 @@
  */
 package org.opendaylight.bierman.impl;
 
-
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.yangtools.yang.binding.Notification;
 import org.slf4j.Logger;
