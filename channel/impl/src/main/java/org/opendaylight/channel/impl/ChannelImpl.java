@@ -7,6 +7,7 @@
  */
 package org.opendaylight.channel.impl;
 
+import com.google.common.base.Optional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannel
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelWithPortInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelWithPortOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelWithPortOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelOutputBuilder;
@@ -44,6 +48,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.o
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.ChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.EgressNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.channel.egress.node.RcvTpBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.with.port.output.QueryChannel;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.with.port.output.QueryChannelBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.egress.node.RcvTp;
@@ -102,6 +109,74 @@ public class ChannelImpl implements BierChannelApiService {
         }
         output.setConfigureResult(buildConfigResult(ConfigureResult.Result.SUCCESS,""));
         return RpcReturnUtil.returnRpcResult(output.build());
+    }
+
+    @Override
+    public Future<RpcResult<QueryChannelWithPortOutput>> queryChannelWithPort(QueryChannelWithPortInput input) {
+        if (input == null || input.getDomainId() == null || input.getSubDomainId() == null
+                || input.getNodeId() == null || input.getTpId() == null) {
+            return RpcReturnUtil.returnErr("input is null, or domain, sub-domain, node-id, tp-id is null!");
+        }
+        Optional<BierChannel> bierChannel = channelDBUtil.readBierChannel(channelDBUtil.DEFAULT_TOPO_ID);
+        List<QueryChannel> outputChannels = new ArrayList<>();
+        if (bierChannel != null && bierChannel.isPresent()) {
+            List<Channel> channels = bierChannel.get().getChannel();
+            if (!channels.isEmpty()) {
+                for (Channel  channel : channels) {
+                    if (channelDBUtil.hasChannelDeplyed(channel.getName(),null)) {
+                        findTpFromChannel(input, channel, outputChannels);
+                    }
+                }
+            }
+        }
+        QueryChannelWithPortOutput output = new QueryChannelWithPortOutputBuilder()
+                .setQueryChannel(outputChannels).build();
+        return RpcReturnUtil.returnRpcResult(output);
+    }
+
+    private void findTpFromChannel(QueryChannelWithPortInput input, Channel channel,
+                                   List<QueryChannel> outputChannels) {
+        if (channel.getDomainId().equals(input.getDomainId())
+                && channel.getSubDomainId().equals(input.getSubDomainId())) {
+            if (isSrcTp(input, channel)) {
+                addChannelInfo(channel,outputChannels,false);
+            } else {
+                for (EgressNode egressNode : channel.getEgressNode()) {
+                    if (isRcvTp(input, egressNode)) {
+                        addChannelInfo(channel, outputChannels,true);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isRcvTp(QueryChannelWithPortInput input, EgressNode egressNode) {
+        return egressNode.getNodeId().equals(input.getNodeId())
+                && isTpInRcvTpList(input.getTpId(),egressNode.getRcvTp());
+    }
+
+    private boolean isTpInRcvTpList(String tpId, List<RcvTp> rcvTps) {
+        if (rcvTps != null) {
+            for (RcvTp rcvTp : rcvTps) {
+                if (rcvTp.getTp().equals(tpId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void addChannelInfo(Channel channel,
+                                List<QueryChannel> outputChannels, boolean isRcvTp) {
+        outputChannels.add(new QueryChannelBuilder()
+                .setChannelName(channel.getName())
+                .setBfir(channel.getIngressNode())
+                .setIsRcvTp(isRcvTp).build());
+    }
+
+    private boolean isSrcTp(QueryChannelWithPortInput input, Channel channel) {
+        return channel.getIngressNode().equals(input.getNodeId()) && channel.getSrcTp().equals(input.getTpId());
     }
 
     public ConfigureResult buildConfigResult(ConfigureResult.Result result, String errorMsg) {

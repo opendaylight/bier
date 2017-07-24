@@ -64,7 +64,7 @@ public class ChannelDBUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ChannelDBUtil.class);
     private ChannelDBContext context;
     private static ChannelDBUtil instance = new ChannelDBUtil();
-    private static final String DEFAULT_TOPO_ID = "example-linkstate-topology";
+    public static final String DEFAULT_TOPO_ID = "example-linkstate-topology";
 
     ChannelDBUtil() {
     }
@@ -109,7 +109,7 @@ public class ChannelDBUtil {
         return channel.get();
     }
 
-    private Optional<BierChannel> readBierChannel(String topologyId) {
+    public Optional<BierChannel> readBierChannel(String topologyId) {
         ReadOnlyTransaction rtx = context.newReadOnlyTransaction();
         try {
             return rtx.read(LogicalDatastoreType.CONFIGURATION,
@@ -263,7 +263,7 @@ public class ChannelDBUtil {
         try {
             return rtx.read(LogicalDatastoreType.CONFIGURATION,
                     buildBierGlobalPath(topologyId,nodeId,domainId)).get().get();
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (ExecutionException | InterruptedException | IllegalStateException e) {
             LOG.warn("Channel:occur exception when read databroker {}", e);
             return null;
         }

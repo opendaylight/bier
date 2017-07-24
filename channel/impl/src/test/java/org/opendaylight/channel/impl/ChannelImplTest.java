@@ -36,6 +36,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelI
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelWithPortInput;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelWithPortInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelWithPortOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannelOutput;
@@ -47,6 +50,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.o
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.get.channel.output.ChannelNameBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.output.ChannelBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.with.port.output.QueryChannel;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.with.port.output.QueryChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
@@ -451,6 +456,69 @@ public class ChannelImplTest extends AbstractDataBrokerTest {
         RpcResult<QueryChannelOutput> result = channelImpl.queryChannel(new QueryChannelInputBuilder().build()).get();
         Assert.assertFalse(result.isSuccessful());
         Assert.assertEquals("input or channel-name is null!",result.getErrors().iterator().next().getMessage());
+    }
+
+
+    @Test
+    public void queryChannelWithPortTest() throws Exception {
+        addChannel("channel-1",1,11,"1.1.1.1","224.1.1.1",(short)24,(short)30);
+        addChannel("channel-2",1,11,"2.2.2.2","225.1.1.1",(short)24,(short)30);
+        addChannel("channel-3",1,11,"1.1.1.1","226.1.1.1",(short)24,(short)30);
+
+        RpcResult<QueryChannelWithPortOutput> output = queryChannelWithPort(1,11,null,"tp1");
+        Assert.assertTrue(!output.isSuccessful());
+        Assert.assertEquals("input is null, or domain, sub-domain, node-id, tp-id is null!",
+                output.getErrors().iterator().next().getMessage());
+
+        output = queryChannelWithPort(1,11,"node1","tp1");
+        Assert.assertTrue(output.isSuccessful());
+        Assert.assertTrue(output.getResult().getQueryChannel().isEmpty());
+
+
+        deployChannel("channel-1","tp1","tp2","tp3", BierForwardingType.BierTe);
+        deployChannel("channel-2","tp2","tp3","tp4", BierForwardingType.BierTe);
+        deployChannel("channel-3","tp3","tp1",null, BierForwardingType.BierTe);
+
+        output = queryChannelWithPort(1,11,"node1","tp1");
+        Assert.assertTrue(output.isSuccessful());
+        Assert.assertEquals(1,output.getResult().getQueryChannel().size());
+        QueryChannel exChannel = new QueryChannelBuilder()
+                .setChannelName("channel-1").setBfir("node1").setIsRcvTp(false).build();
+        Assert.assertTrue(output.getResult().getQueryChannel().contains(exChannel));
+
+        output = queryChannelWithPort(1,11,"node3","tp4");
+        Assert.assertTrue(output.isSuccessful());
+        Assert.assertEquals(1,output.getResult().getQueryChannel().size());
+        exChannel = new QueryChannelBuilder()
+                .setChannelName("channel-2").setBfir("node1").setIsRcvTp(true).build();
+        Assert.assertTrue(output.getResult().getQueryChannel().contains(exChannel));
+
+        output = queryChannelWithPort(1,11,"node3","tp3");
+        Assert.assertTrue(output.isSuccessful());
+        Assert.assertEquals(2,output.getResult().getQueryChannel().size());
+        exChannel = new QueryChannelBuilder()
+                .setChannelName("channel-1").setBfir("node1").setIsRcvTp(true).build();
+        Assert.assertTrue(output.getResult().getQueryChannel().contains(exChannel));
+        exChannel = new QueryChannelBuilder()
+                .setChannelName("channel-2").setBfir("node1").setIsRcvTp(true).build();
+        Assert.assertTrue(output.getResult().getQueryChannel().contains(exChannel));
+
+        output = queryChannelWithPort(2,11,"node3","tp3");
+        Assert.assertTrue(output.isSuccessful());
+        Assert.assertTrue(output.getResult().getQueryChannel().isEmpty());
+
+    }
+
+    private RpcResult<QueryChannelWithPortOutput> queryChannelWithPort(Integer domainId, Integer subDomainId,
+                                                                      String node, String tp)
+            throws ExecutionException, InterruptedException {
+        QueryChannelWithPortInput input = new QueryChannelWithPortInputBuilder()
+                .setDomainId(new DomainId(domainId))
+                .setSubDomainId(new SubDomainId(subDomainId))
+                .setNodeId(node)
+                .setTpId(tp)
+                .build();
+        return channelImpl.queryChannelWithPort(input).get();
     }
 
     private void assertQueryChannelData(Channel expectChannel, Channel actualChannel) {

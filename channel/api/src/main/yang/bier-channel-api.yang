@@ -21,15 +21,15 @@ module bier-channel-api {
 		input {
 			leaf topology-id {
 			  type string;
-		  }
+		    }
 		}
 		output {
-		  list channel-name {
-					key name;
-					leaf name {
-						type string;
-					}
-				}
+		    list channel-name {
+                key name;
+                leaf name {
+                    type string;
+                }
+            }
 		}
 	}
 	
@@ -38,9 +38,9 @@ module bier-channel-api {
 		    leaf topology-id {
 			    type string;
 		    }
-				leaf-list channel-name {
-					type string;
-				}
+            leaf-list channel-name {
+                type string;
+            }
 		}
 		output {
 				list channel {
@@ -138,6 +138,39 @@ module bier-channel-api {
 		output {
            uses bier-common:configure-result;
 		}
+	}
+
+	rpc query-channel-with-port {
+	    input {
+            leaf domain-id {
+              type bier-common:domain-id;
+            }
+
+            leaf sub-domain-id {
+              type bier:sub-domain-id;
+            }
+	        leaf node-id {
+	            type string;
+	        }
+	        leaf tp-id {
+	            type string;
+	        }
+
+	    }
+
+        output {
+            list query-channel {
+                leaf channel-name {
+                    type string;
+                }
+                leaf bfir {
+                    type string;
+                }
+                leaf is-rcv-tp {
+                    type boolean;
+                }
+            }
+        }
 	}
 
 }				

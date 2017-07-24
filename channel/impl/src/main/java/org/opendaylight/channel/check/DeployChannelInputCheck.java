@@ -140,6 +140,9 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
                 Preconditions.checkNotNull(input.getSrcTp(), SRC_TP_IS_NULL);
             }
             Preconditions.checkNotNull(input.getEgressNode(), EGRESS_IS_NULL);
+            if (input.getEgressNode().isEmpty()) {
+                return new CheckResult(true,EGRESS_IS_NULL);
+            }
             for (EgressNode egressNode : input.getEgressNode()) {
                 Preconditions.checkNotNull(egressNode.getNodeId(),EGRESS_NODE_ID_IS_NULL);
                 if (input.getBierForwardingType().equals(BierForwardingType.BierTe)) {

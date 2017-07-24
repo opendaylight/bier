@@ -7,12 +7,10 @@
  */
 package org.opendaylight.channel.check;
 
-
 import com.google.common.base.Preconditions;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class AddChannelInputCheck extends ChannelInputCheck {
     private AddChannelInput addChannelInput;
