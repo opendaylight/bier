@@ -7,7 +7,6 @@
  */
 package org.opendaylight.bier.driver.common.reporter;
 
-
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.yang.gen.v1.urn.bier.driver.reporter.rev170213.DriverFailure;
 import org.opendaylight.yang.gen.v1.urn.bier.driver.reporter.rev170213.DriverFailureBuilder;

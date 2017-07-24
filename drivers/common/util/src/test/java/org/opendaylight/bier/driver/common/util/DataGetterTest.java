@@ -19,8 +19,6 @@ import static org.mockito.Mockito.when;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 import org.junit.Test;
-
-
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.driver.common.util.DataGetter;
 import org.opendaylight.bier.driver.common.util.IidBuilder;

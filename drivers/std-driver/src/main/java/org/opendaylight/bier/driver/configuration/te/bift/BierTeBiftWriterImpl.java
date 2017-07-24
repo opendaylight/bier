@@ -7,7 +7,6 @@
  */
 package org.opendaylight.bier.driver.configuration.te.bift;
 
-
 import com.google.common.util.concurrent.CheckedFuture;
 import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;

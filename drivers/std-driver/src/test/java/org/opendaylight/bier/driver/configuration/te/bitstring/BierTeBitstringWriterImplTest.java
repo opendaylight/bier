@@ -7,18 +7,15 @@
  */
 package test.org.opendaylight.bier.driver.configuration.te.bitstring;
 
-
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.base.Optional;
 import java.util.ArrayList;
-
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +31,6 @@ import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.TePath;
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.Path;
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.PathBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.te.path.Bitstring;
-
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.te.path.BitstringBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Bsl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Si;

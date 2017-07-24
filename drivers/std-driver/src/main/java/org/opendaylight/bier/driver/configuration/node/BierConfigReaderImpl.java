@@ -8,10 +8,7 @@
 package org.opendaylight.bier.driver.configuration.node;
 
 import org.opendaylight.bier.adapter.api.BierConfigReader;
-
 import org.opendaylight.bier.driver.NetconfDataOperator;
-
-
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.BierGlobal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

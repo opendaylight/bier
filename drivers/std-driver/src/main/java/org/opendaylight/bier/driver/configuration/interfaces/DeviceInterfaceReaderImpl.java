@@ -8,7 +8,6 @@
 
 package org.opendaylight.bier.driver.configuration.interfaces;
 
-
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import java.util.List;

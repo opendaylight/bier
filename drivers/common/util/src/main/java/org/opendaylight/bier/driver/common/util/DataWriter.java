@@ -7,7 +7,6 @@
  */
 package org.opendaylight.bier.driver.common.util;
 
-
 import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;

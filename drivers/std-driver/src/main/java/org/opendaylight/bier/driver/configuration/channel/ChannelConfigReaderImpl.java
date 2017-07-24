@@ -10,19 +10,11 @@ package org.opendaylight.bier.driver.configuration.channel;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import java.util.List;
-
 import org.opendaylight.bier.adapter.api.ChannelConfigReader;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 import org.opendaylight.bier.driver.common.util.IidBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
-
-
-
-
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
-
-
-
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.bier.node.EgressNodes;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.PureMulticast;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;

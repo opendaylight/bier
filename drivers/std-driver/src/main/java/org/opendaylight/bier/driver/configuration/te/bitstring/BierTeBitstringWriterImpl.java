@@ -13,17 +13,12 @@ import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 import org.opendaylight.bier.driver.common.util.DataWriter;
-
-
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.BierTePath;
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.TePath;
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.Path;
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.PathBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.PathKey;
-
-
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

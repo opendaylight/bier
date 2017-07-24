@@ -7,17 +7,12 @@
  */
 package test.org.opendaylight.bier.driver.common.util;
 
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-
 import static org.mockito.Mockito.when;
 
 import com.google.common.util.concurrent.CheckedFuture;
-
 import org.junit.Test;
-
-
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
