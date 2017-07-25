@@ -9,6 +9,7 @@
 package org.opendaylight.bier.pce.impl.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 import org.opendaylight.bier.pce.impl.provider.DbProvider;
 import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.BferKey;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.bfer.BierPath;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.bfer.BierPathBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.input.Bfer;
@@ -24,8 +26,12 @@ import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.links.PathLink;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.links.PathLinkBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.instance.path.output.Link;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.instance.path.output.LinkBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.channel.through.port.output.RelatedChannel;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.channel.through.port.output.RelatedChannelBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.BierTEData;
 import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstance;
 import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstanceBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstanceKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
@@ -58,6 +64,18 @@ public class Utils {
         assertEquals(actualPath.get(2).getLinkDest().getDestNode(), node4);
     }
 
+    public static void checkLinkId(List<Link> actualLink, BierLink link1, BierLink link2, BierLink link3) {
+        assertEquals(3, actualLink.size());
+        assertTrue(actualLink.contains(new LinkBuilder().setLinkId(link1.getLinkId()).build()));
+        assertTrue(actualLink.contains(new LinkBuilder().setLinkId(link2.getLinkId()).build()));
+        assertTrue(actualLink.contains(new LinkBuilder().setLinkId(link3.getLinkId()).build()));
+    }
+
+    public static void checkLinkId(List<Link> actualLink, BierLink link1) {
+        assertEquals(1, actualLink.size());
+        assertTrue(actualLink.contains(new LinkBuilder().setLinkId(link1.getLinkId()).build()));
+    }
+
     public static void checkPathNull(List<PathLink> actualPath) {
         assertEquals(actualPath.size(),0);
     }
@@ -76,6 +94,28 @@ public class Utils {
         for (BierLink link:links) {
             writeLinkToDB(link);
         }
+    }
+
+    public static void deleteLinkInDB(BierLink link) {
+        InstanceIdentifier<BierLink> path = InstanceIdentifier.builder(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(TopologyProvider.DEFAULT_TOPO_ID_STRING))
+                .child(BierLink.class, new BierLinkKey(link.getLinkId()))
+                .build();
+        DbProvider.getInstance().deleteData(LogicalDatastoreType.CONFIGURATION,path);
+    }
+
+    public static BierPath readBierPath(String channelName, String bferNode) {
+
+        InstanceIdentifier<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328
+                .bierpath.Bfer> path = InstanceIdentifier.builder(BierTEData.class)
+                .child(BierTEInstance.class, new BierTEInstanceKey(channelName))
+                .child(org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328
+                        .bierpath.Bfer.class, new BferKey(bferNode))
+                .build();
+        org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328
+                .bierpath.Bfer bfer = DbProvider.getInstance().readData(LogicalDatastoreType.OPERATIONAL,path);
+        return bfer.getBierPath();
+
     }
 
     public static List<Bfer> build2BferInfo(String nodeId1, String nodeId2) {
@@ -102,6 +142,14 @@ public class Utils {
         }
     }
 
+
+    public static void assertBierPath(List<PathLink> pathList, BierPath bierPathData) {
+        assertEquals(pathList.size(),bierPathData.getPathLink().size());
+        for (PathLink pathLink : bierPathData.getPathLink()) {
+            PathLink linkTemp = new PathLinkBuilder(pathLink).build();
+            pathList.contains(linkTemp);
+        }
+    }
 
     public static BierTEInstance buildBierTeInstanceData(String channelName, String bfirNode, String bferNode1,
                                                          String bferNode2) {
@@ -175,5 +223,11 @@ public class Utils {
 
     private static String buildLinkId(String srcNode, String srcPort, String destPort, String destNode) {
         return srcNode + srcPort + destPort + destNode;
+    }
+
+    public static void assertChannelInfo(String channelName, String bfirNode, List<RelatedChannel> channels) {
+        assertEquals(1,channels.size());
+        assertTrue(channels.contains(new RelatedChannelBuilder().setChannelName(channelName)
+                .setBfir(bfirNode).build()));
     }
 }

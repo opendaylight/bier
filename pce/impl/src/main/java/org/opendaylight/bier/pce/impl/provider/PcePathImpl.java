@@ -10,14 +10,19 @@ package org.opendaylight.bier.pce.impl.provider;
 
 import com.google.common.util.concurrent.Futures;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
+import org.apache.mina.util.ConcurrentHashSet;
 import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
 import org.opendaylight.bier.pce.impl.biertepath.BierTeInstance;
 import org.opendaylight.bier.pce.impl.biertepath.SingleBierPath;
+import org.opendaylight.bier.pce.impl.pathcore.BierTesRecordPerPort;
+import org.opendaylight.bier.pce.impl.pathcore.PortKey;
 import org.opendaylight.bier.pce.impl.util.ComUtility;
 import org.opendaylight.bier.pce.impl.util.RpcReturnUtils;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.BierPceService;
@@ -30,10 +35,15 @@ import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierInstancePath
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierPathOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortInput;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.path.output.BierPathBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.channel.through.port.output.RelatedChannel;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.channel.through.port.output.RelatedChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -105,6 +115,29 @@ public class PcePathImpl implements BierPceService {
         output.setChannelName(input.getChannelName());
         output.setBfirNodeId(input.getBfirNodeId());
         output.setBfer(bierTeInstance.buildBfers());
+
+        return Futures.immediateFuture(RpcResultBuilder.success(output).build());
+    }
+
+    @Override
+    public Future<RpcResult<QueryChannelThroughPortOutput>> queryChannelThroughPort(QueryChannelThroughPortInput
+                                                                                                input) {
+        if (input == null || input.getNodeId() == null || input.getTpId() == null) {
+            return RpcReturnUtils.returnErr("input is null, or node-id is null, or tp-id is null!");
+        }
+        Set<BierPathUnifyKey> paths = BierTesRecordPerPort.getInstance()
+                .getPathsRecord(new PortKey(input.getNodeId(),input.getTpId()));
+        Set<RelatedChannel> channelSet = new ConcurrentHashSet<>();
+        if (paths != null) {
+            for (BierPathUnifyKey path : paths) {
+                channelSet.add(new RelatedChannelBuilder()
+                        .setChannelName(path.getChannelName())
+                        .setBfir(path.getBfirNode())
+                        .build());
+            }
+        }
+        QueryChannelThroughPortOutput output = new QueryChannelThroughPortOutputBuilder()
+                .setRelatedChannel(new ArrayList<RelatedChannel>(channelSet)).build();
 
         return Futures.immediateFuture(RpcResultBuilder.success(output).build());
     }

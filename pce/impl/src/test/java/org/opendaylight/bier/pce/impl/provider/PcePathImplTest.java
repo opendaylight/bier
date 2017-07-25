@@ -41,12 +41,16 @@ import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierInstancePath
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierPathInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierPathOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortInput;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.links.PathLinkBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.instance.path.output.Link;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.channel.through.port.output.RelatedChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.pcedata.rev170328.biertedata.BierTEInstance;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 
@@ -399,6 +403,12 @@ public class PcePathImplTest extends AbstractConcurrentDataBrokerTest {
         BierTEInstance bierTEInstanceData = PcePathDb.getInstance().readBierInstance("channel-1");
         assertEquals(null,bierTEInstanceData);
 
+        QueryBierInstancePathInput queryBierTe = new QueryBierInstancePathInputBuilder()
+                .setChannelName("channel-1").build();
+        QueryBierInstancePathOutput queryOutput = pcePathProvider.queryBierInstancePath(queryBierTe).get().getResult();
+        List<Link> links = queryOutput.getLink();
+        assertTrue(links == null);
+
     }
 
     @Test
@@ -412,6 +422,15 @@ public class PcePathImplTest extends AbstractConcurrentDataBrokerTest {
                 .build();
         Future<RpcResult<CreateBierPathOutput>> output = pcePathProvider.createBierPath(input);
         assertTrue(output.get().isSuccessful());
+
+        QueryBierInstancePathInput queryBierTe = new QueryBierInstancePathInputBuilder()
+                .setChannelName("channel-1").build();
+        QueryBierInstancePathOutput queryOutput = pcePathProvider.queryBierInstancePath(queryBierTe).get().getResult();
+        List<Link> links = queryOutput.getLink();
+        BierLink link14 = TopoMockUtils.buildLink("1.1.1.1","14.14.14.14","41.41.41.41","4.4.4.4",10);
+        BierLink link45 = TopoMockUtils.buildLink("4.4.4.4","45.45.45.45","54.54.54.54","5.5.5.5",10);
+        BierLink link56 = TopoMockUtils.buildLink("5.5.5.5","56.56.56.56","65.65.65.65","6.6.6.6",10);
+        Utils.checkLinkId(links,link14,link45,link56);
 
         List<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.remove.bier.path.input
                 .Bfer> bferList = new ArrayList<>();
@@ -457,6 +476,24 @@ public class PcePathImplTest extends AbstractConcurrentDataBrokerTest {
                 }
             }
         }
+
+        bferList.clear();
+        bferList.add(new org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.remove.bier.path.input
+                .BferBuilder().setBferNodeId("6.6.6.6").build());
+        removeInput = new RemoveBierPathInputBuilder()
+                .setChannelName("channel-1")
+                .setBfirNodeId("1.1.1.1")
+                .setBfer(bferList)
+                .build();
+        removeOutput = pcePathProvider.removeBierPath(removeInput);
+        assertTrue(removeOutput.get().isSuccessful());
+
+        bfers = removeOutput.get().getResult().getBfer();
+        assertEquals(1,bfers.size());
+
+        queryOutput = pcePathProvider.queryBierInstancePath(queryBierTe).get().getResult();
+        links = queryOutput.getLink();
+        Utils.checkLinkId(links,link14);
 
         removeBierInstance("channel-1","1.1.1.1");
     }
@@ -507,6 +544,15 @@ public class PcePathImplTest extends AbstractConcurrentDataBrokerTest {
         assertNotEquals(null,bierTEInstanceData);
         assertTrue(bierTEInstanceData.getBfer().size() == 1);
 
+        QueryBierInstancePathInput queryBierTe = new QueryBierInstancePathInputBuilder()
+                .setChannelName("channel-1").build();
+        QueryBierInstancePathOutput queryOutput = pcePathProvider.queryBierInstancePath(queryBierTe).get().getResult();
+        List<Link> links = queryOutput.getLink();
+        BierLink link14 = TopoMockUtils.buildLink("1.1.1.1","14.14.14.14","41.41.41.41","4.4.4.4",10);
+        BierLink link45 = TopoMockUtils.buildLink("4.4.4.4","45.45.45.45","54.54.54.54","5.5.5.5",10);
+        BierLink link56 = TopoMockUtils.buildLink("5.5.5.5","56.56.56.56","65.65.65.65","6.6.6.6",10);
+        Utils.checkLinkId(links,link14,link45,link56);
+
         bferList.clear();
         bferList.add(new org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.remove.bier.path.input
                 .BferBuilder().setBferNodeId("6.6.6.6").build());
@@ -526,6 +572,9 @@ public class PcePathImplTest extends AbstractConcurrentDataBrokerTest {
         bierTEInstanceData = PcePathDb.getInstance().readBierInstance("channel-1");
         assertEquals(null,bierTEInstanceData);
 
+        queryOutput = pcePathProvider.queryBierInstancePath(queryBierTe).get().getResult();
+        links = queryOutput.getLink();
+        assertTrue(links == null);
     }
 
 
@@ -672,6 +721,58 @@ public class PcePathImplTest extends AbstractConcurrentDataBrokerTest {
         removeBierInstance("channel-2","1.1.1.1");
         removeBierInstance("channel-3","2.2.2.2");
     }
+
+    @Test
+    public void queryChannelThroughPortTest() throws InterruptedException, ExecutionException {
+        Utils.writeLinksToDB(TopoMockUtils.getTopo6Node());
+        buildBierTeInstanceForQueryAndRecovery();
+
+        Future<RpcResult<QueryChannelThroughPortOutput>> queryOutput = pcePathProvider.queryChannelThroughPort(null);
+        assertTrue(!queryOutput.get().isSuccessful());
+        assertEquals("input is null, or node-id is null, or tp-id is null!",
+                queryOutput.get().getErrors().iterator().next().getMessage());
+
+        QueryChannelThroughPortInput queryInput = new QueryChannelThroughPortInputBuilder()
+                .setNodeId("1.1.1.1")
+                .setTpId("12.12.12.12")
+                .build();
+        queryOutput = pcePathProvider.queryChannelThroughPort(queryInput);
+        assertTrue(queryOutput.get().isSuccessful());
+        List<RelatedChannel> channels = queryOutput.get().getResult().getRelatedChannel();
+        Utils.assertChannelInfo("channel-2","1.1.1.1",channels);
+
+        queryInput = new QueryChannelThroughPortInputBuilder()
+                .setNodeId("5.5.5.5")
+                .setTpId("54.54.54.54")
+                .build();
+        queryOutput = pcePathProvider.queryChannelThroughPort(queryInput);
+        assertTrue(queryOutput.get().isSuccessful());
+        channels = queryOutput.get().getResult().getRelatedChannel();
+        Utils.assertChannelInfo("channel-3","2.2.2.2",channels);
+
+        queryInput = new QueryChannelThroughPortInputBuilder()
+                .setNodeId("4.4.4.4")
+                .setTpId("45.45.45.45")
+                .build();
+        queryOutput = pcePathProvider.queryChannelThroughPort(queryInput);
+        assertTrue(queryOutput.get().isSuccessful());
+        channels = queryOutput.get().getResult().getRelatedChannel();
+        Utils.assertChannelInfo("channel-1","1.1.1.1",channels);
+
+        queryInput = new QueryChannelThroughPortInputBuilder()
+                .setNodeId("6.6.6.6")
+                .setTpId("63.63.63.63")
+                .build();
+        queryOutput = pcePathProvider.queryChannelThroughPort(queryInput);
+        assertTrue(queryOutput.get().isSuccessful());
+        channels = queryOutput.get().getResult().getRelatedChannel();
+        assertTrue(channels.isEmpty());
+
+        removeBierInstance("channel-1","1.1.1.1");
+        removeBierInstance("channel-2","1.1.1.1");
+        removeBierInstance("channel-3","2.2.2.2");
+    }
+
 
     @Test
     public void multicastPathCalcTets1() throws InterruptedException, ExecutionException {

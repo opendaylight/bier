@@ -7,8 +7,6 @@
  */
 package org.opendaylight.bier.pce.impl.biertepath;
 
-
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -132,6 +130,9 @@ public class BierTeInstance {
         BierPathUnifyKey key = new BierPathUnifyKey(path.getChannelName(),path.getBfirNodeId(), path.getBferNodeId());
 
         bierPaths.remove(key);
+        for (BierLink link : path.getPath()) {
+            allPaths.removeFirstOccurrence(link);
+        }
         path.removeDb();
     }
 

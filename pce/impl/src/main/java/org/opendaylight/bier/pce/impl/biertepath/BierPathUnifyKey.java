@@ -10,7 +10,7 @@ package org.opendaylight.bier.pce.impl.biertepath;
 
 
 public class BierPathUnifyKey {
-    protected  String channelName;
+    protected String channelName;
     protected String bfirNode;
     protected String bferNode;
 
@@ -37,8 +37,8 @@ public class BierPathUnifyKey {
         return bfirNode;
     }
 
-    public String getBferNode() {
-        return bferNode;
+    public String getChannelName() {
+        return channelName;
     }
 
     @Override

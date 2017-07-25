@@ -8,7 +8,6 @@
 
 package org.opendaylight.bier.pce.impl.util;
 
-
 import com.google.common.util.concurrent.Futures;
 
 import java.util.concurrent.Future;
@@ -29,8 +28,4 @@ public class RpcReturnUtils {
                 .withError(ErrorType.APPLICATION, errMsg).build());
     }
 
-    public static <T> Future<RpcResult<T>> returnOk() {
-        return Futures.immediateFuture(RpcResultBuilder
-                .<T>success().build());
-    }
 }

@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.links.PathLink;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.links.PathLinkBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
@@ -37,18 +36,6 @@ public class ComUtility {
         }
     }
 
-
-    public static String pathToString(List<BierLink> path) {
-        String rtnString = "";
-
-        if (null != path) {
-            for (BierLink link : path) {
-                rtnString += getLinkString(link);
-                rtnString += "\n";
-            }
-        }
-        return rtnString;
-    }
 
     public static String getLinkString(BierLink link) {
         return link.getLinkSource().getSourceNode() + ":" + link.getLinkSource().getSourceTp()
@@ -78,24 +65,6 @@ public class ComUtility {
         }
 
         return linksFound;
-    }
-
-
-
-    public static BierLink getLink4Path(Graph<String, BierLink> topoGraph, String sourceNode, String sourceTp,
-                                    String dest, String destTp) {
-        if ((topoGraph == null) || (topoGraph.getVertexCount() == 0)) {
-            return null;
-        }
-
-        List<BierLink> links = ComUtility.getLinkInGraph(topoGraph, sourceNode, sourceTp, dest, destTp);
-
-        if ((links != null) && (!links.isEmpty())) {
-            return links.get(0);
-        }
-
-        return null;
-
     }
 
     public static List<BierLink> getOtherLink(Graph<String, BierLink> graph, BierLink link) {
@@ -156,23 +125,4 @@ public class ComUtility {
     }
 
 
-    public static LinkedList<BierLink> pathLinks2Links(String topoId, List<PathLink> pathLinks) {
-        LinkedList<BierLink> links = new LinkedList<>();
-        if ((null == pathLinks) || (pathLinks.isEmpty())) {
-            return links;
-        }
-
-        Graph<String, BierLink> graph = TopologyProvider.getInstance().getTopoGraph(topoId);
-        for (PathLink link : pathLinks) {
-            BierLink dstLink = ComUtility.getLink4Path(graph,
-                    link.getLinkSource().getSourceNode(), link.getLinkSource().getSourceTp(),
-                    link.getLinkDest().getDestNode(), link.getLinkDest().getDestTp());
-            if (dstLink == null) {
-                LOG.error("pathLinks2Links error!" + link.toString());
-                return links;
-            }
-            links.add(dstLink);
-        }
-        return links;
-    }
 }

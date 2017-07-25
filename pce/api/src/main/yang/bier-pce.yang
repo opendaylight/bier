@@ -157,5 +157,27 @@ module bier-pce {
         }
     }
 
+    rpc query-channel-through-port {
+        input {
+            leaf node-id {
+                type string;
+            }
+            leaf tp-id {
+                type string;
+            }
+
+        }
+
+        output {
+            list related-channel {
+                leaf channel-name {
+                    type string;
+                }
+                leaf bfir {
+                    type string;
+                }
+            }
+		}
+	}
 
 }
