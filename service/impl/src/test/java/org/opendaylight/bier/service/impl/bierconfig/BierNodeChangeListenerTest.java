@@ -7,11 +7,10 @@
  */
 package org.opendaylight.bier.service.impl.bierconfig;
 
-
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,10 +18,9 @@ import org.junit.Test;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
-import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
-import org.opendaylight.controller.md.sal.binding.api.DataObjectModification.ModificationType;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
-import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
+import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
@@ -30,6 +28,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParams;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParamsBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPoint;
@@ -56,42 +55,23 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv6Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
-import org.opendaylight.yangtools.yang.binding.Augmentation;
-import org.opendaylight.yangtools.yang.binding.ChildOf;
-import org.opendaylight.yangtools.yang.binding.DataObject;
-import org.opendaylight.yangtools.yang.binding.Identifiable;
-import org.opendaylight.yangtools.yang.binding.Identifier;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.PathArgument;
 
-public class BierNodeChangeListenerTest {
+public class BierNodeChangeListenerTest extends AbstractDataBrokerTest {
 
 
     private BierConfigWriterMock bierConfigWriterMock;
     private BierNodeChangeListener bierNodeChangeListener;
 
-
     public void setUp() {
         bierConfigWriterMock = new BierConfigWriterMock();
         bierNodeChangeListener = new BierNodeChangeListener(bierConfigWriterMock);
+        getDataBroker().registerDataTreeChangeListener(new DataTreeIdentifier<BierNodeParams>(
+                LogicalDatastoreType.CONFIGURATION, bierNodeChangeListener.getBierNodeId()), bierNodeChangeListener);
     }
 
     @Test
-    public void testBierNodeWithNoParaChange() {
-        setUp();
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(null));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 37,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(null));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-    }
-
-    @Test
-    public void testAddedDomainChangeListener1() {
+    public void testBierNodeChangeListener() {
         setUp();
 
         List<Ipv4> ipv4List = new ArrayList<>();
@@ -104,812 +84,290 @@ public class BierNodeChangeListenerTest {
         subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
                 constructAf(ipv4List, ipv6List)));
 
-        Domain domain = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
+        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
 
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListAfter.add(domain);
+        List<Domain> domainListAfter1 = new ArrayList<>();
+        domainListAfter1.add(domain1);
 
+        //Test add domain from null to one
         BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
                 constructBierTerminationPointList("0002"), constructBierNodeParams(null));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
+        BierNode bierNodeAfter1 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
 
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.WRITE));
-
+        addBierNodeToDataStore(bierNodeBefore);
+        addBierNodeToDataStore(bierNodeAfter1);
         assertAddedDomainTest1(bierConfigWriterMock.getDomainProcessList());
-    }
 
-    @Test
-    public void testAddedDomainChangeListener2() {
-        setUp();
 
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainList = new ArrayList<>();
-        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        //Test add domain from one to two
         Domain domain2 = constructDomain(0002, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain1);
-        domainListAfter.add(domain2);
 
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
+        List<Domain> domainListAfter2 = new ArrayList<>();
+        domainListAfter2.add(domain1);
+        domainListAfter2.add(domain2);
 
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
+        BierNode bierNodeAfter2 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter2));
 
+        addBierNodeToDataStore(bierNodeAfter2);
         assertAddedDomainTest2(bierConfigWriterMock.getDomainProcessList());
-    }
 
-    @Test
-    public void testDeletedDomainChangeListener1() {
-        setUp();
+        //Test delete domain from two to one
+        BierNode bierNodeAfter3 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
 
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainList = new ArrayList<>();
-        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        domainListBefore.add(domain);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(null));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
+        addBierNodeToDataStore(bierNodeAfter3);
         assertDeletedDomainTest1(bierConfigWriterMock.getDomainProcessList());
-    }
 
-    @Test
-    public void testDeletedDomainChangeListener2() {
-        setUp();
+        //Test modify parameters of domain
+        Domain domain3 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 10,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain1);
+        domainListAfter1.add(domain3);
 
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
+        BierNode bierNodeAfter4 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
 
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
+        addBierNodeToDataStore(bierNodeAfter4);
+        assertModifiedDomainTest(bierConfigWriterMock.getDomainProcessList());
 
-        List<SubDomain> subDomainList = new ArrayList<>();
+        //Test modify parameters of domain and delete subDomain
+        Domain domain4 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", null));
+        domainListAfter1.remove(domain3);
+        domainListAfter1.add(domain4);
+
+        BierNode bierNodeAfter5 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+
+        addBierNodeToDataStore(bierNodeAfter5);
+        assertModifiedParametersOfDomainAndDeletedSubDomainTest(bierConfigWriterMock.getDomainProcessList(),
+                bierConfigWriterMock.getSubDomainProcessList());
+
+        //Test add subDomain
+        Domain domain5 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain4);
+        domainListAfter1.add(domain5);
+
+        BierNode bierNodeAfter6 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+
+        addBierNodeToDataStore(bierNodeAfter6);
+        assertAddedSubDomainTest1(bierConfigWriterMock.getSubDomainProcessList());
+
+        //Test add subDomain again
+        subDomainList.add(constructSubDomain(0002, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(ipv4List, ipv6List)));
+        Domain domain6 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain5);
+        domainListAfter1.add(domain6);
+
+        BierNode bierNodeAfter7 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+
+        addBierNodeToDataStore(bierNodeAfter7);
+        assertAddedSubDomainTest2(bierConfigWriterMock.getSubDomainProcessList());
+
+        //Test delete subDomain
+        subDomainList.remove(constructSubDomain(0002, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(ipv4List, ipv6List)));
+        Domain domain7 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain6);
+        domainListAfter1.add(domain7);
+
+        BierNode bierNodeAfter8 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+
+        addBierNodeToDataStore(bierNodeAfter8);
+        assertDeletedSubDomainTest(bierConfigWriterMock.getSubDomainProcessList());
+
+        //Test modify parameters of subDomain
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(ipv4List, ipv6List)));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._128Bit,
+                constructAf(ipv4List, ipv6List)));
+
+        Domain domain8 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain7);
+        domainListAfter1.add(domain8);
+
+        BierNode bierNodeAfter9 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+
+        addBierNodeToDataStore(bierNodeAfter9);
+        assertModifiedParametersOfSubDomainTest(bierConfigWriterMock.getSubDomainProcessList());
+
+        //Test modify parameters of subDomain and delete ipv4
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._128Bit,
+                constructAf(ipv4List, ipv6List)));
+        ipv4List.add(constructIpv4(80, 110L, (short)45));
+        ipv6List.add(constructIpv6(256, 120L, (short)56));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._128Bit,
+                constructAf(ipv4List, ipv6List)));
+        Domain domain9 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain8);
+        domainListAfter1.add(domain9);
+        BierNode bierNodeAfter10 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+        addBierNodeToDataStore(bierNodeAfter10);
+
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._128Bit,
+                constructAf(ipv4List, ipv6List)));
+        ipv4List.remove(constructIpv4(80, 110L, (short)45));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit,
+                constructAf(ipv4List, ipv6List)));
+
+        Domain domain10 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain9);
+        domainListAfter1.add(domain10);
+
+        BierNode bierNodeAfter11 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+
+        addBierNodeToDataStore(bierNodeAfter11);
+        assertModifiedParametersOfSubDomainAndDeletedIpv4Test(bierConfigWriterMock.getSubDomainProcessList(),
+                bierConfigWriterMock.getIpv4ProcessList());
+
+        //Test modify parameters of subDomain and delete ipv6
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit,
+                constructAf(ipv4List, ipv6List)));
+        ipv6List.remove(constructIpv6(256, 120L, (short)56));
         subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
                 constructAf(ipv4List, ipv6List)));
 
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
+        Domain domain11 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
-        Domain domain2 = constructDomain(0002, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
+        domainListAfter1.remove(domain10);
+        domainListAfter1.add(domain11);
+
+        BierNode bierNodeAfter12 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+
+        addBierNodeToDataStore(bierNodeAfter12);
+        assertModifiedParametersOfSubDomainAndDeletedIpv6Test(bierConfigWriterMock.getSubDomainProcessList(),
+                bierConfigWriterMock.getIpv6ProcessList());
+
+        //Test modify parameters of subDomain and delete ipv4 and ipv6
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(ipv4List, ipv6List)));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit,
+                constructAf(null, null)));
+        Domain domain12 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
                 "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain11);
+        domainListAfter1.add(domain12);
 
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListBefore.add(domain2);
-        domainListAfter.add(domain2);
+        BierNode bierNodeAfter13 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
 
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
+        addBierNodeToDataStore(bierNodeAfter13);
+        assertModifiedParametersOfSubDomainAndDeletedIpv4Ipv6Test(bierConfigWriterMock.getSubDomainProcessList(),
+                bierConfigWriterMock.getIpv4ProcessList(), bierConfigWriterMock.getIpv6ProcessList());
 
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
+        //Test only delete ipv4
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit,
+                constructAf(null, null)));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(ipv4List, ipv6List)));
 
+        Domain domain13 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain12);
+        domainListAfter1.add(domain13);
+
+        BierNode bierNodeAfter14 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+        addBierNodeToDataStore(bierNodeAfter14);
+
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(ipv4List, ipv6List)));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(null, ipv6List)));
+
+        Domain domain14 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain13);
+        domainListAfter1.add(domain14);
+
+        BierNode bierNodeAfter15 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+        addBierNodeToDataStore(bierNodeAfter15);
+        assertDeleteDSubDomainIpv4(bierConfigWriterMock.getIpv4ProcessList());
+
+        //Test only delete ipv6
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(null, ipv6List)));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(null, null)));
+
+        Domain domain15 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain14);
+        domainListAfter1.add(domain15);
+
+        BierNode bierNodeAfter16 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+        addBierNodeToDataStore(bierNodeAfter16);
+        assertDeleteDSubDomainIpv6(bierConfigWriterMock.getIpv6ProcessList());
+
+        //Test add af
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(null, null)));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                null));
+
+        Domain domain16 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain15);
+        domainListAfter1.add(domain16);
+
+        BierNode bierNodeAfter17 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+        addBierNodeToDataStore(bierNodeAfter17);
+
+        subDomainList.remove(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                null));
+        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
+                constructAf(ipv4List, null)));
+
+        Domain domain17 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 9,
+                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
+        domainListAfter1.remove(domain16);
+        domainListAfter1.add(domain17);
+
+        BierNode bierNodeAfter18 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter1));
+        addBierNodeToDataStore(bierNodeAfter18);
+        assertAddedAfChange(bierConfigWriterMock.getSubDomainProcessList());
+
+        //Delete domain from one to null
+        BierNode bierNodeAfter19 = constructBierNode("0001", "Node1", "0001", 35, 38,
+                constructBierTerminationPointList("0002"), constructBierNodeParams(null));
+        addBierNodeToDataStore(bierNodeAfter19);
         assertDeletedDomainTest2(bierConfigWriterMock.getDomainProcessList());
 
     }
 
-    @Test
-    public void testDeletedDomainChangeListener3() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainList = new ArrayList<>();
-        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        domainListBefore.add(domain);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, null, ModificationType.DELETE));
-
-        assertDeletedDomainTest3(bierConfigWriterMock.getDomainProcessList());
-    }
-
-    @Test
-    public void testModifiedParametersOfDomainChangeListener() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainList = new ArrayList<>();
-        subDomainList.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
-        Domain domain3 = constructDomain(0002, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.42/22", "fe80::7009:fe25:8170:36af/64", subDomainList));
-        List<Domain> domainListBefore = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListBefore.add(domain3);
-
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainList));
-        Domain domain4 = constructDomain(0002, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.42/22", "fe80::7009:fe25:8170:36af/63", subDomainList));
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListAfter.add(domain2);
-        domainListAfter.add(domain4);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertModifiedDomainTest(bierConfigWriterMock.getDomainProcessList());
-
-    }
-
-    @Test
-    public void testModifiedParametersOfDomainAndDeletedSubDomainChangeListener() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-        subDomainListBefore.add(constructSubDomain(0002, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-        subDomainListAfter.add(constructSubDomain(0002, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._128Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertModifiedParametersOfDomainAndDeletedSubDomainTest(bierConfigWriterMock.getDomainProcessList(),
-                bierConfigWriterMock.getSubDomainProcessList());
-    }
-
-    @Test
-    public void testAddedSubDomainChangeListener1() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", null));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertAddedSubDomainTest1(bierConfigWriterMock.getSubDomainProcessList());
-    }
-
-    @Test
-    public void testAddedSubDomainChangeListener2() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-        subDomainListAfter.add(constructSubDomain(0002, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertAddedSubDomainTest2(bierConfigWriterMock.getSubDomainProcessList());
-    }
-
-    @Test
-    public void testOnlyDeletedSubDomainChangeListener1() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", null));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertDeletedSubDomainTest1(bierConfigWriterMock.getSubDomainProcessList());
-    }
-
-    @Test
-    public void testOnlyDeletedSubDomainChangeListener2() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-        subDomainListBefore.add(constructSubDomain(0002, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-        subDomainListAfter.add(constructSubDomain(0002, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertDeletedSubDomainTest2(bierConfigWriterMock.getSubDomainProcessList());
-    }
-
-    @Test
-    public void testModifiedParametersOfSubDomainChangeListener() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6List)));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit,
-                constructAf(ipv4List, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertModifiedParametersOfSubDomainTest(bierConfigWriterMock.getSubDomainProcessList());
-    }
-
-    @Test
-    public void testModifiedParametersOfSubDomainAndDeletedIpv4ChangeListener() {
-        setUp();
-
-        List<Ipv4> ipv4ListBefore = new ArrayList<>();
-        List<Ipv4> ipv4ListAfter = new ArrayList<>();
-        ipv4ListBefore.add(constructIpv4(64, 101L, (short)30));
-        ipv4ListBefore.add(constructIpv4(80, 110L, (short)45));
-        ipv4ListAfter.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4ListBefore, ipv6List)));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit,
-                constructAf(ipv4ListAfter, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertModifiedParametersOfSubDomainAndDeletedIpv4Test(bierConfigWriterMock.getSubDomainProcessList(),
-                bierConfigWriterMock.getIpv4ProcessList());
-    }
-
-    @Test
-    public void testModifiedParametersOfSubDomainAndDeletedIpv6ChangeListener() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6ListBefore = new ArrayList<>();
-        List<Ipv6> ipv6ListAfter = new ArrayList<>();
-        ipv6ListBefore.add(constructIpv6(128, 98L, (short)48));
-        ipv6ListBefore.add(constructIpv6(256, 120L, (short)56));
-        ipv6ListAfter.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6ListBefore)));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit,
-                constructAf(ipv4List, ipv6ListAfter)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertModifiedParametersOfSubDomainAndDeletedIpv6Test(bierConfigWriterMock.getSubDomainProcessList(),
-                bierConfigWriterMock.getIpv6ProcessList());
-    }
-
-    @Test
-    public void testModifiedParametersOfSubDomainAndDeletedIpv4Ipv6ChangeListener() {
-        setUp();
-
-        List<Ipv4> ipv4ListBefore = new ArrayList<>();
-        ipv4ListBefore.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6ListBefore = new ArrayList<>();
-        ipv6ListBefore.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4ListBefore, ipv6ListBefore)));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._256Bit,
-                constructAf(null, null)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertModifiedParametersOfSubDomainAndDeletedIpv4Ipv6Test(bierConfigWriterMock.getSubDomainProcessList(),
-                bierConfigWriterMock.getIpv4ProcessList(), bierConfigWriterMock.getIpv6ProcessList());
-    }
-
-    @Test
-    public void testOnlyDeletedIpv4ChangeListener1() {
-        setUp();
-
-        List<Ipv4> ipv4ListBefore = new ArrayList<>();
-        List<Ipv4> ipv4ListAfter = new ArrayList<>();
-        ipv4ListBefore.add(constructIpv4(64, 101L, (short)30));
-        ipv4ListBefore.add(constructIpv4(80, 110L, (short)45));
-        ipv4ListAfter.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4ListBefore, ipv6List)));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4ListAfter, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertDeleteDSubDomainIpv4(bierConfigWriterMock.getIpv4ProcessList());
-    }
-
-    @Test
-    public void testOnlyDeletedIpv4ChangeListener2() {
-        setUp();
-
-        List<Ipv4> ipv4ListBefore = new ArrayList<>();
-        List<Ipv4> ipv4ListAfter = new ArrayList<>();
-        ipv4ListBefore.add(constructIpv4(64, 101L, (short)30));
-        ipv4ListBefore.add(constructIpv4(80, 110L, (short)45));
-        ipv4ListAfter.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6List = new ArrayList<>();
-        ipv6List.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, null, 12, 13, null,
-                constructAf(ipv4ListBefore, ipv6List)));
-        subDomainListAfter.add(constructSubDomain(0001, null, 12, 13, null,
-                constructAf(ipv4ListAfter, ipv6List)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(null, null, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(null, null, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertDeleteDSubDomainIpv4(bierConfigWriterMock.getIpv4ProcessList());
-    }
-
-    @Test
-    public void testOnlyDeletedIpv6ChangeListener() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<Ipv6> ipv6ListBefore = new ArrayList<>();
-        List<Ipv6> ipv6ListAfter = new ArrayList<>();
-        ipv6ListBefore.add(constructIpv6(128, 98L, (short)48));
-        ipv6ListBefore.add(constructIpv6(256, 120L, (short)56));
-        ipv6ListAfter.add(constructIpv6(128, 98L, (short)48));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6ListBefore)));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, ipv6ListAfter)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertDeleteDSubDomainIpv6(bierConfigWriterMock.getIpv6ProcessList());
-    }
-
-    @Test
-    public void testAddedAfChange() {
-        setUp();
-
-        List<Ipv4> ipv4List = new ArrayList<>();
-        ipv4List.add(constructIpv4(64, 101L, (short)30));
-
-        List<SubDomain> subDomainListBefore = new ArrayList<>();
-        List<SubDomain> subDomainListAfter = new ArrayList<>();
-        subDomainListBefore.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit, null));
-        subDomainListAfter.add(constructSubDomain(0001, IgpType.ISIS, 12, 13, Bsl._512Bit,
-                constructAf(ipv4List, null)));
-
-        Domain domain1 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListBefore));
-        Domain domain2 = constructDomain(0001, constructBierGlobal(BierEncapsulation.class, Bsl._512Bit, 10,
-                "102.112.20.40/24", "fe80::7009:fe25:8170:36af/64", subDomainListAfter));
-
-        List<Domain> domainListBefore = new ArrayList<>();
-        List<Domain> domainListAfter = new ArrayList<>();
-        domainListBefore.add(domain1);
-        domainListAfter.add(domain2);
-
-        BierNode bierNodeBefore = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListBefore));
-        BierNode bierNodeAfter = constructBierNode("0001", "Node1", "0001", 35, 38,
-                constructBierTerminationPointList("0002"), constructBierNodeParams(domainListAfter));
-
-        bierNodeChangeListener.onDataTreeChanged(setBierNodeData(bierNodeBefore, bierNodeAfter,
-                ModificationType.SUBTREE_MODIFIED));
-
-        assertAddedAfChange(bierConfigWriterMock.getSubDomainProcessList());
-    }
-
-    private static class DataTreeModificationMock implements DataTreeModification<BierNode> {
-        private BierNode before;
-        private BierNode after;
-        private ModificationType type;
-
-        public void setBierNodeData(BierNode before, BierNode after, ModificationType type) {
-            this.before = before;
-            this.after = after;
-            this.type = type;
+    private void addBierNodeToDataStore(BierNode bierNode) {
+        final ReadWriteTransaction tx = getDataBroker().newReadWriteTransaction();
+        final InstanceIdentifier<BierNode> bierNodePath = InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey("example-linkstate-topology"))
+                .child(BierNode.class, new BierNodeKey(bierNode.getNodeId()));
+        tx.put(LogicalDatastoreType.CONFIGURATION, bierNodePath, bierNode, true);
+        try {
+            tx.submit().get();
+        } catch (InterruptedException | ExecutionException e) {
+            return;
         }
-
-        @Override
-        public DataTreeIdentifier<BierNode> getRootPath() {
-            InstanceIdentifier<BierNode> bierNodeId = InstanceIdentifier.create(BierNetworkTopology.class)
-                    .child(BierTopology.class, new BierTopologyKey("flow:1")).child(BierNode.class);
-            return new DataTreeIdentifier<BierNode>(LogicalDatastoreType.CONFIGURATION, bierNodeId);
-        }
-
-        @Override
-        public DataObjectModification<BierNode> getRootNode() {
-            DataObjectModificationMock mock = new DataObjectModificationMock();
-            mock.setBierNodeData(before, after, type);
-            return mock;
-        }
-    }
-
-    private static class DataObjectModificationMock implements DataObjectModification<BierNode> {
-        private BierNode before;
-        private BierNode after;
-        private ModificationType type;
-
-        public void setBierNodeData(BierNode before, BierNode after, ModificationType type) {
-            this.before = before;
-            this.after = after;
-            this.type = type;
-        }
-
-        @Override
-        public ModificationType getModificationType() {
-            return type;
-        }
-
-        @Override
-        public BierNode getDataBefore() {
-            return before;
-        }
-
-        @Override
-        public BierNode getDataAfter() {
-            return after;
-        }
-
-        @Override
-        public PathArgument getIdentifier() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Class<BierNode> getDataType() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public Collection<DataObjectModification<? extends DataObject>> getModifiedChildren() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public <C extends ChildOf<? super BierNode>> DataObjectModification<C> getModifiedChildContainer(
-                Class<C> child) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public <C extends Augmentation<BierNode> & DataObject> DataObjectModification<C> getModifiedAugmentation(
-                Class<C> augmentation) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public <C extends Identifiable<K> & ChildOf<? super BierNode>,
-                K extends Identifier<C>> DataObjectModification<C> getModifiedChildListItem(
-                Class<C> listItem, K listKey) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public DataObjectModification<? extends DataObject> getModifiedChild(
-                PathArgument childArgument) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-    }
-
-    private Collection<DataTreeModification<BierNode>> setBierNodeData(BierNode before, BierNode after,
-                                                                       ModificationType type) {
-        Collection<DataTreeModification<BierNode>> collection = new ArrayList<>();
-        DataTreeModificationMock mock = new DataTreeModificationMock();
-        mock.setBierNodeData(before, after, type);
-        collection.add(mock);
-        return collection;
     }
 
     private static class BierConfigWriterMock implements BierConfigWriter {
@@ -1145,58 +603,34 @@ public class BierNodeChangeListenerTest {
     }
 
     private void assertAddedDomainTest1(List<Domain> domainList) {
-        assertAddedOrDeletedDomainData(domainList);
+        Assert.assertEquals(domainList.size(), 1);
+        Assert.assertEquals(domainList.get(0).getDomainId(), new DomainId(0001));
+        BierGlobal bierGlobal = domainList.get(0).getBierGlobal();
+        Assert.assertEquals(bierGlobal.getBitstringlength(), Bsl._512Bit);
+        assertAddedOrDeletedDomainBierGlobalData(bierGlobal);
     }
 
     private void assertAddedDomainTest2(List<Domain> domainList) {
-        BierGlobal bierGlobal = domainList.get(0).getBierGlobal();
-        SubDomain subDomain = bierGlobal.getSubDomain().get(0);
-        Ipv4 ipv4 = subDomain.getAf().getIpv4().get(0);
-        Ipv6 ipv6 = subDomain.getAf().getIpv6().get(0);
-        Assert.assertEquals(domainList.size(), 1);
-        Assert.assertEquals(domainList.get(0).getDomainId(), new DomainId(0002));
-        Assert.assertEquals(bierGlobal.getEncapsulationType(), BierEncapsulation.class);
+        Assert.assertEquals(domainList.size(), 2);
+        Assert.assertEquals(domainList.get(1).getDomainId(), new DomainId(0002));
+        BierGlobal bierGlobal = domainList.get(1).getBierGlobal();
         Assert.assertEquals(bierGlobal.getBitstringlength(), Bsl._512Bit);
-        Assert.assertEquals(bierGlobal.getBfrId(), new BfrId(10));
-        Assert.assertEquals(bierGlobal.getIpv4BfrPrefix(), new Ipv4Prefix("102.112.20.40/24"));
-        Assert.assertEquals(bierGlobal.getIpv6BfrPrefix(), new Ipv6Prefix("fe80::7009:fe25:8170:36af/64"));
-        Assert.assertEquals(bierGlobal.getSubDomain().size(), 1);
-        Assert.assertEquals(subDomain.getSubDomainId(), new SubDomainId(0001));
-        Assert.assertEquals(subDomain.getBitstringlength(), Bsl._512Bit);
-        Assert.assertEquals(subDomain.getIgpType(), IgpType.ISIS);
-        Assert.assertEquals(subDomain.getBfrId(), new BfrId(13));
-        Assert.assertEquals(subDomain.getMtId(), new MtId(12));
-        Assert.assertEquals(subDomain.getAf().getIpv4().size(), 1);
-        Assert.assertEquals(subDomain.getAf().getIpv6().size(), 1);
-        Assert.assertEquals(ipv4.getBitstringlength(), new Integer(64));
-        Assert.assertEquals(ipv4.getBierMplsLabelBase(), new MplsLabel(101L));
-        Assert.assertEquals(ipv4.getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize(Short.valueOf("30")));
-        Assert.assertEquals(ipv6.getBitstringlength(), new Integer(128));
-        Assert.assertEquals(ipv6.getBierMplsLabelBase(), new MplsLabel(98L));
-        Assert.assertEquals(ipv6.getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize(Short.valueOf("48")));
+        assertAddedOrDeletedDomainBierGlobalData(bierGlobal);
     }
 
     private void assertDeletedDomainTest1(List<Domain> domainList) {
-        assertAddedOrDeletedDomainData(domainList);
+        Assert.assertEquals(domainList.size(), 3);
+        Assert.assertEquals(domainList.get(2).getDomainId(), new DomainId(0002));
+        BierGlobal bierGlobal = domainList.get(2).getBierGlobal();
+        Assert.assertEquals(bierGlobal.getBitstringlength(), Bsl._512Bit);
+        assertAddedOrDeletedDomainBierGlobalData(bierGlobal);
     }
 
-    private void assertDeletedDomainTest2(List<Domain> domainList) {
-        assertAddedOrDeletedDomainData(domainList);
-    }
-
-    private void assertDeletedDomainTest3(List<Domain> domainList) {
-        assertAddedOrDeletedDomainData(domainList);
-    }
-
-    private void assertAddedOrDeletedDomainData(List<Domain> domainList) {
-        BierGlobal bierGlobal = domainList.get(0).getBierGlobal();
+    private void assertAddedOrDeletedDomainBierGlobalData(BierGlobal bierGlobal) {
         SubDomain subDomain = bierGlobal.getSubDomain().get(0);
         Ipv4 ipv4 = subDomain.getAf().getIpv4().get(0);
         Ipv6 ipv6 = subDomain.getAf().getIpv6().get(0);
-        Assert.assertEquals(domainList.size(), 1);
-        Assert.assertEquals(domainList.get(0).getDomainId(), new DomainId(0001));
         Assert.assertEquals(bierGlobal.getEncapsulationType(), BierEncapsulation.class);
-        Assert.assertEquals(bierGlobal.getBitstringlength(), Bsl._512Bit);
         Assert.assertEquals(bierGlobal.getBfrId(), new BfrId(10));
         Assert.assertEquals(bierGlobal.getIpv4BfrPrefix(), new Ipv4Prefix("102.112.20.40/24"));
         Assert.assertEquals(bierGlobal.getIpv6BfrPrefix(), new Ipv6Prefix("fe80::7009:fe25:8170:36af/64"));
@@ -1217,78 +651,54 @@ public class BierNodeChangeListenerTest {
     }
 
     private void assertModifiedDomainTest(List<Domain> domainList) {
-        BierGlobal bierGlobal1 = domainList.get(0).getBierGlobal();
-        BierGlobal bierGlobal2 = domainList.get(1).getBierGlobal();
-        Assert.assertEquals(domainList.size(), 2);
-        Assert.assertEquals(domainList.get(0).getDomainId(), new DomainId(0001));
-        Assert.assertEquals(domainList.get(1).getDomainId(), new DomainId(0002));
-        Assert.assertEquals(bierGlobal1.getBitstringlength(), Bsl._128Bit);
-        Assert.assertEquals(bierGlobal2.getIpv6BfrPrefix(), new Ipv6Prefix("fe80::7009:fe25:8170:36af/63"));
-    }
-
-    private void assertAddedSubDomainTest1(List<SubDomain> subDomainList) {
-        assertAddedOrDeletedSubDomainData(subDomainList);
-    }
-
-    private void assertAddedSubDomainTest2(List<SubDomain> subDomainList) {
-        SubDomain subDomain = subDomainList.get(0);
-        Ipv4 ipv4 = subDomain.getAf().getIpv4().get(0);
-        Ipv6 ipv6 = subDomain.getAf().getIpv6().get(0);
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertEquals(subDomain.getSubDomainId(), new SubDomainId(0002));
-        Assert.assertEquals(subDomain.getBitstringlength(), Bsl._512Bit);
-        Assert.assertEquals(subDomain.getBfrId(), new BfrId(13));
-        Assert.assertEquals(subDomain.getMtId(), new MtId(12));
-        Assert.assertEquals(subDomain.getIgpType(), IgpType.ISIS);
-        Assert.assertEquals(subDomain.getAf().getIpv4().size(), 1);
-        Assert.assertEquals(subDomain.getAf().getIpv6().size(), 1);
-        Assert.assertEquals(ipv4.getBitstringlength(), new Integer(64));
-        Assert.assertEquals(ipv4.getBierMplsLabelBase(), new MplsLabel(101L));
-        Assert.assertEquals(ipv4.getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize(Short.valueOf("30")));
-        Assert.assertEquals(ipv6.getBitstringlength(), new Integer(128));
-        Assert.assertEquals(ipv6.getBierMplsLabelBase(), new MplsLabel(98L));
-        Assert.assertEquals(ipv6.getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize(Short.valueOf("48")));
-    }
-
-    private void assertDeletedSubDomainTest1(List<SubDomain> subDomainList) {
-        assertAddedOrDeletedSubDomainData(subDomainList);
-    }
-
-    private void assertDeletedSubDomainTest2(List<SubDomain> subDomainList) {
-        assertAddedOrDeletedSubDomainData(subDomainList);
-    }
-
-    private void assertAddedOrDeletedSubDomainData(List<SubDomain> subDomainList) {
-        SubDomain subDomain = subDomainList.get(0);
-        Ipv4 ipv4 = subDomain.getAf().getIpv4().get(0);
-        Ipv6 ipv6 = subDomain.getAf().getIpv6().get(0);
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertEquals(subDomain.getSubDomainId(), new SubDomainId(0001));
-        Assert.assertEquals(subDomain.getBitstringlength(), Bsl._512Bit);
-        Assert.assertEquals(subDomain.getBfrId(), new BfrId(13));
-        Assert.assertEquals(subDomain.getMtId(), new MtId(12));
-        Assert.assertEquals(subDomain.getIgpType(), IgpType.ISIS);
-        Assert.assertEquals(subDomain.getAf().getIpv4().size(), 1);
-        Assert.assertEquals(subDomain.getAf().getIpv6().size(), 1);
-        Assert.assertEquals(ipv4.getBitstringlength(), new Integer(64));
-        Assert.assertEquals(ipv4.getBierMplsLabelBase(), new MplsLabel(101L));
-        Assert.assertEquals(ipv4.getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize(Short.valueOf("30")));
-        Assert.assertEquals(ipv6.getBitstringlength(), new Integer(128));
-        Assert.assertEquals(ipv6.getBierMplsLabelBase(), new MplsLabel(98L));
-        Assert.assertEquals(ipv6.getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize(Short.valueOf("48")));
+        Assert.assertEquals(domainList.size(), 4);
+        Assert.assertEquals(domainList.get(3).getDomainId(), new DomainId(0001));
+        BierGlobal bierGlobal = domainList.get(3).getBierGlobal();
+        Assert.assertEquals(bierGlobal.getBitstringlength(), Bsl._128Bit);
     }
 
     private void assertModifiedParametersOfDomainAndDeletedSubDomainTest(List<Domain> domainList,
-                                                                     List<SubDomain> subDomainList) {
-        SubDomain subDomain = subDomainList.get(0);
+                                                                         List<SubDomain> subDomainList) {
+        Assert.assertEquals(domainList.size(), 5);
+        Assert.assertEquals(domainList.get(4).getDomainId(), new DomainId(0001));
+        Assert.assertEquals(domainList.get(4).getBierGlobal().getBitstringlength(), Bsl._128Bit);
+        Assert.assertEquals(domainList.get(4).getBierGlobal().getBfrId(), new BfrId(9));
+        Assert.assertEquals(subDomainList.size(), 1);
+        Assert.assertEquals(subDomainList.get(0).getSubDomainId(), new SubDomainId(0001));
+        assertAddedOrDeletedSubDomainData(subDomainList.get(0));
+    }
+
+    private void assertAddedSubDomainTest1(List<SubDomain> subDomainList) {
+        Assert.assertEquals(subDomainList.size(), 2);
+        Assert.assertEquals(subDomainList.get(1).getSubDomainId(), new SubDomainId(0001));
+        Assert.assertEquals(subDomainList.get(1).getBitstringlength(), Bsl._512Bit);
+        assertAddedOrDeletedSubDomainData(subDomainList.get(1));
+    }
+
+    private void assertAddedSubDomainTest2(List<SubDomain> subDomainList) {
+        Assert.assertEquals(subDomainList.size(), 3);
+        Assert.assertEquals(subDomainList.get(2).getSubDomainId(), new SubDomainId(0002));
+        Assert.assertEquals(subDomainList.get(2).getBitstringlength(), Bsl._512Bit);
+        assertAddedOrDeletedSubDomainData(subDomainList.get(2));
+    }
+
+    private void assertDeletedSubDomainTest(List<SubDomain> subDomainList) {
+        Assert.assertEquals(subDomainList.size(), 4);
+        Assert.assertEquals(subDomainList.get(3).getSubDomainId(), new SubDomainId(0002));
+        Assert.assertEquals(subDomainList.get(3).getBitstringlength(), Bsl._512Bit);
+        assertAddedOrDeletedSubDomainData(subDomainList.get(3));
+    }
+
+    private void assertModifiedParametersOfSubDomainTest(List<SubDomain> subDomainList) {
+        Assert.assertEquals(subDomainList.size(), 5);
+        Assert.assertEquals(subDomainList.get(4).getSubDomainId(), new SubDomainId(0001));
+        Assert.assertEquals(subDomainList.get(4).getBitstringlength(), Bsl._128Bit);
+        assertAddedOrDeletedSubDomainData(subDomainList.get(4));
+    }
+
+    private void assertAddedOrDeletedSubDomainData(SubDomain subDomain) {
         Ipv4 ipv4 = subDomain.getAf().getIpv4().get(0);
         Ipv6 ipv6 = subDomain.getAf().getIpv6().get(0);
-        Assert.assertEquals(domainList.size(), 1);
-        Assert.assertEquals(domainList.get(0).getDomainId(), new DomainId(0001));
-        Assert.assertEquals(domainList.get(0).getBierGlobal().getBitstringlength(), Bsl._128Bit);
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertEquals(subDomain.getSubDomainId(), new SubDomainId(0001));
-        Assert.assertEquals(subDomain.getBitstringlength(), Bsl._512Bit);
         Assert.assertEquals(subDomain.getBfrId(), new BfrId(13));
         Assert.assertEquals(subDomain.getMtId(), new MtId(12));
         Assert.assertEquals(subDomain.getIgpType(), IgpType.ISIS);
@@ -1300,34 +710,13 @@ public class BierNodeChangeListenerTest {
         Assert.assertEquals(ipv6.getBitstringlength(), new Integer(128));
         Assert.assertEquals(ipv6.getBierMplsLabelBase(), new MplsLabel(98L));
         Assert.assertEquals(ipv6.getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize(Short.valueOf("48")));
-
-    }
-
-    private void assertModifiedParametersOfSubDomainTest(List<SubDomain> subDomainList) {
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertEquals(subDomainList.get(0).getSubDomainId(), new SubDomainId(0001));
-        Assert.assertEquals(subDomainList.get(0).getBitstringlength(), Bsl._256Bit);
-    }
-
-    private void assertDeleteDSubDomainIpv4(List<Ipv4> ipv4List) {
-        Assert.assertEquals(ipv4List.size(), 1);
-        Assert.assertEquals(ipv4List.get(0).getBitstringlength(), new Integer(80));
-        Assert.assertEquals(ipv4List.get(0).getBierMplsLabelBase(), new MplsLabel(110L));
-        Assert.assertEquals(ipv4List.get(0).getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize((short)45));
-    }
-
-    private void assertDeleteDSubDomainIpv6(List<Ipv6> ipv6List) {
-        Assert.assertEquals(ipv6List.size(), 1);
-        Assert.assertEquals(ipv6List.get(0).getBitstringlength(), new Integer(256));
-        Assert.assertEquals(ipv6List.get(0).getBierMplsLabelBase(), new MplsLabel(120L));
-        Assert.assertEquals(ipv6List.get(0).getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize((short)56));
     }
 
     private void assertModifiedParametersOfSubDomainAndDeletedIpv4Test(List<SubDomain> subDomainList,
                                                                        List<Ipv4> ipv4List) {
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertEquals(subDomainList.get(0).getSubDomainId(),new SubDomainId(0001));
-        Assert.assertEquals(subDomainList.get(0).getBitstringlength(), Bsl._256Bit);
+        Assert.assertEquals(subDomainList.size(), 7);
+        Assert.assertEquals(subDomainList.get(6).getSubDomainId(),new SubDomainId(0001));
+        Assert.assertEquals(subDomainList.get(6).getBitstringlength(), Bsl._256Bit);
         Assert.assertEquals(ipv4List.size(), 1);
         Assert.assertEquals(ipv4List.get(0).getBitstringlength(), new Integer(80));
         Assert.assertEquals(ipv4List.get(0).getBierMplsLabelBase(), new MplsLabel(110L));
@@ -1336,9 +725,9 @@ public class BierNodeChangeListenerTest {
 
     private void assertModifiedParametersOfSubDomainAndDeletedIpv6Test(List<SubDomain> subDomainList,
                                                                        List<Ipv6> ipv6List) {
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertEquals(subDomainList.get(0).getSubDomainId(),new SubDomainId(0001));
-        Assert.assertEquals(subDomainList.get(0).getBitstringlength(), Bsl._256Bit);
+        Assert.assertEquals(subDomainList.size(), 8);
+        Assert.assertEquals(subDomainList.get(7).getSubDomainId(),new SubDomainId(0001));
+        Assert.assertEquals(subDomainList.get(7).getBitstringlength(), Bsl._512Bit);
         Assert.assertEquals(ipv6List.size(), 1);
         Assert.assertEquals(ipv6List.get(0).getBitstringlength(), new Integer(256));
         Assert.assertEquals(ipv6List.get(0).getBierMplsLabelBase(), new MplsLabel(120L));
@@ -1347,26 +736,58 @@ public class BierNodeChangeListenerTest {
 
     private void assertModifiedParametersOfSubDomainAndDeletedIpv4Ipv6Test(List<SubDomain> subDomainList,
                                                                            List<Ipv4> ipv4List, List<Ipv6> ipv6List) {
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertEquals(subDomainList.get(0).getSubDomainId(),new SubDomainId(0001));
-        Assert.assertEquals(subDomainList.get(0).getBitstringlength(), Bsl._256Bit);
-        Assert.assertEquals(ipv4List.size(), 1);
-        Assert.assertEquals(ipv4List.get(0).getBitstringlength(), new Integer(64));
-        Assert.assertEquals(ipv4List.get(0).getBierMplsLabelBase(), new MplsLabel(101L));
-        Assert.assertEquals(ipv4List.get(0).getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize((short)30));
-        Assert.assertEquals(ipv6List.size(), 1);
-        Assert.assertEquals(ipv6List.get(0).getBitstringlength(), new Integer(128));
-        Assert.assertEquals(ipv6List.get(0).getBierMplsLabelBase(), new MplsLabel(98L));
-        Assert.assertEquals(ipv6List.get(0).getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize((short)48));
+        Assert.assertEquals(subDomainList.size(), 9);
+        Assert.assertEquals(subDomainList.get(8).getSubDomainId(),new SubDomainId(0001));
+        Assert.assertEquals(subDomainList.get(8).getBitstringlength(), Bsl._256Bit);
+        Assert.assertEquals(ipv4List.size(), 2);
+        Assert.assertEquals(ipv4List.get(1).getBitstringlength(), new Integer(64));
+        Assert.assertEquals(ipv4List.get(1).getBierMplsLabelBase(), new MplsLabel(101L));
+        Assert.assertEquals(ipv4List.get(1).getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize((short)30));
+        Assert.assertEquals(ipv6List.size(), 2);
+        Assert.assertEquals(ipv6List.get(1).getBitstringlength(), new Integer(128));
+        Assert.assertEquals(ipv6List.get(1).getBierMplsLabelBase(), new MplsLabel(98L));
+        Assert.assertEquals(ipv6List.get(1).getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize((short)48));
+    }
+
+    private void assertDeleteDSubDomainIpv4(List<Ipv4> ipv4List) {
+        Assert.assertEquals(ipv4List.size(), 3);
+        Assert.assertEquals(ipv4List.get(2).getBitstringlength(), new Integer(64));
+        Assert.assertEquals(ipv4List.get(2).getBierMplsLabelBase(), new MplsLabel(101L));
+        Assert.assertEquals(ipv4List.get(2).getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize((short)30));
+    }
+
+    private void assertDeleteDSubDomainIpv6(List<Ipv6> ipv6List) {
+        Assert.assertEquals(ipv6List.size(), 3);
+        Assert.assertEquals(ipv6List.get(2).getBitstringlength(), new Integer(128));
+        Assert.assertEquals(ipv6List.get(2).getBierMplsLabelBase(), new MplsLabel(98L));
+        Assert.assertEquals(ipv6List.get(2).getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize((short)48));
     }
 
     private void assertAddedAfChange(List<SubDomain> subDomainList) {
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertNotNull(subDomainList.get(0).getAf());
+        Assert.assertEquals(subDomainList.size(), 12);
+        Assert.assertNotNull(subDomainList.get(11).getAf());
     }
 
-    private void assertDeletedAfChange(List<SubDomain> subDomainList) {
-        Assert.assertEquals(subDomainList.size(), 1);
-        Assert.assertNull(subDomainList.get(0).getAf());
+    private void assertDeletedDomainTest2(List<Domain> domainList) {
+        Assert.assertEquals(domainList.size(), 6);
+        Assert.assertEquals(domainList.get(5).getDomainId(), new DomainId(0001));
+        BierGlobal bierGlobal = domainList.get(5).getBierGlobal();
+        Assert.assertEquals(bierGlobal.getBitstringlength(), Bsl._128Bit);
+        Assert.assertEquals(bierGlobal.getSubDomain().size(), 1);
+        SubDomain subDomain = bierGlobal.getSubDomain().get(0);
+        Ipv4 ipv4 = subDomain.getAf().getIpv4().get(0);
+        Assert.assertEquals(bierGlobal.getEncapsulationType(), BierEncapsulation.class);
+        Assert.assertEquals(bierGlobal.getBfrId(), new BfrId(9));
+        Assert.assertEquals(bierGlobal.getIpv4BfrPrefix(), new Ipv4Prefix("102.112.20.40/24"));
+        Assert.assertEquals(bierGlobal.getIpv6BfrPrefix(), new Ipv6Prefix("fe80::7009:fe25:8170:36af/64"));
+        Assert.assertEquals(subDomain.getSubDomainId(), new SubDomainId(0001));
+        Assert.assertEquals(subDomain.getBitstringlength(), Bsl._512Bit);
+        Assert.assertEquals(subDomain.getIgpType(), IgpType.ISIS);
+        Assert.assertEquals(subDomain.getBfrId(), new BfrId(13));
+        Assert.assertEquals(subDomain.getMtId(), new MtId(12));
+        Assert.assertEquals(subDomain.getAf().getIpv4().size(), 1);
+        Assert.assertEquals(ipv4.getBitstringlength(), new Integer(64));
+        Assert.assertEquals(ipv4.getBierMplsLabelBase(), new MplsLabel(101L));
+        Assert.assertEquals(ipv4.getBierMplsLabelRangeSize(), new BierMplsLabelRangeSize(Short.valueOf("30")));
     }
 }

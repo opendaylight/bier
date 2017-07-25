@@ -35,7 +35,9 @@ public class ChannelChangeListener implements DataTreeChangeListener<Channel> {
     private static final Logger LOG = LoggerFactory.getLogger(ChannelChangeListener.class);
 
     private static final InstanceIdentifier<Channel> CHANNEL_IID = InstanceIdentifier.create(BierNetworkChannel.class)
-            .child(BierChannel.class, new BierChannelKey("flow:1")).child(Channel.class);
+            .child(BierChannel.class, new BierChannelKey("example-linkstate-topology"))
+            .child(Channel.class);
+
 
     private BierChannelConfigProcess bierChannelConfigProcess;
     private BierTeChannelProcess bierTeChannelProcess;
@@ -85,9 +87,12 @@ public class ChannelChangeListener implements DataTreeChangeListener<Channel> {
     }
 
     public void processAddedChannel(Channel channel) {
-        if (null == channel) {
+        LOG.info("Check channel input");
+        if (!checkChannelInput(channel)) {
+            LOG.info("does not deploy-channel,do nothing!");
             return;
         }
+
         LOG.info("Add Channel!");
         if (channel.getBierForwardingType().equals(BierForwardingType.BierTe)) {
             LOG.info("Process add bier-te channel ");
@@ -99,9 +104,12 @@ public class ChannelChangeListener implements DataTreeChangeListener<Channel> {
     }
 
     public void processDeletedChannel(Channel channel) {
-        if (null == channel) {
+        LOG.info("Check channel input");
+        if (!checkChannelInput(channel)) {
+            LOG.error("Channel input error!");
             return;
         }
+
         LOG.info("Del Channel!");
         if (channel.getBierForwardingType().equals(BierForwardingType.BierTe)) {
             LOG.info("Process delete bier-te channel");
@@ -113,17 +121,42 @@ public class ChannelChangeListener implements DataTreeChangeListener<Channel> {
     }
 
     public void processModifiedChannel(Channel before, Channel after) {
-        if (null == before || null == after) {
+        if (null == before) {
             return;
         }
-        if (before.getBierForwardingType().equals(BierForwardingType.BierTe)
-                && after.getBierForwardingType().equals(BierForwardingType.BierTe)) {
-            LOG.info("Process modify bier-te channel");
-            bierTeChannelProcess.processModifiedTeChannel(before, after);
+        if (!checkChannelInput(after)) {
+            LOG.error("Channel input error!");
+            return;
+        }
+
+        if (after.getBierForwardingType().equals(BierForwardingType.BierTe)) {
+            if (before.getBierForwardingType() == null) {
+                LOG.info("Process add bier-te channel ");
+                bierTeChannelProcess.processAddedTeChannel(after);
+            } else {
+                LOG.info("Process modify bier-te channel");
+                bierTeChannelProcess.processModifiedTeChannel(before, after);
+            }
         } else {
             LOG.info("process deploy bier channel!");
             bierChannelConfigProcess.processModifiedChannel(before,after);
         }
+    }
+
+    private boolean checkChannelInput(Channel channel) {
+        if (null == channel) {
+            return false;
+        }
+        if (null == channel.getIngressNode()) {
+            return false;
+        }
+        if (null == channel.getEgressNode() || channel.getEgressNode().isEmpty()) {
+            return false;
+        }
+        if (null == channel.getBierForwardingType()) {
+            return false;
+        }
+        return true;
     }
 
     public InstanceIdentifier<Channel> getChannelId() {

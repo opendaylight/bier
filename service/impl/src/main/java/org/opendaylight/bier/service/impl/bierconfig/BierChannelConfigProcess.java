@@ -50,14 +50,6 @@ public class BierChannelConfigProcess {
     }
 
     public void processAddedChannel(Channel channel) {
-        if (null == channel) {
-            return;
-        }
-        LOG.info("Add Channel!");
-        if (!checkChannelInput(channel)) {
-            LOG.error("Channel input error!");
-            return;
-        }
         Channel channelBfr = addBfrIdToChannel(channel,channel.getEgressNode());
         ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
                 ConfigurationType.ADD, channelBfr);
@@ -68,14 +60,6 @@ public class BierChannelConfigProcess {
     }
 
     public void processDeletedChannel(Channel channel) {
-        if (null == channel) {
-            return;
-        }
-        LOG.info("Del Channel!");
-        if (!checkChannelInput(channel)) {
-            LOG.error("Channel input error!");
-            return;
-        }
         Channel channelBfr = addBfrIdToChannel(channel,channel.getEgressNode());
         ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
                 ConfigurationType.DELETE, channelBfr);
@@ -86,22 +70,15 @@ public class BierChannelConfigProcess {
     }
 
     public void processModifiedChannel(Channel before, Channel after) {
-        if (null == before || null == after) {
+        LOG.info("Deploy Channel!");
+        Channel channel = addBfrIdToChannel(after,after.getEgressNode());
+        ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
+                ConfigurationType.MODIFY, channel);
+        if (!writedChannelResult.isSuccessful()) {
+            notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
             return;
         }
-        if (!checkChannelInput(after)) {
-            LOG.error("Channel input error!");
-            return;
-        } else {
-            LOG.info("Deploy Channel!");
-            Channel channel = addBfrIdToChannel(after,after.getEgressNode());
-            ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
-                    ConfigurationType.MODIFY, channel);
-            if (!writedChannelResult.isSuccessful()) {
-                notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
-                return;
-            }
-        }
+
         if (checkEgressNodeDeleted(before.getEgressNode(),after.getEgressNode())) {
             LOG.info("Del Egress node!");
             List<EgressNode> egressNodeDeleted =
@@ -170,7 +147,8 @@ public class BierChannelConfigProcess {
             return null;
         }
         final InstanceIdentifier<BierNode> path = InstanceIdentifier.create(BierNetworkTopology.class)
-                                                  .child(BierTopology.class, new BierTopologyKey("flow:1"))
+                                                  .child(BierTopology.class, new BierTopologyKey(
+                                                          "example-linkstate-topology"))
                                                   .child(BierNode.class,new BierNodeKey(nodeId));
         final ReadTransaction tx = dataProvider.newReadOnlyTransaction();
         Optional<BierNode> bierNode = null;
@@ -233,19 +211,6 @@ public class BierChannelConfigProcess {
         EgressNodeBuilder builderNode = new EgressNodeBuilder(egressNode);
         builderNode.setEgressBfrId(egressBfrId);
         return builderNode.build();
-    }
-
-    private boolean checkChannelInput(Channel channel) {
-        if (null == channel) {
-            return false;
-        }
-        if (null == channel.getIngressNode()) {
-            return false;
-        }
-        if (null == channel.getEgressNode() || channel.getEgressNode().isEmpty()) {
-            return false;
-        }
-        return true;
     }
 
 }

@@ -7,7 +7,6 @@
  */
 package org.opendaylight.bier.service.impl;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -97,7 +96,7 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
         addNodeToDatastore("1", constructDomainList(1, 1, 1, 1));
         addNodeToDatastore("2", constructDomainList(1, 2, 1, 2));
         addNodeToDatastore("3", null);
-        addChannelToDatastore(constructBierChannel("flow:1", "channel-1", "10.84.220.5",
+        addChannelToDatastore(constructBierChannel("example-linkstate-topology", "channel-1", "10.84.220.5",
                 "102.112.20.40", 1, 1, (short)30, (short)40, 2, "2",
                 constructEgressNodeList(1, "1"), BierForwardingType.Bier));
         netconfStateChangeListener.onDataTreeChanged(setNodeData(constructNodeBefore("1"), constructNodeAfter("1"),
@@ -133,7 +132,7 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
     private void addNodeToDatastore(String nodeId, List<Domain> domainList) {
         final ReadWriteTransaction tx = getDataBroker().newReadWriteTransaction();
         final InstanceIdentifier<BierNode> path = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey("flow:1"))
+                .child(BierTopology.class, new BierTopologyKey("example-linkstate-topology"))
                 .child(BierNode.class, new BierNodeKey(nodeId));
         BierNodeBuilder bierNodeBuilder = new BierNodeBuilder();
         bierNodeBuilder.setNodeId(nodeId);
@@ -185,7 +184,7 @@ public class NodeOnlineTest extends AbstractDataBrokerTest {
     private void addChannelToDatastore(BierChannel channel) {
         final ReadWriteTransaction tx = getDataBroker().newReadWriteTransaction();
         final InstanceIdentifier<BierChannel> path = InstanceIdentifier.create(BierNetworkChannel.class)
-                .child(BierChannel.class, new BierChannelKey("flow:1"));
+                .child(BierChannel.class, new BierChannelKey("example-linkstate-topology"));
         tx.put(LogicalDatastoreType.CONFIGURATION, path, channel, true);
         try {
             tx.submit().get();

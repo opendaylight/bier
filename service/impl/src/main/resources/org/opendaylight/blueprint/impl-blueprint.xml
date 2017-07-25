@@ -30,6 +30,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
              interface="org.opendaylight.bier.adapter.api.BierTeBiftWriter" />
   <reference id="bierTeBitstringWriter"
              interface="org.opendaylight.bier.adapter.api.BierTeBitstringWriter" />
+  <reference id="bierTeLabelRangeConfigWriter"
+             interface="org.opendaylight.bier.adapter.api.BierTeLabelRangeConfigWriter" />
 
   <bean id="provider"
     class="org.opendaylight.bier.service.impl.ServiceProvider"
@@ -42,6 +44,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <argument ref="teChannelWriter" />
     <argument ref="bierTeBiftWriter" />
     <argument ref="bierTeBitstringWriter" />
+    <argument ref="bierTeLabelRangeConfigWriter" />
     <property name="bierConfigReader" ref="bierConfigReader"/>
   </bean>
 

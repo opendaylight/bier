@@ -80,6 +80,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
       <artifactId>pce-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.opendaylight.bier</groupId>
+      <artifactId>channel-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <!-- Testing Dependencies -->
     <dependency>

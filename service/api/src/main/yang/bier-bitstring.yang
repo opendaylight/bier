@@ -1,0 +1,44 @@
+module bier-bitstring{
+    yang-version 1;
+    namespace "urn:bier:bitstring";
+    prefix "bier-bitstring";
+
+    import bier-common {
+        prefix bier-common;
+    }
+
+    import bier-te-path {
+        prefix bier-te-path;
+    }
+
+    import ietf-bier {
+       prefix bier;
+    }
+
+    organization "zte";
+    revision "2017-05-23" {
+        description "Initial revision.";
+    }
+
+    container bier-bitstring {
+        description "The BIER TE BitString";
+        list channel-bitstring {
+                key "name";
+                ordered-by user;
+                leaf name {
+                     type string;
+                }
+                leaf domain-id {
+                     type bier-common:domain-id;
+                }
+                leaf sub-domain-id {
+                     type bier:sub-domain-id;
+                }
+                list path-bitstring {
+                     key "path-id";
+                     uses bier-te-path:te-path;
+                }
+         }
+    }
+
+}

@@ -7,7 +7,6 @@
  */
 package org.opendaylight.bier.service.impl;
 
-
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.ReportMessage;
 import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.ReportMessageBuilder;

@@ -100,7 +100,8 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
         @Override
         public DataTreeIdentifier<Channel> getRootPath() {
             InstanceIdentifier<Channel> channelId = InstanceIdentifier.create(BierNetworkChannel.class)
-                    .child(BierChannel.class, new BierChannelKey("flow:1")).child(Channel.class);
+                    .child(BierChannel.class, new BierChannelKey("example-linkstate-topology"))
+                    .child(Channel.class);
             return new DataTreeIdentifier<Channel>(
                     LogicalDatastoreType.CONFIGURATION, channelId);
         }
@@ -283,7 +284,7 @@ public class ChannelChangeListenerTest extends AbstractDataBrokerTest {
     private void addNodeToDatastore(String nodeId,int domainId,int subDomainId,int bfrId) {
         final ReadWriteTransaction tx = getDataBroker().newReadWriteTransaction();
         final InstanceIdentifier<BierNode> path = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey("flow:1"))
+                .child(BierTopology.class, new BierTopologyKey("example-linkstate-topology"))
                 .child(BierNode.class,new BierNodeKey(nodeId));
         BierNodeBuilder bierNode = new BierNodeBuilder();
         bierNode.setNodeId(nodeId);

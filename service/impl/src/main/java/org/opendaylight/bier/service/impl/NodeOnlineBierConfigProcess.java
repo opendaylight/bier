@@ -51,7 +51,7 @@ public class NodeOnlineBierConfigProcess {
         BierNode bierNode = queryBierNodeById(nodeId);
         if (null != bierNode) {
             LOG.info("process send bier config");
-            bierNodeChangeListener.processAddedNode(bierNode);
+            bierNodeChangeListener.processAddedNode(nodeId, bierNode.getBierNodeParams());
             LOG.info("process send channel");
             processSendChannelContainThisNode(nodeId);
         }
@@ -63,7 +63,7 @@ public class NodeOnlineBierConfigProcess {
             return null;
         }
         final InstanceIdentifier<BierNode> path = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class,new BierTopologyKey("flow:1"))
+                .child(BierTopology.class,new BierTopologyKey("example-linkstate-topology"))
                 .child(BierNode.class,new BierNodeKey(nodeId));
         final ReadTransaction tx = dataBroker.newReadOnlyTransaction();
         Optional<BierNode> bierNode = null;
@@ -77,7 +77,7 @@ public class NodeOnlineBierConfigProcess {
         } catch (ReadFailedException e) {
             LOG.error("Get bierNode from bier topology is null");
         }
-        if (null != node.getBierNodeParams()) {
+        if (null != node && null != node.getBierNodeParams()) {
             if (null != node.getBierNodeParams().getDomain() && 0 != node.getBierNodeParams().getDomain().size()) {
                 LOG.info("Node has bier config");
                 return node;
@@ -92,7 +92,7 @@ public class NodeOnlineBierConfigProcess {
 
     private void processSendChannelContainThisNode(String nodeId) {
         final InstanceIdentifier<BierChannel> path = InstanceIdentifier.create(BierNetworkChannel.class)
-                .child(BierChannel.class,new BierChannelKey("flow:1"));
+                .child(BierChannel.class,new BierChannelKey("example-linkstate-topology"));
         final ReadTransaction tx = dataBroker.newReadOnlyTransaction();
         Optional<BierChannel> bierChannel = null;
         BierChannel channel = null;

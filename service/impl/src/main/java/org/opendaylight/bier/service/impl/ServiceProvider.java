@@ -7,12 +7,12 @@
  */
 package org.opendaylight.bier.service.impl;
 
-
 import org.opendaylight.bier.adapter.api.BierConfigReader;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
 import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
 import org.opendaylight.bier.adapter.api.BierTeChannelWriter;
+import org.opendaylight.bier.adapter.api.BierTeLabelRangeConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
 import org.opendaylight.bier.service.impl.activate.driver.ActivateNetconfConnetion;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -33,6 +33,7 @@ public class ServiceProvider {
     private final BierConfigWriter bierConfigWriter;
     private final BierTeBiftWriter bierTeBiftWriter;
     private final BierTeBitstringWriter bierTeBitstringWriter;
+    private final BierTeLabelRangeConfigWriter bierTeLabelRangeConfigWriter;
     private BierConfigReader bierConfigReader;
 
     private ServiceManager serviceManager;
@@ -43,7 +44,8 @@ public class ServiceProvider {
                            final BierConfigWriter bierConfigWriter, final ChannelConfigWriter channelConfigWriter,
                            final BierTeChannelWriter teChannelWriter,
                            final BierTeBiftWriter bierTeBiftWriter,
-                           final BierTeBitstringWriter bierTeBitstringWriter) {
+                           final BierTeBitstringWriter bierTeBitstringWriter,
+                           final BierTeLabelRangeConfigWriter bierTeLabelRangeConfigWriter) {
         this.dataBroker = dataBroker;
         this.rpcConsumerRegistry = rpcConsumerRegistry;
         this.notificationService = notificationService;
@@ -52,6 +54,7 @@ public class ServiceProvider {
         this.teChannelWriter = teChannelWriter;
         this.bierTeBiftWriter = bierTeBiftWriter;
         this.bierTeBitstringWriter = bierTeBitstringWriter;
+        this.bierTeLabelRangeConfigWriter = bierTeLabelRangeConfigWriter;
     }
 
     public void setBierConfigReader(BierConfigReader bierConfigReader) {
@@ -64,7 +67,8 @@ public class ServiceProvider {
     public void init() {
         LOG.info("ServiceProvider Session Initiated");
         serviceManager = new ServiceManager(dataBroker, notificationService, rpcConsumerRegistry, bierConfigWriter,
-                bierChannelWriter, teChannelWriter, bierTeBiftWriter,bierTeBitstringWriter);
+                bierChannelWriter, teChannelWriter, bierTeBiftWriter, bierTeBitstringWriter,
+                bierTeLabelRangeConfigWriter);
         ActivateNetconfConnetion activateNetconfConnetion = new ActivateNetconfConnetion(dataBroker,bierConfigReader);
     }
 
