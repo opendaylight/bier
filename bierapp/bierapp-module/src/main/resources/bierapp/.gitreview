@@ -1,0 +1,5 @@
+[gerrit]
+host=gerrit.zte.com.cn
+port=29418
+project=bier/bier-a
+defaultbranch=BIER_V1.1

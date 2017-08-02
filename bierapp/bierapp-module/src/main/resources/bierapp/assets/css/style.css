@@ -1,0 +1,256 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html,body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#bierman-topology {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+.bierappModule {
+    background-color: #ffffff;
+    color: #505050;
+    height: 90%;
+    width: 100%;
+}
+
+.white {
+    color: white;
+}
+
+span.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.n-topology.n-topology-blue {
+    background: #ffffff;
+}
+
+.n-topology-nav-setting-icon {
+    display:none;
+}
+
+
+.md-dialog-container.ng-scope {
+    z-index: 10000000;
+}
+
+.h100 {
+    height: 100%;
+}
+
+.w100 {
+    width: 100%;
+}
+
+.w70 {
+    width: 70%;
+}
+
+.md-subheader-inner {
+    padding-left: 0 !important;
+}
+
+md-toolbar.white {
+    color: #fff !important;
+}
+
+.add-channel md-input-container {
+    margin: 0 !important;
+}
+
+.channel-info {
+    padding: 5px 0px 5px 0px;
+}
+
+.topology-info {
+    padding: 10px 5px 10px 24px;
+}
+
+.bier-info {
+    padding: 20px 5px 10px 24px;
+}
+
+.channel-actions {
+    padding: 5px 0px 5px 0px;
+}
+
+.topology-actions {
+    padding: 10px 24px 10px 55px;
+}
+
+.menu-button {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+md-list-item {
+    padding: 0px 10px 0px 10px !important;
+}
+
+.center-button-outer {
+    text-align: center;
+}
+
+.center-button-inner {
+    display: inline-block;
+}
+
+.fmask-result {
+    padding-top: 15px;
+}
+
+.info-icon {
+    color: #2196f3;
+}
+
+.toolbar {
+    background: #000 !important;
+}
+
+.toolbar-gray {
+    background: #666666 !important;
+}
+
+.product-label {
+    margin: auto 16px auto 10px;
+    font-weight: bold;
+}
+
+/* Fix for conflicts with Angular Material */
+.sweet-alert {
+    z-index: 10000005 !important;
+}
+
+.sweet-overlay {
+    z-index: 10000004 !important;
+}
+
+.path-item:hover {
+    background: #d8e6f3;
+    cursor: pointer;
+}
+
+/* No select */
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Floating */
+.align-left {
+    float: left;
+}
+
+.align-right{
+    float: right;
+}
+
+.clear {
+    clear: both;
+}
+
+.text-success, .text-error {
+    font: normal 15px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #009b00;
+}
+
+.text-error {
+    color: #9b0000;
+}
+
+.sidenav-border {
+    border-left: solid #000 1px;
+}
+
+.sidenav-with {
+    width: 320px;
+}
+
+.button-enlarged {
+    font-size: 16px;
+    padding: 10px;
+}
+
+div:focus, span:focus {
+    outline: none;
+    border: 0;
+}
+
+.nextLink,.prevLink{
+    font-size: 12px;
+    line-height: 24px;
+    height: 24px;
+    border: solid 1px #aaa;
+    color: #999;
+    padding: 0 9px;
+    margin: 0 0 0 5px;
+    list-style: none;
+    background: #f2f2f2;
+    float: left;
+    cursor: pointer;
+}
+
+a.prevLink:hover,a.nextLink:hover {
+    background: #aaa !important;
+    color: #fff !important;
+    cursor: pointer;
+}
+
+.step {
+    display: block;
+    line-height: 24px;
+    height: 24px;
+    border: solid 1px #aaa;
+    color: #999;
+    background: #fff;
+    padding: 0 9px;
+    font-size: 12px;
+    float: left;
+    margin: 0 0 0 5px;
+    list-style: none;
+    cursor: pointer;
+ }
+
+
+.currentStep{
+       border-color: #fff;
+       padding: 0 4px;
+       color: #f90;
+       font-weight: bold;
+       float: left;
+       display: block;
+       line-height: 24px;
+       height: 24px;
+       padding: 0 9px;
+       font-size: 12px;
+       float: left;
+       margin: 0 0 0 5px;
+       list-style: none;
+       cursor: pointer;
+ }
+
+.inside-next {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    padding: 20px 20px 20px 40px;
+    color: #464646;
+    z-index: 10;
+}
+
+/* Modal window */

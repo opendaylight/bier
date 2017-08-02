@@ -1,0 +1,26 @@
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
+    <reference id="httpService" availability="mandatory" activation="eager" interface="org.osgi.service.http.HttpService"/>
+    <reference id="loader" availability="mandatory" activation="eager" interface="org.opendaylight.dlux.loader.DluxModuleLoader"/>
+
+    <bean id="bundle" init-method="initialize" destroy-method="clean" class="org.opendaylight.dlux.loader.DluxModule">
+        <property name="httpService" ref="httpService"/>
+        <property name="loader" ref="loader"/>
+        <property name="moduleName" value="bierapp"/>
+        <property name="url" value="/src/app/bierapp"/>
+        <property name="directory" value="/bierapp/build"/>
+        <property name="requireJs" value="app/bierapp/src/main"/>
+        <property name="angularJs" value="app.bierapp"/>
+        <property name="cssDependencies">
+            <list>
+                <!--value>src/app/bierapp/bierapp-custom.css</value-->
+                <value>src/app/bierapp/assets/css/loading.css</value>
+                <value>src/app/bierapp/assets/css/style.css</value>
+                <value>src/app/bierapp/assets/css/sweetalert.css</value>
+                <value>src/app/bierapp/vendor/angular-material/angular-material.min.css</value>
+                <value>src/app/bierapp/vendor/NeXt/css/next.min.css</value>
+                <value>src/app/bierapp/vendor/font-awesome/css/font-awesome.min.css</value>
+                <value>src/app/bierapp/vendor/bootstrap/dist/css/bootstrap.min.css</value>     
+            </list>
+        </property>
+    </bean>
+</blueprint>

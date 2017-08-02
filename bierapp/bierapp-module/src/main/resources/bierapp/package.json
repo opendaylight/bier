@@ -1,0 +1,26 @@
+{
+  "name": "bierapp",
+  "version": "0.2.0",
+  "description": "a demo app for configure BIER informations on ODL",
+  "author": {
+    "name": "Gao Chenqiang",
+    "email": "gao.chenqiang@zte.com.cn"
+  },
+  "dependencies": {
+    "del": "^2.2.0",
+    "gulp-util": "^3.0.7",
+    "gulp-concat": "^2.6.0",
+    "gulp-install": "^0.6.0",
+    "run-sequence": "^1.1.5"
+  },
+  "devDependencies": {
+    "bower": "^1.8.0",
+    "gulp": "^3.9.1"
+  },
+  "scripts": {
+  },
+  "keywords": [
+    "bier"
+  ],
+  "license": "MIT"
+}

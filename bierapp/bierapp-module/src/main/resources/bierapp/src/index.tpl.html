@@ -1,0 +1,52 @@
+<!--div ng-controller="biermanCtrl" class="app-wrapper h100"-->
+<!--div class="app-wrapper h100"-->
+<div layout="row" class="app-wrapper h100" flex>
+	<div ng-show="appConfig.queryTopology == 'yes'" ng-hide="appConfig.queryTopology == 'no'">
+        <div class="loading">Loading&#8230;</div>
+    </div>
+    
+	<div layout="row" class="h100" flex>
+		<section flex layout='column' class="h100">
+			<!--md-toolbar class="toolbar"-->
+			<md-toolbar >
+				<div class="md-toolbar-tools white float-left ">
+					<!--span class="product-label"><i class="fa fa-beer"></i> BIERMAN</span-->
+					<md-button class="menu-button" ng-click="openRightPanel('topology-manager')">
+						Topology
+					</md-button>
+					<md-button class="menu-button" ng-click="openNetconfManager()">
+						Netconf
+					</md-button>
+					<md-button class="menu-button" ng-click="openDomainManager()">
+						Domain
+					</md-button>
+					<md-button class="menu-button" ng-click="openBierManager()">
+						Bier
+					</md-button>
+					<md-button class="menu-button" ng-click="openBierTeManager()">
+						Bier Te
+					</md-button>
+					<md-button class="menu-button" ng-click="openChannelManager()">
+						Channel
+					</md-button>
+					<span flex></span>
+					<md-button class="menu-button" ng-click="openRightPanel('bgp-setting')">
+						<i class="fa fa-cog"></i> BGP-LS
+					</md-button>
+				</div>
+				
+			</md-toolbar>
+			<div class="h100">
+				<section layout="row" class="h100">
+					<bierman-topology id="bierman-topology" topo="topo" open-panel="openPanel" process-bier-tree-data="processBierTreeData" process-deploy-channel-data="processDeployChannelData" reset-topology="resetTopology" convert-uni-to-bi-links="convertUniToBiLinks" highlight-path="highlightPath">
+						<!--b>current topology：{{appConfig.currentTopologyId}}　　current domain：{{appConfig.currentDomain}}</b-->
+						<div class="inside-next">
+							<b>current topology： <span ng-bind="appConfig.currentTopologyId"></span> 　  current domain：<span ng-bind="appConfig.currentDomain"> </span></b>
+						</div>
+					</bierman-topology>
+					<slideout-right layout="column"></slideout-right>
+				</section>
+			</div>
+		</section>
+	</div>
+</div>
