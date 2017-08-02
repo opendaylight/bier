@@ -2012,7 +2012,7 @@ public class BierDataManager {
                 if (label.domainId.equals(label1.domainId) && label.subDomainId.equals(label1.subDomainId)
                         && label.type.equals(label1.type)
                         && label.bitstringlength == label1.bitstringlength
-                        && label1.labelbase == label1.labelbase) {
+                        && label.labelbase == label1.labelbase) {
                     continue;
                 }
 

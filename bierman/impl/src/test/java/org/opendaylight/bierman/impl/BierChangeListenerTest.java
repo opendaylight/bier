@@ -8,6 +8,8 @@
 package org.opendaylight.bierman.impl;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import org.junit.After;
 import org.junit.Assert;
@@ -71,51 +73,84 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
     public void addedNodeTest() throws ExecutionException, InterruptedException {
         String nodeId = "bgpls://IsisLevel1:0/type=node&as=1&domain=0&router=3";
         addNodeToTopology(nodeId);
-        BierNode bierNode = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,"3");
-        Assert.assertTrue(bierNode.getNodeId().equals("3"));
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                BierNode bierNode = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,"3");
+                Assert.assertTrue(bierNode.getNodeId().equals("3"));
+            }
+        },1500);
+
     }
 
     @Test
     public void removedNodeTest() {
         removeNodeToTopology("bgpls://IsisLevel1:0/type=node&as=1&domain=0&router=1");
-        BierNode bierNode = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,"1");
-        Assert.assertTrue(bierNode.getNodeId().equals("1"));
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                BierNode bierNode = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,"1");
+                Assert.assertTrue(bierNode.getNodeId().equals("1"));
+            }
+        },1500);
+
     }
 
     @Test
     public void addedLinkTest() {
         addLinkToTopology("bgpls://IsisLevel1:0/type=link&local-as=1&local-domain=0&local-router=1"
                 + "&remote-as=1&remote-domain=0&remote-router=2&ipv4-iface=192.168.54.11&ipv4-neigh=192.168.54.13");
-        BierLink bierLink = topoManager.getLinkData(BierTopologyTestDataInit.TopologyId,
-                "1,192.168.54.11-2,192.168.54.13");
-        Assert.assertTrue(bierLink.getLinkId().equals("1,192.168.54.11-2,192.168.54.13"));
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                BierLink bierLink = topoManager.getLinkData(BierTopologyTestDataInit.TopologyId,
+                        "1,192.168.54.11-2,192.168.54.13");
+                Assert.assertTrue(bierLink.getLinkId().equals("1,192.168.54.11-2,192.168.54.13"));
+            }
+        },1500);
+
     }
 
     @Test
     public void removedLinkTest() {
         removeLinkToTopology("bgpls://IsisLevel1:0/type=link&local-as=1&local-domain=0&local-router=2"
                 + "&remote-as=1&remote-domain=0&remote-router=1&ipv4-iface=192.168.54.13&ipv4-neigh=192.168.54.11");
-        BierLink bierLink = topoManager.getLinkData(BierTopologyTestDataInit.TopologyId,
-                "2,192.168.54.13-1,192.168.54.11");
-        Assert.assertTrue(bierLink == null);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                BierLink bierLink = topoManager.getLinkData(BierTopologyTestDataInit.TopologyId,
+                        "2,192.168.54.13-1,192.168.54.11");
+                Assert.assertTrue(bierLink == null);
+            }
+        },1500);
     }
 
     @Test
     public void addedTpTest() {
         addTpToTopology("bgpls://IsisLevel1:0/type=node&as=1&domain=0&router=1",
                 "bgpls://IsisLevel1:0/type=tp&ipv4=192.168.54.12");
-        List<BierTerminationPoint> bierTp = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,
-                "1").getBierTerminationPoint();
-        Assert.assertTrue(bierTp.get(1).getTpId().equals("192.168.54.12"));
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                List<BierTerminationPoint> bierTp = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,
+                        "1").getBierTerminationPoint();
+                Assert.assertTrue(bierTp.get(1).getTpId().equals("192.168.54.12"));
+            }
+        },1500);
     }
 
     @Test
     public void removedTpTest() {
         removeTpToTopology("bgpls://IsisLevel1:0/type=node&as=1&domain=0&router=1",
                 "bgpls://IsisLevel1:0/type=tp&ipv4=192.168.54.11");
-        List<BierTerminationPoint> bierTp = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId, "1")
-                .getBierTerminationPoint();
-        Assert.assertTrue(bierTp.size() == 0);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                List<BierTerminationPoint> bierTp = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId, "1")
+                        .getBierTerminationPoint();
+                Assert.assertTrue(bierTp.size() == 0);
+            }
+        },1500);
     }
 
     public void addNodeToTopology(String strNodeId) {
@@ -132,7 +167,6 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
         tx.put(LogicalDatastoreType.OPERATIONAL,path, node, true);
         try {
             tx.submit().get();
-            Thread.sleep(1500);
         } catch (InterruptedException | ExecutionException e) {
             return;
         }
@@ -146,7 +180,6 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
         tx.delete(LogicalDatastoreType.OPERATIONAL,path);
         try {
             tx.submit().get();
-            Thread.sleep(1500);
         } catch (InterruptedException | ExecutionException e) {
             return;
         }
@@ -182,7 +215,6 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
         tx.put(LogicalDatastoreType.OPERATIONAL,path, link, true);
         try {
             tx.submit().get();
-            Thread.sleep(1500);
         } catch (InterruptedException | ExecutionException e) {
             return;
         }
@@ -196,7 +228,6 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
         tx.delete(LogicalDatastoreType.OPERATIONAL, path);
         try {
             tx.submit().get();
-            Thread.sleep(1500);
         } catch (InterruptedException | ExecutionException e) {
             return;
         }
@@ -217,7 +248,6 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
         tx.put(LogicalDatastoreType.OPERATIONAL,path, tp, true);
         try {
             tx.submit().get();
-            Thread.sleep(1500);
         } catch (InterruptedException | ExecutionException e) {
             return;
         }
@@ -233,7 +263,6 @@ public class BierChangeListenerTest extends AbstractDataBrokerTest {
         tx.delete(LogicalDatastoreType.OPERATIONAL, path);
         try {
             tx.submit().get();
-            Thread.sleep(1500);
         } catch (InterruptedException | ExecutionException e) {
             return;
         }
