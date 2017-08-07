@@ -2500,6 +2500,566 @@ define([
 		});
 	};
 
+	//open Bier Manager
+	$scope.openBierManager = function() {
+		$scope.customFuBierllscreen = $mdMedia('xs') || $mdMedia('sm');
+		var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
+		$mdDialog.show({
+			controller: function($scope, $mdDialog, dScope){
+
+				$scope.nodedetail = {
+					name: '',
+					detail: false,
+					domain: []
+				};
+				$scope.nodeadd = {
+					name: '',
+					adding: false
+				};
+				$scope.nodedomainedit = {
+					name: '',
+					editing: false
+				};
+				$scope.nodesubdomainedit = {
+					name: '',
+					editing: false
+				};
+				$scope.nodeipv4edit = {
+					name: '',
+					editing: false
+				};
+
+				$scope.input = {
+					'editDomain': {},
+					'editSubdomain': {},
+					'editIpv4': {},
+					'editDomainStatus': 'none',
+					'editSubdomainStatus': 'none',
+					'editIpv4Status': 'none',
+
+					'addNodeConfig':{},
+					'addNodeConfigStatus':'none'
+				};
+				$scope.editDomainid = null;
+				$scope.editSubdomainid = null;
+				$scope.editIpv4data = null;
+
+				$scope.currentPage = 0;
+				$scope.listsPerPage = 20;
+
+				if(dScope.topologyData === null){
+					$scope.dataNum = 0;
+				}else{
+					$scope.dataNum =  dScope.topologyData.nodes.length;
+				}
+				$scope.pages = Math.ceil($scope.dataNum/20);
+				$scope.pageNum = [];
+
+				for(var num = 0; num < $scope.pages; num++){
+					$scope.pageNum.push(num);
+				}
+
+				// Hide dialog (close without discarding changes)
+				$scope.hide = function() {
+					$mdDialog.hide();
+				};
+				// Cancel (discard changes)
+				$scope.cancel = function() {
+					$mdDialog.cancel();
+				};
+				$scope.typeOf = function(val){
+					return typeof val;
+				};
+
+				$scope.setPage = function(num){
+					$scope.currentPage = num;
+				};
+
+				$scope.prevPage = function(){
+					if($scope.currentPage > 0){
+						$scope.currentPage--;
+					}
+				};
+				$scope.nextPage = function(){
+					if ($scope.currentPage < $scope.pages-1){
+						$scope.currentPage++;
+					}
+				};
+
+				$scope.addNodeDomain = function(val){
+					var netconf = false;
+					//var netconf = true;
+					for(var i = 0; i < dScope.netconfNode.length; i++){
+						if(val == dScope.netconfNode[i]['node-id'])
+							if(dScope.netconfNode[i].ip !== null)
+								netconf = true;
+					}
+					if(netconf === false){
+						dScope.displayAlert({
+							title: "Netconf  Not Configure",
+							text: "You must add netconf for " + val + " before configure bier" ,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+					else{
+						$scope.nodeadd.adding = true;
+						$scope.nodedetail.detail = false;
+
+						$scope.nodedomainedit.editing = false;
+						$scope.nodesubdomainedit.editing = false;
+					}
+				};
+
+				$scope.closedetail = function(val){
+					$scope.nodedetail.detail = false;
+					$scope.nodedetail.domain = [];
+				};
+
+				$scope.closeAdd = function(){
+					$scope.nodeadd.adding = false;
+					$scope.nodedetail.detail = true;
+				};
+
+				$scope.editDomain = function(val){
+					$scope.nodedomainedit.editing = true;
+					$scope.nodedetail.detail = false;
+
+					$scope.nodeadd.adding = false;
+					$scope.nodesubdomainedit.editing = false;
+					$scope.nodeipv4edit.editing = false;
+
+					$scope.editDomainid = val;
+				};
+
+				$scope.closeDomainEdit = function(){
+					$scope.nodedomainedit.editing = false;
+					$scope.nodedetail.detail = true;
+				};
+
+				$scope.editSubdomain = function(val1, val2){
+					$scope.nodesubdomainedit.editing = true;
+					$scope.nodedetail.detail = false;
+
+					$scope.nodeadd.adding = false;
+					$scope.nodedomainedit.editing = false;
+					$scope.nodeipv4edit.editing = false;
+
+					$scope.editDomainid = val1;
+					$scope.editSubdomainid = val2;
+				};
+
+				$scope.closeSubdomainEdit = function(){
+					$scope.nodesubdomainedit.editing = false;
+					$scope.nodedetail.detail = true;
+				};
+
+				$scope.editIpv4 = function(val1, val2, val3){
+					$scope.nodeipv4edit.editing = true;
+					$scope.nodedetail.detail = false;
+
+					$scope.nodeadd.adding = false;
+					$scope.nodedomainedit.editing = false;
+					$scope.nodesubdomainedit.editing = false;
+
+					$scope.editDomainid = val1;
+					$scope.editSubdomainid = val2;
+					$scope.editIpv4data = val3;
+
+				};
+
+				$scope.closeIpv4Edit = function(){
+					$scope.nodeipv4edit.editing = false;
+					$scope.nodedetail.detail = true;
+				};
+
+				$scope.select = '';
+
+				//get detail node
+				$scope.detailNode = function(val){
+					$scope.nodedetail.domain = [];
+					$scope.nodedetail.detail = true;
+					$scope.nodedetail.name = val;
+					var node = [val];
+					BiermanRest.queryNode(
+						{
+							'topo-id': dScope.appConfig.currentTopologyId,
+							'node': node
+						},
+						function(data){
+							if(data.node[0].hasOwnProperty('bier-node-params')){
+								$scope.nodedetail.domain = data.node[0]['bier-node-params'].domain;
+							}
+						},
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Node details not loaded",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				//edit domain configure of node
+				$scope.nodeEditDomain = function(val){
+					$scope.input.editDomainStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.editDomain, [])){
+						var nodeId = val;
+						var domain =[
+							{
+								"domain-id": $scope.editDomainid,
+								"bier-global":{
+									"encapsulation-type": $scope.input.editDomain.encap,
+									"bitstringlength": $scope.input.editDomain.bsl,
+									"bfr-id": $scope.input.editDomain.gbfr,
+									"ipv4-bfr-prefix": $scope.input.editDomain.ipv4
+								}
+							}
+						];
+						BiermanRest.configNode(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'node-id': nodeId,
+								'domain':domain
+							},
+							// success
+							function(data){
+								$scope.input.editDomain = {};
+								$scope.input.editDomainStatus = 'success';
+								dScope.displayAlert({
+									title: "Node Added",
+									text: "Node " + nodeId + " has been edited to the system",
+									type: "success",
+									timer: 1500,
+									confirmButtonText: "Okay"
+								});
+								$scope.closeDomainEdit();
+								$scope.detailNode(nodeId);
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Node configure Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+						dScope.displayAlert({
+							title: "Node configure Not Added",
+							text: "configued a node " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+				//edit subdomain configure of node
+				$scope.nodeEditSubdomain = function(val){
+					$scope.input.editSubdomainStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.editSubdomain, [])){
+						var nodeId = val;
+						var subdomain =[
+							{
+								"sub-domain-id": $scope.editSubdomainid,
+								"igp-type": $scope.input.editSubdomain.igp,
+								"bfr-id": $scope.input.editSubdomain.bfr,
+								"bitstringlength": $scope.input.editSubdomain.bsl,
+								"mt-id": 0
+							}
+						];
+						BiermanRest.configNode(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'node-id': nodeId,
+								'domain':[
+									{
+										"domain-id": $scope.editDomainid,
+										"bier-global":{
+											"sub-domain":subdomain
+										}
+									}
+								]
+							},
+							// success
+							function(data){
+								$scope.input.editSubdomain = {};
+								$scope.input.editSubdomainStatus = 'success';
+								dScope.displayAlert({
+									title: "Node  Edited",
+									text: "The Node " + nodeId + " has been edited to the system",
+									type: "success",
+									timer: 1500,
+									confirmButtonText: "Okay"
+								});
+								$scope.closeSubdomainEdit();
+								$scope.detailNode(nodeId);
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Node configure Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+						dScope.displayAlert({
+							title: "Node configure Not Added",
+							text: "configued a node " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+				//edit ipv4 configure of node
+				$scope.nodeEditIpv4 = function(val){
+					$scope.input.editIpv4Status = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.editIpv4, ['range'])){
+						var nodeId = val;
+						var subdomain =[
+							{
+								"sub-domain-id": $scope.editSubdomainid,
+								"af":{
+									"ipv4": [
+										{
+											"bitstringlength": $scope.editIpv4data.bitstringlength,
+											"bier-mpls-label-base": $scope.editIpv4data['bier-mpls-label-base'],
+											"bier-mpls-label-range-size": $scope.input.editIpv4.range
+										}
+									]
+								}
+							}
+						];
+						BiermanRest.configNode(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'node-id': nodeId,
+								'domain':[
+									{
+										"domain-id": $scope.editDomainid,
+										"bier-global":{
+											"sub-domain":subdomain
+										}
+									}
+								]
+							},
+							// success
+							function(data){
+								$scope.input.editIpv4 = {};
+								$scope.input.editIpv4Status = 'success';
+								dScope.displayAlert({
+									title: "Ipv4 Edited",
+									text: "The Node " + nodeId + " Ipv4 has been edited to the system",
+									type: "success",
+									timer: 1500,
+									confirmButtonText: "Okay"
+								});
+								$scope.closeIpv4Edit();
+								$scope.detailNode(nodeId);
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Node configure Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+						dScope.displayAlert({
+							title: "Node configure Not Added",
+							text: "configued a node " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+				// remove node from subdomain
+				$scope.removeNodeFromSubdomain = function(node, domain, subdomain){
+					BiermanRest.removeNodeFromSubdomain (
+						{
+							'topology-id': dScope.appConfig.currentTopologyId,
+							'node-id': node,
+							'domain-id': domain,
+							'sub-domain-id': subdomain
+						},
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "Node Removed ",
+								text: "Node removed from subdomain " + subdomain ,
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							$scope.detailNode(node);
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Node Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+				// remove ipv4 from subdomain
+				$scope.removeIpv4 = function(node, domain, subdomain, ipv4){
+					BiermanRest.removeIpv4 (
+						{
+							'topology-id': dScope.appConfig.currentTopologyId,
+							'node-id': node,
+							'domain-id': domain,
+							'sub-domain-id': subdomain,
+							'ipv4':{
+								'bitstringlength':ipv4.bitstringlength,
+								'bier-mpls-label-base':ipv4['bier-mpls-label-base']
+							}
+						},
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "Ipv4 Removed ",
+								text: "ipv4 removed from subdomain " + subdomain ,
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							$scope.detailNode(node);
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Ipv4 Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+				//add domain/subdomain configure of node
+				$scope.addNodeConfig = function(val){
+					$scope.input.addNodeConfigStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.addNodeConfig, ['domain','subdomain','ipv4bsl','ipv4base'])){
+						var nodeId = val;
+						var subdomain =[
+							{
+								//"sub-domain-id": $scope.input.addNodeConfig.subdomain['sub-domain-id'],
+								"sub-domain-id": $scope.input.addNodeConfig.subdomain,
+								"igp-type": $scope.input.addNodeConfig.igp,
+								"bfr-id": $scope.input.addNodeConfig.bfr,
+								"bitstringlength": $scope.input.addNodeConfig.sbsl,
+								"mt-id": 0,
+								"af":{
+									"ipv4": [
+										{
+											"bier-mpls-label-base": $scope.input.addNodeConfig.ipv4base,
+											"bier-mpls-label-range-size": $scope.input.addNodeConfig.ipv4range,
+											"bitstringlength": $scope.input.addNodeConfig.ipv4bsl
+										}
+									]
+								}
+							}
+						];
+						BiermanRest.configNode(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'node-id': nodeId,
+								'domain':[
+									{
+										"domain-id": $scope.input.addNodeConfig.domain['domain-id'],
+										"bier-global":{
+											"encapsulation-type": "ietf-bier:bier-encapsulation-mpls",
+											"bitstringlength": $scope.input.addNodeConfig.gbsl,
+											"ipv4-bfr-prefix": $scope.input.addNodeConfig.ipv4,
+											"bfr-id": $scope.input.addNodeConfig.gbfr,
+											//"ipv6-bfr-prefix": $scope.input.addNodeConfig.ipv6,
+											"sub-domain":subdomain
+										}
+									}
+								]
+							},
+							// success
+							function(data){
+								$scope.input.addNodeConfig = {};
+								$scope.input.addNodeConfigStatus = 'success';
+								dScope.displayAlert({
+									title: "Node  Added",
+									text: "Node " + nodeId + " has been added to the system",
+									type: "success",
+									timer: 500,
+									confirmButtonText: "Okay"
+								});
+								$scope.detailNode(nodeId);
+								$scope.closeAdd();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Node configure Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+
+						dScope.displayAlert({
+							title: "Node configure Not Added",
+							text: dScope.errMsg2,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				$scope.dScope = dScope;
+			},
+			templateUrl: 'src/app/bierapp/src/templates/bier-manager.tpl.html',
+			parent: angular.element(document.body),
+			clickOutsideToClose: true,
+			fullscreen: useFullScreen,
+			locals: {
+				dScope: $scope
+			}
+		})
+			.then(function(answer) {
+				$scope.status = 'You said the information was "' + answer + '".';
+			}, function() {
+				$scope.status = 'You cancelled the dialog.';
+			});
+		$scope.$watch(function() {
+			return $mdMedia('xs') || $mdMedia('sm');
+		}, function(wantsFullScreen) {
+			$scope.customFullscreen = (wantsFullScreen === true);
+		});
+	};
+
+
+
 
 
 

@@ -1,0 +1,336 @@
+<md-dialog aria-label="Bier Manager" flex="50">
+    <md-dialog-content>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Bier Manager</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                    <i class="fa fa-close fa-2x" aria-label="Close dialog"></i>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <!-- Node Configure Block -->
+        <md-toolbar class="md-accent white">
+            <div class="md-toolbar-tools">
+                <h3>Node Configure</h3>
+            </div>
+            <!--div ng-show="progressBar == true" ng-hide="progressBar == false">
+                <md-progress-linear md-mode="query"></md-progress-linear>
+            </div-->
+        </md-toolbar>
+        <div ng-show="dScope.topologyData.nodes.length == 0">
+            Topology has no nodes.
+        </div>
+        <div ng-show="dScope.topologyData == null">
+            <md-progress-linear md-mode="query"></md-progress-linear>
+            <div class="bottom-block channel-info">
+                <span>Loading available Nodes...</span>
+            </div>
+        </div>
+        <div ng-show="typeOf(dScope.topologyData) == 'object'">
+            <md-content>
+                <div ng-show="dScope.topologyData.nodes.length  > 0">
+                    <md-content>
+                        <md-list>
+                            <md-list-item class="md-3-line" ng-repeat="node in dScope.topologyData.nodes  | paging:currentPage*listsPerPage | limitTo:listsPerPage ">
+                                <div class="md-list-item-text" layout="row">
+                                    <!--node display mode-->
+                                    <div ng-show="!nodedomainedit.editing && !nodesubdomainedit.editing && !nodedetail.detail && !nodeadd.adding && !nodeipv4edit.editing || nodedetail.name != node['node-id']" class="w100 clear">
+                                        <div class="channel-info align-left">
+                                            <h3>{{node['node-id']}}</h3>
+                                        </div>
+                                        <div class="channel-actions align-right">
+                                            <md-button ng-click="detailNode(node['node-id'])" class="md-primary">
+                                                Detail
+                                            </md-button>
+                                        </div>
+                                    </div>
+                                    <!-- detial display mode -->
+                                    <div ng-show="nodedetail.detail && nodedetail.name == node['node-id']">
+                                        <div layout="row">
+                                            <div class="channel-info">
+                                                <div ng-show="nodedetail.domain == null">
+                                                    <div class="channel-info">
+                                                        No domain added so far.
+                                                    </div>
+                                                </div>
+                                                <!--domain display-->
+                                                <div ng-show="nodedetail.domain.length > 0">
+                                                    <h3>node :{{node['node-id']}}</h3></br>
+                                                    <md-list>
+                                                        <md-list-item class="md-3-line" ng-repeat="domain in nodedetail.domain">
+                                                            <div class="md-list-item-text" layout="row">
+                                                                <div class="channel-info align-left">
+                                                                    <p1><b> domain :{{domain['domain-id']}}</b></p1>
+                                                                    <p><i class="fa fa-cube"></i> encapsulation-type:{{domain['bier-global']['encapsulation-type']}}</p>
+                                                                    <p><i class="fa fa-text-width"></i> bitstringlength:{{domain['bier-global']['bitstringlength']}}</p>
+                                                                    <p><i class="fa fa-map-marker"></i> bfr-id:{{domain['bier-global']['bfr-id']}}</p>
+                                                                    <p><i class="fa fa-mixcloud"></i> ipv4-bfr-prefix:{{domain['bier-global']['ipv4-bfr-prefix']}}</p>
+                                                                    <!--p><i class="fa fa-mixcloud"></i> ipv6-bfr-prefix:{{domain['bier-global']['ipv6-bfr-prefix']}}</p-->
+                                                                    <!--display subdomain of nodes-->
+                                                                    <md-list>
+                                                                        <md-list-item class="md-3-line" ng-repeat="subdomain in domain['bier-global']['sub-domain']">
+                                                                            <div class="md-list-item-text" layout="row">
+                                                                                <div class="channel-info align-left">
+                                                                                    <p><i class="fa fa-sitemap"></i> subdomain :{{subdomain['sub-domain-id']}}</p>
+                                                                                    <p><i class="fa fa-map-marker"></i> bfr-id :{{subdomain['bfr-id']}}</p>
+                                                                                    <p><i class="fa fa-text-width"></i> bitstringlength :{{subdomain['bitstringlength']}}</p>
+                                                                                    <p><i class="fa fa-exchange"></i> igp-type :{{subdomain['igp-type']}}</p>
+                                                                                    <md-list>
+                                                                                        <p>　ipv4</p>
+                                                                                        <md-list-item class="md-3-line" ng-repeat="ipv4 in subdomain.af.ipv4">
+                                                                                            <div class="md-list-item-text" layout="row">
+                                                                                                <div class="channel-info align-left">
+                                                                                                    <p><i class="fa fa-text-width"></i>bitstringlength :{{ipv4['bitstringlength']}}</p>
+                                                                                                    <p><i class="fa fa-list-ul"></i>bier-mpls-label-base :{{ipv4['bier-mpls-label-base']}}</p>
+                                                                                                    <p><i class="fa fa-list-ol"></i>bier-mpls-label-range-size :{{ipv4['bier-mpls-label-range-size']}}</p>
+                                                                                                </div>
+                                                                                                <div class="channel-actions align-right">
+                                                                                                    <md-button ng-click="editIpv4(domain['domain-id'], subdomain['sub-domain-id'], ipv4)" class="md-primary">
+                                                                                                        Edit
+                                                                                                    </md-button></br>
+                                                                                                    <md-button ng-click="removeIpv4(node['node-id'], domain['domain-id'], subdomain['sub-domain-id'], ipv4)" class="md-warn">
+                                                                                                        Remove
+                                                                                                    </md-button>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <md-divider ng-if="!$last"></md-divider>
+                                                                                        </md-list-item>
+                                                                                    </md-list>
+                                                                    
+                                                                                </div>
+                                                                                <div class="channel-actions align-right">
+                                                                                    <md-button ng-click="editSubdomain(domain['domain-id'], subdomain['sub-domain-id'])" class="md-primary">
+                                                                                        Edit
+                                                                                    </md-button><br>
+                                                                                    <md-button ng-click="removeNodeFromSubdomain(node['node-id'], domain['domain-id'], subdomain['sub-domain-id'])" class="md-warn">
+                                                                                        Remove
+                                                                                    </md-button><br>
+                                                                                </div>
+                                                                            </div>
+                                                                            <md-divider ng-if="!$last"></md-divider>
+                                                                        </md-list-item>
+                                                                    </md-list>
+                                                                </div>
+                                                                <div class="channel-actions align-right">
+                                                                    <md-button ng-click="editDomain(domain['domain-id'])" class="md-primary">
+                                                                        Edit
+                                                                    </md-button>
+                                                                    <!--md-button-- ng-click="removeNodeFromSubdomain(node.nodeId, domain['domain-id'], subdomain['sub-domain-id'])" class="md-warn">
+                                                                        Remove
+                                                                    </md-button-->
+                                                                </div>
+                                                            </div>
+                                                            <md-divider ng-if="!$last"></md-divider>
+                                                        </md-list-item>
+                                                    </md-list>
+                                                </div>
+                                            </div>
+                                            <div class="channel-actions align-right">
+                                                <md-button ng-click="addNodeDomain(node['node-id'])" class="md-primary">
+                                                    Add
+                                                </md-button><br>
+                                                <md-button ng-click="closedetail(node['node-id'])" class="md-primary">
+                                                    Cancel
+                                                </md-button><br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- domain add mode -->
+                                    <div ng-show="nodeadd.adding && !nodedetail.detail && !nodedomainedit.editing && !nodesubdomainedit.editing && !nodeipv4edit.editing && nodedetail.name == node['node-id']">
+                                        <div layout="row">
+                                            <div class="channel-info">
+                                                <md-input-container>
+                                                    Domain
+                                                    <select ng-model="input.addNodeConfig.domain" ng-options="Domain['domain-id'] for Domain in dScope.domainData" ng-change="dScope.changeDomainData(input.addNodeConfig.domain)" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container>
+                                                <!--md-input-container>
+                                                    <label for="cm-add-node-domain-encap">encapsulation-type</label>
+                                                    <input ng-model="input.addNodeConfig.encap" id="cm-add-node-domain-encap" required>
+                                                </md-input-container-->
+                                                <md-input-container>
+                                                    global-bitstringlength
+                                                    <select ng-model="input.addNodeConfig.gbsl" ng-options="bitstring.bsl as bitstring.bsl for bitstring in dScope.bitstringlength" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container></br>
+                                                <md-input-container>
+                                                    <label for="cm-add-node-domain-global-bfr">global-bfr-id</label>
+                                                    <input ng-model="input.addNodeConfig.gbfr" id="cm-add-node-domain-global-bfr" required>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    <label for="cm-add-node-domain-ipv4-pre">ipv4-bfr-prefix</label>
+                                                    <input ng-model="input.addNodeConfig.ipv4" id="cm-add-node-domain-ipv4-pre" required>
+                                                </md-input-container>
+                                                <!--md-input-container>
+                                                    <label for="cm-add-node-domain-ipv6-pre">ipv6-bfr-prefix</label>
+                                                    <input ng-model="input.addNodeConfig.ipv6" id="cm-add-node-domain-ipv6-pre" required>
+                                                </md-input-container--></br>
+                                                <md-input-container>
+                                                    Subdomain
+                                                    <select ng-model="input.addNodeConfig.subdomain" ng-options="subdomain['sub-domain-id'] as subdomain['sub-domain-id'] for subdomain in dScope.subdomainData" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    igp-type
+                                                    <select ng-model="input.addNodeConfig.igp" ng-options="igp.type as igp.type for igp in dScope.igpType" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    subdomain-bitstringlength
+                                                    <select ng-model="input.addNodeConfig.sbsl" ng-options="bitstring.bsl as bitstring.bsl for bitstring in dScope.bitstringlength" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    <label for="cm-add-node-subdomain-bfr">subdomain-bfr-id</label>
+                                                    <input ng-model="input.addNodeConfig.bfr" id="cm-add-node-subdomain-bfr" required>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    <label for="cm-add-node-subdomain-ipv4base">ipv4-bier-mpls-label-base</label>
+                                                    <input ng-model="input.addNodeConfig.ipv4base" id="cm-add-node-subdomain-ipv4base" required>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    <label for="cm-add-node-subdomain-ipv4range">ipv4-bier-mpls-label-range-size</label>
+                                                    <input ng-model="input.addNodeConfig.ipv4range" id="cm-add-node-subdomain-ipv4range" required>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    ipv4-bitstringlength
+                                                    <select ng-model="input.addNodeConfig.ipv4bsl" ng-options="bitstring.bsl as bitstring.bsl for bitstring in dScope.ipv4bitstringlength" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container>
+                                            </div>
+                                            <div class="channel-actions">
+                                                <md-button ng-click="addNodeConfig(node['node-id'])" class="md-primary">
+                                                    Save
+                                                </md-button>
+                                                <md-button ng-click="closeAdd(node['node-id'])" class="md-primary">
+                                                    Cancel
+                                                </md-button><br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- doamin edit mode -->
+                                    <div ng-show="nodedomainedit.editing && !nodedetail.detail && !nodeadd.adding && !nodesubdomainedit.editing && !nodeipv4edit.editing && nodedetail.name == node['node-id']">
+                                        <div layout="row">
+                                            <div class="channel-info">
+                                                <!--md-input-container>
+                                                    <label for="cm-edit-node-domain-encap">encapsulation-type</label>
+                                                    <input ng-model="input.editDomain.encap" id="cm-edit-node-domain-encap" required>
+                                                </md-input-container-->
+                                                <!--md-input-container>
+                                                    <label for="cm-edit-node-domain-bsl">bitstringlength</label>
+                                                    <input ng-model="input.editDomain.bsl" id="cm-edit-node-domain-bsl" required>
+                                                </1--md-input-container-->
+                                                <md-input-container>
+                                                    <label for="cm-edit-node-domain-global-bfr">global-bfr-id</label>
+                                                    <input ng-model="input.editDomain.gbfr" id="cm-edit-node-domain-global-bfr" required>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    <label for="cm-edit-node-domain-ipv4-pre">ipv4-bfr-prefix</label>
+                                                    <input ng-model="input.editDomain.ipv4" id="cm-edit-node-domain-ipv4-pre" required>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    global-bitstringlength
+                                                    <select ng-model="input.editDomain.bsl" ng-options="bitstring.bsl as bitstring.bsl for bitstring in dScope.bitstringlength" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container>
+                                                <!--md-input-container>
+                                                    <label for="cm-edit-node-domain-ipv6-pre">ipv6-bfr-prefix</label>
+                                                    <input ng-model="input.editDomain.ipv6" id="cm-edit-node-domain-ipv6-pre" required>
+                                                </md-input-container-->
+                                            </div>
+                                            <div class="channel-actions">
+                                                <md-button ng-click="nodeEditDomain(node['node-id'])" class="md-primary">
+                                                    Save
+                                                </md-button>
+                                                <md-button ng-click="closeDomainEdit()" class="md-primary">
+                                                    Cancel
+                                                </md-button><br>
+                                            </div>
+                                        </div>
+                                    </div>
+                        
+                                    <!-- subdoamin edit mode -->
+                                    <div ng-show="nodesubdomainedit.editing && !nodedomainedit.editing && !nodedetail.detail && !nodeadd.adding && !nodeipv4edit.editing && nodedetail.name == node['node-id']">
+                                        <div layout="row">
+                                            <div class="channel-info">
+                                                <!--md-input-container>
+                                                    <label for="cm-edit-node-subdomain-igp">igp-type</label>
+                                                    <input ng-model="input.editSubdomain.igp" id="cm-edit-node-subdomain-igp" required>
+                                                </md-input-container-->
+                                                <md-input-container>
+                                                    igp-type
+                                                    <select ng-model="input.editSubdomain.igp" ng-options="igp.type as igp.type for igp in dScope.igpType" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container>
+                                                <md-input-container>
+                                                    subdomain-bitstringlength
+                                                    <select ng-model="input.editSubdomain.bsl" ng-options="bitstring.bsl as bitstring.bsl for bitstring in dScope.bitstringlength" required>
+                                                        <option value="">-select-</option>
+                                                    </select>
+                                                </md-input-container></br>
+                                                <md-input-container>
+                                                    <label for="cm-edit-node-subdomain-bfr">subdomain-bfr-id</label>
+                                                    <input ng-model="input.editSubdomain.bfr" id="cm-edit-node-subdomain-bfr" required>
+                                                </md-input-container>
+                                            </div>
+                                            <div class="channel-actions">
+                                                <md-button ng-click="nodeEditSubdomain(node['node-id'])" class="md-primary">
+                                                    Save
+                                                </md-button>
+                                                <md-button ng-click="closeSubdomainEdit()" class="md-primary">
+                                                    Cancel
+                                                </md-button><br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- ipv4 edit mode -->
+                                    <div ng-show="nodeipv4edit.editing && !nodedomainedit.editing && !nodedetail.detail && !nodeadd.adding && nodedetail.name == node['node-id']">
+                                        <div layout="row">
+                                            <div class="channel-info">
+                                                <md-input-container>
+                                                    <label for="cm-edit-node-ipv4-range">ipv4-bier-mpls-label-range-size</label>
+                                                    <input ng-model="input.editIpv4.range" id="cm-edit-node-ipv4-range" required>
+                                                </md-input-container>
+                                            </div>
+                                            <div class="channel-actions">
+                                                <md-button ng-click="nodeEditIpv4(node['node-id'])" class="md-primary">
+                                                    Save
+                                                </md-button>
+                                                <md-button ng-click="closeIpv4Edit()" class="md-primary">
+                                                    Cancel
+                                                </md-button><br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <md-divider ng-if="!$last"></md-divider>
+                            </md-list-item>
+                        </md-list>
+                    </md-content>
+                    <div ng-show="!nodedomainedit.editing && !nodesubdomainedit.editing && !nodedetail.detail && !nodeadd.adding && !nodeipv4edit.editing ">
+                        <a class="step prevLink" ng-click="prevPage()">Previous</a>
+                        <a ng-class="{true:'currentStep',false:'step'}[num == currentPage]" ng-repeat="num in pageNum" ng-click="setPage(num)">{{num+1}}</a>
+                        <a class="step nextLink" ng-click="nextPage()">Next</a>
+                    </div>
+                </div>
+            </md-content>
+        </div>
+    </md-dialog-content>
+    
+    <md-dialog-actions layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel()" class="md-primary">
+            Close
+        </md-button>
+    </md-dialog-actions>
+    </form>
+</md-dialog>
