@@ -28,7 +28,7 @@ module.exports = {
 
     assets_files: {
         css: ['assets/css/*.css'],
-        images: ['assets/images/*.gif'],
+        images: ['assets/images/*.jpg'],
         js: ['assets/js/*.js']
     },
 

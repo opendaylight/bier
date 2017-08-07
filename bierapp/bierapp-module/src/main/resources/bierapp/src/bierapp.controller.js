@@ -11,7 +11,7 @@ define([
   bierapp.controller('biermanCtrl', ['$scope', '$rootScope', 'BiermanRest', '$mdSidenav', '$mdDialog', '$mdMedia',
 		function($scope, $rootScope, BiermanRest, $mdSidenav, $mdDialog, $mdMedia) {
    
-	$rootScope['section_logo'] = 'src/app/bierapp/assets/images/bierapp.gif';
+	$rootScope['section_logo'] = 'src/app/bierapp/assets/images/bier.jpg';
 	
 	$scope.appConfig = {
 		// FOR MANUAL CONFIGURATION
@@ -1719,6 +1719,545 @@ define([
 
 	};
 	$scope.initApp();
+
+	$scope.openRightPanel = function(panelCode){
+		$scope.appConfig.currentPanel = panelCode;
+		$mdSidenav('right').open();
+	};
+	//open Channel Manager
+	$scope.openChannelManager = function() {
+		$scope.customFullscreen = $mdMedia('xs') || $mdMedia('sm');
+		var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
+		$mdDialog.show({
+			controller: function($scope, $mdDialog, dScope){
+
+				$scope.edit = {
+					name: '',
+					editing: false
+				};
+				$scope.input = {
+					'addChannel': {},
+					'addChannelStatus': 'none',
+					'editChannel': {},
+					'editChannelStatus': 'none',
+					'deployChannel':{},
+					'deployChannelStatus': 'none',
+					'deployTeChannel':{},
+					'deployTeChannelStatus': 'none',
+					'deployChannelType': null
+				};
+
+				// Hide dialog (close without discarding changes)
+				$scope.hide = function() {
+					$mdDialog.hide();
+				};
+				// Cancel (discard changes)
+				$scope.cancel = function() {
+					$mdDialog.cancel();
+				};
+				$scope.typeOf = function(val){
+					return typeof val;
+				};
+				$scope.editChannel = function(val){
+					$scope.edit.editing = true;
+					$scope.edit.name = val;
+				};
+				$scope.closeEditor = function(val){
+					$scope.edit.editing = false;
+					$scope.edit.name = val;
+				};
+
+				$scope.chooseNodeData = [];
+				$scope.chooseTpIdData = [];
+				$scope.items = [null];
+				var i = 1;
+				//add input button dynamic
+				$scope.Channel= {
+					add: function () {
+						$scope.items[i] = null;
+						i++;
+					},
+					del: function (key) {
+						//console.log(key);
+						$scope.items.splice(key, 1);
+						$scope.chooseTpIdData[key] = null;
+						i--;
+					}
+				};
+				$scope.display = function(){
+					console.log('$scope.items', $scope.items);
+				};
+
+				$scope.removeChannel = function(chName){
+					BiermanRest.removeChannel(
+						{
+							topologyId: dScope.appConfig.currentTopologyId,
+							channelName: chName
+						},
+						function(){
+							dScope.getChannels();
+							dScope.displayAlert({
+								title: "Channel Removed",
+								text: "The channel " + chName + " has been removed",
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+						},
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Channel Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.addChannel = function(){
+					$scope.input.addChannelStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.addChannel, ['name', 'srcIP', 'destGroup', 'sourceWildcard', 'groupWildcard', 'domain', 'subdomain'])){
+						var channelName = $scope.input.addChannel.name;
+						BiermanRest.addChannel(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'channel-name': channelName,
+								'src-ip': $scope.input.addChannel.srcIP,
+								'dst-group': $scope.input.addChannel.destGroup,
+								'source-wildcard': $scope.input.addChannel.sourceWildcard,
+								'group-wildcard': $scope.input.addChannel.groupWildcard,
+								'domain-id': $scope.input.addChannel.domain['domain-id'],
+								'sub-domain-id': $scope.input.addChannel.subdomain['sub-domain-id']
+							},
+							// success
+							function(data){
+								$scope.input.addChannel = {};
+								$scope.input.addChannelStatus = 'success';
+								dScope.displayAlert({
+									title: "Channel Added",
+									text: "The channel " + channelName + " has been added to the system",
+									type: "success",
+									timer: 1500,
+									confirmButtonText: "Okay"
+								});
+								dScope.getChannels();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Channel Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+						dScope.displayAlert({
+							title: "Channel Not Added",
+							text: "create a channel " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				$scope.modifyChannel = function(name){
+					$scope.input.editChannelStatus = 'inprogress';
+					var send = true;
+					if( $scope.input.editChannel.domain !== undefined){
+						$scope.inputdomain = $scope.input.editChannel.domain['domain-id'];
+						if( $scope.input.editChannel.subdomain !== undefined){
+							var subdomain =  $scope.input.editChannel.subdomain['sub-domain-id'];
+						}
+						else{
+							console.log('error');
+							dScope.displayAlert({
+								title: "Channel Not modified",
+								text: "Domain and Subdomain must modify at the same time",
+								type: "error",
+								confirmButtonText: "Close"
+							});
+							send = false;
+						}
+					}
+					else{
+						if( $scope.input.editChannel.subdomain !== undefined){
+							dScope.displayAlert({
+								title: "Channel Not modified",
+								text: "Domain and Subdomain must modify at the same time",
+								type: "error",
+								confirmButtonText: "Close"
+							});
+							send = false;
+						}
+					}
+					if(send){
+						var channelName = name;
+						BiermanRest.editchannel(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'channel-name': channelName,
+								'src-ip': $scope.input.editChannel.srcIP,
+								'dst-group': $scope.input.editChannel.destGroup,
+								'source-wildcard': $scope.input.editChannel.sourceWildcard,
+								'group-wildcard': $scope.input.editChannel.groupWildcard,
+								'domain-id': $scope.inputdomain,
+								'sub-domain-id': subdomain
+							},
+							// success
+							function(data){
+								$scope.input.editChannel = {};
+								$scope.input.editChannelStatus = 'success';
+								dScope.displayAlert({
+									title: "Channel modified",
+									text: "The channel " + channelName + " has been modified to the system",
+									type: "success",
+									timer: 1500,
+									confirmButtonText: "Okay"
+								});
+								dScope.getChannels();
+								$scope.closeEditor();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Channel Not modified",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+				};
+
+				$scope.getPath = function(channel){
+					BiermanRest.getPath(
+						{
+							'input':{
+								'channel-name': channel
+							}
+						},
+						function(link){
+							var biLinkList = dScope.convertUniToBiLinks(link, true);
+							dScope.highlightPath(biLinkList);
+						},
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Path not loaded",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				//deploy BIER channel
+				$scope.deployChannel = function(){
+					$scope.input.deployChannelStatus = 'inprogress';
+					//console.log('deploy Channel---');
+					dScope.processDeployChannelData(
+						// success callback
+						function(input){
+							//console.log('input node', input);
+							var nodes = input.input["egress-node"];
+							var inode = input.input["ingress-node"];
+							nodes.push({'node-id':inode});
+							var num = 0;
+							for(var i = 0; i < nodes.length; i++){
+								for(var j = 0; j < dScope.netconfNode.length; j++){
+									if(nodes[i]['node-id'] === dScope.netconfNode[j]['node-id']){
+										if(dScope.netconfNode[j].ip !== null){
+											num++;
+											break;
+										}
+									}
+								}
+							}
+							if(num != nodes.length){
+								dScope.displayAlert({
+									title: "Netconf  Not Configure",
+									text: "You must add netconf for all " +  nodes.length + " nodes before deploy channel" ,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+							else if(biermanTools.hasOwnProperties($scope.input.deployChannel, ['name'])){
+								input.input["egress-node"].pop();
+								var channelName = $scope.input.deployChannel.name.name;
+								input.input['channel-name']= channelName;
+								input.input['bier-forwarding-type'] = 'bier';
+								BiermanRest.deployChannel(input,
+									// success callback
+									function(response){
+										$scope.input.deployChannelStatus = 'success';
+										dScope.displayAlert({
+											title: "Channel Deployed",
+											text: "The channel " + channelName + " has been deployed to the system",
+											type: "success",
+											timer: 1500,
+											confirmButtonText: "Okay"
+										});
+										dScope.clearTopology();
+										dScope.getChannels();
+										//console.log(response);
+									},
+									// error callback
+									function(err){
+										console.error(err);
+										dScope.displayAlert({
+											title: "Channel Deploy Failed",
+											text: err.errMsg,
+											type: "error",
+											confirmButtonText: "Close"
+										});
+									}
+								);
+							}
+							else{
+								dScope.displayAlert({
+									title: "Channel Not Deployed",
+									text: "deploy a channel " + dScope.errMsg1,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						},
+						// error callback
+						function(errMsg){
+							console.error(errMsg);
+							dScope.displayAlert({
+								title: "Channel Deploy Failed",
+								text: errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.checkError = function () {
+					dScope.displayAlert({
+						title: "Channel Not Deployed",
+						text: "deploy a channel " + dScope.errMsg1,
+						type: "error",
+						confirmButtonText: "Close"
+					});
+				};
+
+				$scope.checkEgressNodes = function(){
+					console.log('$scope.items',$scope.items);
+					if($scope.items.length > 0){
+						for(var i = 0; i < $scope.items.length; i++){
+							if($scope.items[i] === null){
+								$scope.checkError();
+								return false;
+							}
+							else if($scope.items[i]['node-id'] === undefined ||
+								$scope.items[i]['rcv-tp'] === undefined ){
+
+
+								$scope.checkError();
+								return false;
+							}else if($scope.items[i]['rcv-tp'].length === 0){
+								$scope.checkError();
+								return false;
+							}
+						}
+						return true;
+					}
+					else
+						return false;
+				};
+
+				$scope.checkNetconf = function(){
+					//console.log('checkNetconf');
+					var nodes = $scope.items;
+					var node = {};
+					node['node-id'] = $scope.input.deployTeChannel.ingressNode;
+					nodes.push(node);
+					var nodeSize = nodes.length;
+					var num = 0;
+					for(var iLoop = 0; iLoop < nodes.length; iLoop++){
+						for(var jLoop = 0; jLoop < dScope.netconfNode.length; jLoop++){
+							if(nodes[iLoop]['node-id'] === dScope.netconfNode[jLoop]['node-id']){
+								if(dScope.netconfNode[jLoop].ip !== null){
+									num++;
+									break;
+								}
+							}
+						}
+					}
+					nodes.pop(node);
+					if(num != nodeSize)
+						return false;
+					else
+						return true;
+				};
+
+				//deploy BIER-TE channel
+				$scope.deployTeChannel = function(){
+					$scope.input.deployTeChannelStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.deployTeChannel,
+							['name','ingressNode','ingressTpId']) && $scope.input.deployTeChannel.name !== null &&
+						$scope.input.deployTeChannel.ingressTpId !== null && $scope.checkEgressNodes())
+					{
+						if($scope.checkNetconf()){
+							BiermanRest.deployChannel(
+								{
+									"input":{
+										"topology-id": dScope.appConfig.currentTopologyId,
+										"channel-name": $scope.input.deployTeChannel.name.name,
+										"ingress-node": $scope.input.deployTeChannel.ingressNode,
+										"src-tp": $scope.input.deployTeChannel.ingressTpId.tp,
+										"egress-node": $scope.items,
+										"bier-forwarding-type":"bier-te"
+									}
+								},
+								// success callback
+								function(response){
+									$scope.input.deployTeChannelStatus = 'success';
+									dScope.displayAlert({
+										title: "BIER-TE Channel Deployed",
+										text: "The channel " + $scope.input.deployTeChannel.name.name + " has been deployed to the system",
+										type: "success",
+										timer: 1500,
+										confirmButtonText: "Okay"
+									});
+									dScope.getChannels();
+									$scope.chooseTpIdData = [];
+									$scope.chooseNodeData = [];
+									$scope.items = [null];
+								},
+								// error callback
+								function(err){
+									console.error(err);
+									dScope.displayAlert({
+										title: "Channel Deploy Failed",
+										text: err.errMsg,
+										type: "error",
+										confirmButtonText: "Close"
+									});
+								}
+							);
+						}
+						else{
+							dScope.displayAlert({
+								title: "Netconf  Not Configure",
+								text: "You must add netconf for all nodes before deploy BIER-TE channel" ,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					}
+					else{
+						$scope.checkError();
+						/*
+						dScope.displayAlert({
+							title: "Channel Not Deployed",
+							text: "deploy a channel " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});*/
+					}
+				};
+
+				$scope.channelChange = function(channel){
+					console.log('choose channel', channel);
+					//console.log('dScope.channelData', dScope.channelData);
+					for(var iLoop = 0; iLoop < dScope.channelData.length; iLoop++){
+						if(channel.name == dScope.channelData[iLoop].name){
+							var domainId = dScope.channelData[iLoop]['domain-id'];
+							var subDomainId = dScope.channelData[iLoop]['sub-domain-id'];
+							$scope.chooseNode(domainId, subDomainId);
+							break;
+						}
+					}
+				};
+
+				$scope.chooseNode = function(domainId, subDomainId){
+					$scope.chooseNodeData = [];
+					var flag = false;
+					for(var domainLoop = 0; domainLoop < dScope.nodeForDeployChannel.length; domainLoop++){
+						if(domainId == dScope.nodeForDeployChannel[domainLoop]['domain-id']){
+							var subdomainData = dScope.nodeForDeployChannel[domainLoop]['sub-domain'];
+							for(var subdomainLoop = 0; subdomainLoop < subdomainData.length; subdomainLoop++){
+								if(subDomainId == subdomainData[subdomainLoop]['sub-domain-id']){
+									$scope.chooseNodeData = subdomainData[subdomainLoop].node;
+
+									flag = true;
+									break;
+								}
+							}
+							break;
+						}
+					}
+					if(!flag){
+						$scope.chooseNodeData = [];
+					}
+					console.log('$scope.chooseNodeData',$scope.chooseNodeData);
+				};
+
+				$scope.chooseTpId = function(nodeId,key) {
+					var flag =false;
+					for(var i = 0; i < $scope.chooseNodeData.length; i++){
+						if(nodeId == $scope.chooseNodeData[i]['node-id']){
+							$scope.chooseTpIdData[key] = $scope.chooseNodeData[i].tp;
+							flag =true;
+						}
+					}
+					if(!flag){
+						$scope.chooseTpIdData[key] = null;
+					}
+				};
+
+				$scope.chooseIngressTpId = function(nodeId) {
+					var flag =false;
+					for(var i = 0; i < $scope.chooseNodeData.length; i++){
+						if(nodeId == $scope.chooseNodeData[i]['node-id']){
+							$scope.chooseIngressTpIdData = $scope.chooseNodeData[i].tp;
+							flag =true;
+						}
+					}
+					if(!flag){
+						$scope.chooseIngressTpIdData = null;
+					}
+				};
+
+				$scope.clearTopology = function(){
+					dScope.clearTopology();
+				};
+
+				$scope.dScope = dScope;
+			},
+			templateUrl: 'src/app/bierapp/src/templates/channel-manager.tpl.html',
+			parent: angular.element(document.body),
+			clickOutsideToClose: true,
+			fullscreen: useFullScreen,
+			locals: {
+				dScope: $scope
+			}
+		})
+			.then(function(answer) {
+				$scope.status = 'You said the information was "' + answer + '".';
+			}, function() {
+				$scope.status = 'You cancelled the dialog.';
+			});
+		$scope.$watch(function() {
+			return $mdMedia('xs') || $mdMedia('sm');
+		}, function(wantsFullScreen) {
+			$scope.customFullscreen = (wantsFullScreen === true);
+		});
+	};
+
 
 	
   }]);

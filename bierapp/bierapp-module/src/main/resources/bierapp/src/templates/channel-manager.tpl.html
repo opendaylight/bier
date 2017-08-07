@@ -1,0 +1,276 @@
+<md-dialog aria-label="Channel Manager" flex="50">
+	<md-dialog-content>
+		<md-toolbar>
+			<div class="md-toolbar-tools">
+				<h2>Channel Manager</h2>
+				<span flex></span>
+				<md-button class="md-icon-button" ng-click="cancel()">
+					<i class="fa fa-close fa-2x" aria-label="Close dialog"></i>
+				</md-button>
+			</div>
+		</md-toolbar>
+		<!-- Add Channel Block -->
+		<md-toolbar class="md-accent white">
+			<div class="md-toolbar-tools">
+				<h3>Add Channel</h3>
+			</div>
+		</md-toolbar>
+		<md-content class="md-dialog-content">
+			<form>
+				<div  class="md-inline-form layout-column add-channel">
+					<div>
+						<md-input-container>
+							<label for="cm-add-channel-name">Channel name</label>
+							<input ng-model="input.addChannel.name" id="cm-add-channel-name" required>
+						</md-input-container>
+						<md-input-container>
+							<label for="cm-add-src-ip">Source IP</label>
+							<input ng-model="input.addChannel.srcIP" id="cm-add-src-ip" required>
+						</md-input-container>
+						<md-input-container>
+							<label for="cm-add-dest-group">Destination Group</label>
+							<input ng-model="input.addChannel.destGroup" id="cm-add-dest-group" required>
+						</md-input-container>
+					</div>
+					<div>
+						<md-input-container>
+							<label for="cm-add-dest-group">Source Wildcard</label>
+							<input ng-model="input.addChannel.sourceWildcard" id="cm-add-dest-group" required>
+						</md-input-container>
+						<md-input-container>
+							<label for="cm-add-dest-group">Group Wildcard</label>
+							<input ng-model="input.addChannel.groupWildcard" id="cm-add-dest-group" required>
+						</md-input-container>
+					</div>
+					<div>
+						<md-input-container>
+							Domain
+							<select ng-model="input.addChannel.domain" ng-options="Domain['domain-id'] for Domain in dScope.domainData" ng-change="dScope.changeDomainData(input.addChannel.domain)" required>
+								<option value="">-select-</option>
+							</select>
+						</md-input-container>
+						<md-input-container>
+							Subdomain
+							<select ng-model="input.addChannel.subdomain" ng-options="subdomain['sub-domain-id'] for subdomain in dScope.subdomainData" >
+								<option value="">-select-</option>
+							</select>
+						</md-input-container>
+					</div>
+				</div>
+				<md-button ng-click="addChannel()" class="md-raised md-primary">
+					Add
+				</md-button>
+			</form>
+		</md-content>
+
+		<!-- Manage Channels -->
+		<md-toolbar class="md-accent white">
+			<div class="md-toolbar-tools">
+				<h3>Manage Channels</h3>
+			</div>
+		</md-toolbar>
+		
+		<div ng-show="dScope.channelData == null">
+			<md-progress-linear md-mode="query"></md-progress-linear>
+			<div class="bottom-block channel-info">
+				<span>Loading available channels...</span>{{dScope.channelData}}
+			</div>
+		</div>
+		<div ng-show="typeOf(dScope.channelData) == 'object'">
+			<md-content>
+				<div ng-show="dScope.channelData.length > 0">
+					<md-list>
+						<md-list-item class="md-3-line" ng-repeat="channel in dScope.channelData | orderBy:'name' ">
+							<div class="md-list-item-text" layout="row">
+								<!-- edit mode -->
+								<div ng-show="edit.editing && edit.name == channel.name">
+									<div layout="row">
+										<div class="channel-info">
+											<md-input-container>
+												<label for="cm-edit-src-ip">Source IP</label>
+												<input ng-model="input.editChannel.srcIP" id="cm-edit-src-ip" required>
+											</md-input-container>
+											<md-input-container>
+												<label for="cm-edit-dest-group">Destination Group</label>
+												<input ng-model="input.editChannel.destGroup" id="cm-edit-dest-group" required>
+											</md-input-container>
+											<md-input-container>
+												<label for="cm-edit-source-wildcard">Source Wildcard</label>
+												<input ng-model="input.editChannel.sourceWildcard" id="cm-edit-source-wildcard" required>
+											</md-input-container>
+											<md-input-container>
+												<label for="cm-edit-group-wildcard">Group Wildcard</label>
+												<input ng-model="input.editChannel.groupWildcard" id="cm-edit-group-wildcard" required>
+											</md-input-container><br>
+											<md-input-container>
+												Domain
+												<select ng-model="input.editChannel.domain" ng-options="Domain['domain-id'] for Domain in dScope.domainData" ng-change="dScope.changeDomainData(input.editChannel.domain)" required>
+													<option value="">-select-</option>
+												</select>
+											</md-input-container>
+											<md-input-container>
+												Subdomain
+												<select ng-model="input.editChannel.subdomain" ng-options="subdomain['sub-domain-id'] for subdomain in dScope.subdomainData" >
+													<option value="">-select-</option>
+												</select>
+											</md-input-container>
+										</div>
+										<div class="channel-actions">
+											<md-button ng-click="modifyChannel(channel.name)" class="md-primary">
+												Save
+											</md-button>
+											<md-button ng-click="closeEditor(channel.name)" class="md-primary">
+												Cancel
+											</md-button><br>
+										</div>
+									</div>
+								</div>
+								<!-- display mode -->
+								<div ng-show="!edit.editing || edit.name != channel.name" class="w100 clear">
+									<div class="channel-info align-left">
+										<h3>{{channel.name}}</h3>
+										<p><i class="fa fa-arrow-right"></i>source ip: {{channel['src-ip']}}</p>
+										<p><i class="fa fa-users"></i>destination group: {{channel['dst-group']}}</p>
+										<p><i class="fa fa-eye-slash" ></i>source wildcard: {{channel['source-wildcard']}}</p>
+										<p><i class="fa fa-eye-slash" ></i>group wildcard: {{channel['group-wildcard']}}</p>
+										<p><i class="fa fa-align-justify" ></i>domain: {{channel['domain-id']}}</p>
+										<p><i class="fa fa-th-list" ></i>subdomain: {{channel['sub-domain-id']}}</p>
+										<p><i class="fa fa-asterisk" ></i>type: {{channel['bier-forwarding-type']}}</p>
+										<p><i class="fa fa-arrow-right"></i>ingress node: {{channel['ingress-node']}}</p>
+										<p><i class="fa fa-users"></i>egress-node:</p>
+										<div  ng-repeat="egress in channel['egress-node']">
+											<p>　　　　　{{egress['node-id']}}</p>
+										</div>
+									</div>
+									<div class="channel-actions align-right">
+										<md-button ng-click="editChannel(channel.name)" class="md-primary">
+											Edit
+										</md-button>
+										<md-button ng-click="removeChannel(channel.name)" class="md-warn">
+											Remove
+										</md-button><br>
+										<div ng-show="channel['bier-forwarding-type'] === 'bier-te'">
+											<md-button ng-click="getPath(channel.name)" class="md-primary">
+												Show Path
+											</md-button>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<md-divider ng-if="!$last"></md-divider>
+						</md-list-item>
+					</md-list>
+				</div>
+				<div ng-show="dScope.channelData.length == 0">
+					<div class="channel-info">
+						No channels defined so far.
+					</div>
+				</div>
+			</md-content>
+		</div>
+		
+		<!--Channel Deploy Block -->
+		<md-toolbar class="md-accent white">
+			<div class="md-toolbar-tools">
+				<h3>Channel Deploy</h3>
+			</div>
+		</md-toolbar>
+		<md-content flex>
+			<div>
+				<md-tabs md-dynamic-height md-border-bottom>
+					<md-tab label="BIER Channel" class="md-accent white" >
+						<md-content class="md-dialog-content">
+							<form>
+								<div  class="md-inline-form layout-column">
+									<div>
+										<md-input-container>
+											Channel name
+											<select ng-model="input.deployChannel.name" ng-options="channel['name'] for channel in dScope.channelData" required>
+												<option value="">-select-</option>
+											</select>
+										</md-input-container>
+									</div>
+								</div>
+								<md-button ng-click="deployChannel()" class="md-raised md-primary">
+									<i class="fa fa-check"></i> Deploy channel
+								</md-button>
+								<md-button ng-click="deployChannel()" class="md-raised md-primary">
+									<i class="fa fa-check"></i> Redeploy channel
+								</md-button>
+								<md-button class="md-raised md-warn " ng-click="clearTopology()">
+									<i class="fa fa-times"></i> Clear tree
+								</md-button>
+							</form>
+						</md-content>
+					</md-tab>
+					<md-tab label="BIER-Te Channel" class="md-accent white" ng-click="dScope.LoadAllTeDomainNode()">
+						<md-content class="md-dialog-content">
+							<md-list>
+								<div  class="channel-info  md-inline-form">
+									<div>
+										<md-input-container>
+											Channel name
+											<select ng-model="input.deployTeChannel.name" ng-options="channel['name'] for channel in dScope.channelData" ng-change="channelChange(input.deployTeChannel.name)" required>
+												<option value="">-select-</option>
+											</select>
+										</md-input-container>
+									</div>
+								</div>
+								<div  class="channel-info md-inline-form">
+									ingress-node:
+									<select ng-model="input.deployTeChannel.ingressNode" ng-options="node['node-id'] as node['node-id'] for node in chooseNodeData" ng-change="chooseIngressTpId(input.deployTeChannel.ingressNode)" required>
+										<option value="">-select-</option>
+									</select>&nbsp&nbsp&nbsp&nbsp
+									tp-id:
+									<select ng-model="input.deployTeChannel.ingressTpId" ng-options="tp.tp for tp in chooseIngressTpIdData" required>
+										<option value="">-select-</option>
+									</select>
+								</div>
+								<div  class="channel-info md-inline-form">
+									<div>egress-node:</div>
+									<md-list-item class="md-3-line" ng-repeat="(key,item) in items track by $index">
+										<div class="md-list-item-text" layout="row">
+											<div class="align-left">
+												&nbsp&nbsp node-id:{{key}}
+												<select ng-model="items[key]['node-id']" ng-options="node['node-id'] as node['node-id'] for node in chooseNodeData" ng-change="chooseTpId(items[key]['node-id'], key)" required>
+													<option value="">-select-</option>
+												</select>&nbsp&nbsp&nbsp&nbsp
+												tp-id:
+												<label ng-repeat="tp in chooseTpIdData[key]">
+													<input type="checkbox" data-checklist-model="items[key]['rcv-tp']" data-checklist-value="tp">{{tp.tp}}　</br>
+												</label>
+											</div>
+											<div class="align-right">
+												<md-button ng-click="Channel.del(key)" class="md-warn" id="delete-button">
+													Delete
+												</md-button>
+											</div>
+										</div>
+									</md-list-item>
+									<md-button ng-click="Channel.add()" class="md-primary">
+										<i class="fa fa-plus"></i>  Add Egress Node Number
+									</md-button>
+									<md-divider ng-if="!$last"></md-divider>
+								</div>
+								<md-button ng-click="deployTeChannel()" class="md-raised md-primary">
+									deployChannel
+								</md-button>
+								<md-button class="md-raised md-warn " ng-click="clearTopology()">
+									<i class="fa fa-times"></i> Clear tree
+								</md-button>
+							</md-list>
+						</md-content>
+					</md-tab>
+				</md-tabs>
+			</div>
+		</md-content>
+	</md-dialog-content>
+	<md-dialog-actions layout="row">
+			<span flex></span>
+			<md-button ng-click="cancel()" class="md-primary">
+				Close
+			</md-button>
+		</md-dialog-actions>
+	</form>
+</md-dialog>
