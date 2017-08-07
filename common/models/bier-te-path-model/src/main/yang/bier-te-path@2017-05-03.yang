@@ -35,6 +35,7 @@ module bier-te-path {
 		}
 		list bitstring {
 			key "bitposition";
+			ordered-by user;
 			leaf bitposition {
 				type bier-te:bit-string;
 			}

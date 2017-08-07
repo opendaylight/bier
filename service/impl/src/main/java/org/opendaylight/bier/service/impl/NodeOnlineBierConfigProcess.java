@@ -75,7 +75,7 @@ public class NodeOnlineBierConfigProcess {
                 LOG.info("get bierNode from bier topology success, info is {}",node);
             }
         } catch (ReadFailedException e) {
-            LOG.error("Get bierNode from bier topology is null");
+            LOG.error("Get bierNode from bier topology is null:" + e.getStackTrace());
         }
         if (null != node && null != node.getBierNodeParams()) {
             if (null != node.getBierNodeParams().getDomain() && 0 != node.getBierNodeParams().getDomain().size()) {
@@ -103,7 +103,7 @@ public class NodeOnlineBierConfigProcess {
                 LOG.info("get bierChannel from networkChannel success,bierChannel is {}",channel);
             }
         } catch (ReadFailedException e) {
-            LOG.error("Get bierChannel from networkChannel failed");
+            LOG.error("Get bierChannel from networkChannel failed:" + e.getStackTrace());
         }
         if (null == channel || null == channel.getChannel() || 0 == channel.getChannel().size()) {
             return;

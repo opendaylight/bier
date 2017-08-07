@@ -159,7 +159,7 @@ public class BierChannelConfigProcess {
                 node = bierNode.get();
             }
         } catch (ReadFailedException e) {
-            LOG.error("Get node from bier topology is null");
+            LOG.error("Get node from bier topology is null:" + e.getStackTrace());
         }
         if (null == node) {
             return null;

@@ -310,7 +310,7 @@ public class BierTeChannelProcess {
                 channel = bierChannel.get();
             }
         } catch (ReadFailedException e) {
-            LOG.error("Get bierChannelList from networkChannel failed");
+            LOG.error("Get bierChannelList from networkChannel failed:" + e.getStackTrace());
             return null;
         }
         if (null == channel || null == channel.getChannel() || channel.getChannel().isEmpty()) {

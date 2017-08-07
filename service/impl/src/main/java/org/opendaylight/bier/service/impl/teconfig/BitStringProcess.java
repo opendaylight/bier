@@ -377,7 +377,7 @@ public class BitStringProcess {
         return teInfoList;
     }
 
-    private boolean checkNodeTpExisted(List<String> tpList,List<String> nodeList,String tpId,String nodeId) {
+    private boolean checkNodeTpExisted(List<String> tpList,List<String> nodeList,String nodeId,String tpId) {
         if (null != tpList && !tpList.isEmpty() && null != nodeList && !nodeList.isEmpty()) {
             for (int i = 0;i < tpList.size(); i++) {
                 if (tpList.get(i).equals(tpId) && nodeList.get(i).equals(nodeId)) {

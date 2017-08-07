@@ -42,14 +42,19 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTe
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomainKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomainKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.TeBsl;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.TeBslBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.TeBslKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.TeSi;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.TeSiBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.TeSiKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBp;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBpBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBpKey;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Bsl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Si;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
@@ -148,36 +153,17 @@ public class TeBpChangeListenerTest extends AbstractDataBrokerTest {
         assertTestAddedFiveNodeFwdInfo(bierTeBiftWriterMock.getTeInfoAddedList());
 
         //Test delete five bier node Fwd Info
-        BierNode bierNode6 = constructBierNode("001", "Node1", "001", 35, 38,
-                constructBierTerminationPointList("001", 1L, "002", 2L),
-                constructBierTeNodeParams2(new DomainId(001), new SubDomainId(001), Bsl._64Bit,
-                        new Si(0001), 1L, "001", new Integer(1)));
-        addBierNodeToDataStore(bierNode6);
-
-        BierNode bierNode7 = constructBierNode("002", "Node2", "001", 35, 38,
-                constructBierTerminationPointList("003", 3L, "004", 4L),
-                constructBierTeNodeParams2(new DomainId(001), new SubDomainId(001), Bsl._64Bit,
-                        new Si(0001), 2L, "003", new Integer(3)));
-        addBierNodeToDataStore(bierNode7);
-
-        BierNode bierNode8 = constructBierNode("003", "Node3", "001", 35, 38,
-                constructBierTerminationPointList("005", 5L, "006", 6L),
-                constructBierTeNodeParams2(new DomainId(001), new SubDomainId(001), Bsl._64Bit,
-                        new Si(0001), 3L, "005", new Integer(5)));
-        addBierNodeToDataStore(bierNode8);
-
-        BierNode bierNode9 = constructBierNode("004", "Node4", "001", 35, 38,
-                constructBierTerminationPointList("007", 7L, "008", 8L),
-                constructBierTeNodeParams2(new DomainId(001), new SubDomainId(001), Bsl._64Bit,
-                        new Si(0001), 4L, "007", new Integer(7)));
-        addBierNodeToDataStore(bierNode9);
-
-        BierNode bierNode10 = constructBierNode("005", "Node5", "001", 35, 38,
-                constructBierTerminationPointList("009", 9L, "010", 10L),
-                constructBierTeNodeParams2(new DomainId(001), new SubDomainId(001), Bsl._64Bit,
-                        new Si(0001), 5L, "009", new Integer(9)));
-        addBierNodeToDataStore(bierNode10);
-
+        TeBpBuilder teBpBuilder = new TeBpBuilder();
+        teBpBuilder.setBitposition(2).setTpId("002").setKey(new TeBpKey("002"));
+        deleteBP("001", teBpBuilder.build());
+        teBpBuilder.setBitposition(4).setTpId("004").setKey(new TeBpKey("004"));
+        deleteBP("002", teBpBuilder.build());
+        teBpBuilder.setBitposition(6).setTpId("006").setKey(new TeBpKey("006"));
+        deleteBP("003",teBpBuilder.build());
+        teBpBuilder.setBitposition(8).setTpId("008").setKey(new TeBpKey("008"));
+        deleteBP("004",teBpBuilder.build());
+        teBpBuilder.setBitposition(10).setTpId("010").setKey(new TeBpKey("010"));
+        deleteBP("005",teBpBuilder.build());
         assertTestDeletedFiveNodeFwdInfo(bierTeBiftWriterMock.getTeInfoDeletedList());
     }
 
@@ -224,6 +210,28 @@ public class TeBpChangeListenerTest extends AbstractDataBrokerTest {
         bierTerminationPointList.add(bierTerminationPointBuilder1.build());
         bierTerminationPointList.add(bierTerminationPointBuilder2.build());
         return bierTerminationPointList;
+    }
+
+    public void deleteBP(String bierNodeId,TeBp teBp) {
+        final ReadWriteTransaction tx = getDataBroker().newReadWriteTransaction();
+        final InstanceIdentifier<TeBp> teBPPath = getTeBPPath(bierNodeId,teBp.getTpId());
+        tx.delete(LogicalDatastoreType.CONFIGURATION, teBPPath);
+        try {
+            tx.submit().get();
+        } catch (InterruptedException | ExecutionException e) {
+            return;
+        }
+    }
+
+    public InstanceIdentifier<TeBp> getTeBPPath(String bierNodeId,String bp) {
+        final InstanceIdentifier<TeBp> bierNodePath = InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey("example-linkstate-topology"))
+                .child(BierNode.class, new BierNodeKey(bierNodeId)).child(BierTeNodeParams.class)
+                .child(TeDomain.class, new TeDomainKey(new DomainId(001)))
+                .child(TeSubDomain.class, new TeSubDomainKey(new SubDomainId(001)))
+                .child(TeBsl.class, new TeBslKey(Bsl._64Bit)).child(TeSi.class,new TeSiKey(new Si(0001)))
+                .child(TeBp.class, new TeBpKey(bp));
+        return bierNodePath;
     }
 
     private TeBp constructTeBp(String tpId, Integer bp) {

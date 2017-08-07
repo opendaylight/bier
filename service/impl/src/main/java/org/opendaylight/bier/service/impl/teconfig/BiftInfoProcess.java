@@ -425,7 +425,7 @@ public class BiftInfoProcess {
             BierNode bfer = getBierNodeById(node.getNodeId());
             if (null == bfer) {
                 LOG.info("Get bfer from datastore failed");
-                webSocketToApp("Bfer: " + bfer.getNodeId() + " is not in datastore");
+                webSocketToApp("Bfer: " + node.getNodeId() + " is not in datastore");
                 return false;
             }
             LOG.info("Get bfer info");
@@ -608,7 +608,7 @@ public class BiftInfoProcess {
                 return topology;
             }
         } catch (ReadFailedException e) {
-            LOG.error("Bier topology is null");
+            LOG.error("Bier topology is null:" + e.getStackTrace());
         }
         return null;
     }

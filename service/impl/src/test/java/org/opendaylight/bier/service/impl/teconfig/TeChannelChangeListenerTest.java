@@ -238,7 +238,7 @@ public class TeChannelChangeListenerTest extends AbstractDataBrokerTest {
         channelChangeListener.onDataTreeChanged(setTeChannelData(channelDeploy3, channelDeploy4,
                 ModificationType.SUBTREE_MODIFIED));
         assertModifiedChannelBfirBferTeInfo3(bierTeBiftWriterMock.getTeInfoAddedList());
-        //assertModifiedChannelTeBitString3(bierTeBitstringWriterMock.getTePathList());
+        assertModifiedChannelTeBitString3(bierTeBitstringWriterMock.getTePathList());
         assertModifiedTeChannel3(bierTeChannelWriterMock.getChannelFromList("channel-1"));
 
         //Test remove one egressNode and then add one
@@ -474,18 +474,17 @@ public class TeChannelChangeListenerTest extends AbstractDataBrokerTest {
     private void assertModifiedChannelTeBitString3(List<TePath> list) {
         Assert.assertEquals(list.size(), 5);
         Assert.assertEquals(list.get(3).getBitstring().size(), 6);
-        Assert.assertEquals(list.get(3).getBitstring().get(0).getBitposition(), new BitString(new Integer(4)));
-        Assert.assertEquals(list.get(3).getBitstring().get(1).getBitposition(), new BitString(new Integer(7)));
-        Assert.assertEquals(list.get(3).getBitstring().get(2).getBitposition(), new BitString(new Integer(9)));
-        Assert.assertEquals(list.get(3).getBitstring().get(3).getBitposition(), new BitString(new Integer(12)));
-        Assert.assertEquals(list.get(3).getBitstring().get(4).getBitposition(), new BitString(new Integer(11)));
-        Assert.assertEquals(list.get(3).getBitstring().get(5).getBitposition(), new BitString(new Integer(14)));
-        Assert.assertEquals(list.get(4).getBitstring().size(), 5);
+        Assert.assertEquals(list.get(3).getBitstring().get(0).getBitposition(), new BitString(new Integer(14)));
+        Assert.assertEquals(list.get(3).getBitstring().get(1).getBitposition(), new BitString(new Integer(11)));
+        Assert.assertEquals(list.get(3).getBitstring().get(2).getBitposition(), new BitString(new Integer(4)));
+        Assert.assertEquals(list.get(3).getBitstring().get(3).getBitposition(), new BitString(new Integer(7)));
+        Assert.assertEquals(list.get(3).getBitstring().get(4).getBitposition(), new BitString(new Integer(9)));
+        Assert.assertEquals(list.get(3).getBitstring().get(5).getBitposition(), new BitString(new Integer(12)));
+        Assert.assertEquals(list.get(4).getBitstring().size(), 4);
         Assert.assertEquals(list.get(4).getBitstring().get(0).getBitposition(), new BitString(new Integer(7)));
-        Assert.assertEquals(list.get(4).getBitstring().get(1).getBitposition(), new BitString(new Integer(7)));
-        Assert.assertEquals(list.get(4).getBitstring().get(2).getBitposition(), new BitString(new Integer(10)));
-        Assert.assertEquals(list.get(4).getBitstring().get(3).getBitposition(), new BitString(new Integer(9)));
-        Assert.assertEquals(list.get(4).getBitstring().get(4).getBitposition(), new BitString(new Integer(12)));
+        Assert.assertEquals(list.get(4).getBitstring().get(1).getBitposition(), new BitString(new Integer(10)));
+        Assert.assertEquals(list.get(4).getBitstring().get(2).getBitposition(), new BitString(new Integer(9)));
+        Assert.assertEquals(list.get(4).getBitstring().get(3).getBitposition(), new BitString(new Integer(12)));
     }
 
     private void assertModifiedChannelTeBitString4(List<TePath> list) {

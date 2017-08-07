@@ -594,7 +594,7 @@ public class BierParametersConfigProcess {
     }
 
     private boolean checkIpv6BfrPrefixChange(Domain before, Domain after) {
-        if (after.getBierGlobal().getIpv6BfrPrefix().equals(before.getBierGlobal().getIpv6BfrPrefix())) {
+        if (null != after.getBierGlobal().getIpv6BfrPrefix() && null != before.getBierGlobal().getIpv6BfrPrefix() && after.getBierGlobal().getIpv6BfrPrefix().equals(before.getBierGlobal().getIpv6BfrPrefix())) {
             return false;
         } else {
             return true;
