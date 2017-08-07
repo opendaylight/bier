@@ -3058,10 +3058,816 @@ define([
 		});
 	};
 
+	//open Bier TE-Manager
+	$scope.openBierTeManager = function() {
+		$scope.customFuBierllscreen = $mdMedia('xs') || $mdMedia('sm');
+		var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
+		$mdDialog.show({
+			controller: function($scope, $mdDialog, dScope){
 
+				$scope.nodedetail = {
+					domain: [],
+					name: '',
+					detail: false
+				};
+				$scope.nodeadd = {
+					name: '',
+					adding: false
+				};
 
+				$scope.tebsladd = {
+					name: '',
+					adding: false
+				};
 
+				$scope.tesiadd = {
+					name: '',
+					adding: false
+				};
 
+				$scope.tebpadd = {
+					name: '',
+					adding: false
+				};
+
+				$scope.labelRangeDetail = {
+					name: '',
+					detail: true
+				};
+
+				$scope.labelRangeAdd = {
+					name: '',
+					adding: false
+				};
+
+				$scope.labelRangeEdit = {
+					name: '',
+					editing: false
+				};
+
+				$scope.input = {
+					'addTeNodeConfig':{},
+					'addBSL': {},
+					'addSI': {},
+					'addBP': {},
+					'addLabel': {},
+					'editLabel': {},
+					'addBSLStatus': 'none',
+					'addSIStatus': 'none',
+					'addBPStatus': 'none',
+					'addTeNodeConfigStatus':'none',
+					'addLabelStatus': 'none',
+					'editLabelStatus': 'none'
+				};
+
+				$scope.tpId = [];
+
+				$scope.addDomainid = null;
+				$scope.addSubdomainid = null;
+				$scope.addBitstringlength = null;
+				$scope.addSI = null;
+
+				$scope.currentPage = 0;
+				$scope.listsPerPage = 10;
+
+				if(dScope.topologyData === null){
+					$scope.dataNum = 0;
+				}else{
+					$scope.dataNum =  dScope.topologyData.nodes.length;
+				}
+				$scope.pages = Math.ceil($scope.dataNum/10);
+				$scope.pageNum = [];
+
+				for(var num = 0; num < $scope.pages; num++){
+					$scope.pageNum.push(num);
+				}
+
+				// Hide dialog (close without discarding changes)
+				$scope.hide = function() {
+					$mdDialog.hide();
+				};
+				// Cancel (discard changes)
+				$scope.cancel = function() {
+					$mdDialog.cancel();
+				};
+				$scope.typeOf = function(val){
+					return typeof val;
+				};
+
+				$scope.setPage = function(num){
+					$scope.currentPage = num;
+				};
+
+				$scope.prevPage = function(){
+					if($scope.currentPage > 0){
+						$scope.currentPage--;
+					}
+				};
+				$scope.nextPage = function(){
+					if ($scope.currentPage < $scope.pages-1){
+						$scope.currentPage++;
+					}
+				};
+
+				$scope.addTeNodeDomain = function(val){
+					var netconf = false;
+					for(var i = 0; i < dScope.netconfNode.length; i++){
+						if(val == dScope.netconfNode[i]['node-id'])
+							if(dScope.netconfNode[i].ip !== null)
+								netconf = true;
+					}
+					if(netconf === false){
+						dScope.displayAlert({
+							title: "Netconf  Not Configure",
+							text: "You must add netconf for " + val + " before configure bier te" ,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+					else{
+						$scope.nodeadd.adding = true;
+						$scope.nodedetail.detail = false;
+						$scope.tebsladd.adding = false;
+						$scope.tesiadd.adding = false;
+					}
+				};
+
+				$scope.closedetail = function(val){
+					$scope.nodedetail.detail = false;
+					$scope.nodedetail.domain = [];
+				};
+
+				$scope.closeAdd = function(){
+					$scope.nodeadd.adding = false;
+					$scope.nodedetail.detail = true;
+				};
+
+				$scope.addBsl = function(domain,subdomain,node){
+					//dScope.changeTpIdData(node);
+					$scope.tebsladd.adding = true;
+					$scope.nodedetail.detail = false;
+					$scope.nodeadd.adding = false;
+					$scope.tesiadd.adding = false;
+					$scope.tebpadd.adding = false;
+
+					$scope.addDomainid = domain;
+					$scope.addSubdomainid = subdomain;
+				};
+
+				$scope.closeBslAdd = function(){
+					$scope.tebsladd.adding = false;
+					$scope.nodedetail.detail = true;
+				};
+
+				$scope.addSi = function(domain, subdomain, bsl, node){
+					//dScope.changeTpIdData(node);
+					$scope.tesiadd.adding = true;
+					$scope.nodedetail.detail = false;
+					$scope.nodeadd.adding = false;
+					$scope.tebsladd.adding = false;
+					$scope.tebpadd.adding = false;
+
+					$scope.addDomainid = domain;
+					$scope.addSubdomainid = subdomain;
+					$scope.addBitstringlength = bsl;
+				};
+
+				$scope.closeSiAdd = function(){   //close   tesiadd.adding
+					$scope.tesiadd.adding = false;
+					$scope.nodedetail.detail = true;
+				};
+
+				$scope.addBp = function(domain, subdomain, bsl, si){
+					$scope.tebpadd.adding = true;
+					$scope.nodedetail.detail = false;
+
+					$scope.nodeadd.adding = false;
+					$scope.tebsladd.adding = false;
+					$scope.tesiadd.adding = false;
+
+					$scope.addDomainid = domain;
+					$scope.addSubdomainid = subdomain;
+					$scope.addBitstringlength = bsl;
+					$scope.addSI = si;
+				};
+
+				$scope.closeBpAdd = function(){
+					$scope.tebpadd.adding = false;
+					$scope.nodedetail.detail = true;
+				};
+
+				$scope.addLabelRange = function(val){
+					$scope.labelRangeAdd.adding = true;
+					$scope.labelRangeDetail.detail = false;
+					$scope.labelRangeEdit.editing = false;
+					$scope.labelRangeDetail.name = val;
+				};
+
+				$scope.closeAddLabelRange = function(){
+					$scope.labelRangeAdd.adding = false;
+					$scope.labelRangeDetail.detail = true;
+					$scope.labelRangeEdit.editing = false;
+
+				};
+
+				$scope.editLabelRange = function(val){
+					$scope.labelRangeEdit.editing = true;
+					$scope.labelRangeDetail.detail = false;
+					$scope.labelRangeAdd.adding = false;
+					$scope.labelRangeDetail.name = val;
+				};
+
+				$scope.closeEditLabelRange = function(){
+					$scope.labelRangeEdit.editing = false;
+					$scope.labelRangeDetail.detail = true;
+					$scope.labelRangeAdd.adding = false;
+				};
+
+				$scope.detailNode = function(val){
+					$scope.tpId = [];
+					$scope.nodedetail.domain = [];
+					$scope.nodedetail.detail = true;
+					$scope.nodedetail.name = val;
+					var node = [val];
+					BiermanRest.queryNode(
+						{
+							'topo-id': dScope.appConfig.currentTopologyId,
+							'node': node
+						},
+						function(data){
+							if(data.node[0].hasOwnProperty('bier-termination-point')){
+								$scope.tpId = data.node[0]['bier-termination-point'];
+							}
+							if(data.node[0].hasOwnProperty('bier-te-node-params')){
+								$scope.nodedetail.domain = data.node[0]['bier-te-node-params']['te-domain'];
+							}
+							//dScope.processTpIdForNode(data.node);
+							//$scope.nodedetail.domain = dScope.TeParams.domain;
+						},
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Node details not loaded",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.addTeNodeConfig = function(node){
+					$scope.input.addTeNodeConfigStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.addTeNodeConfig, ['domain','subdomain','bsl', 'si',
+							'tpid','bitposition']) && $scope.input.addTeNodeConfig.domain !== undefined &&
+						$scope.input.addTeNodeConfig.tpid !== undefined){
+						var nodeId = node;
+						BiermanRest.configTeNode(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'node-id': nodeId,
+								'te-domain':[
+									{
+										"domain-id": $scope.input.addTeNodeConfig.domain['domain-id'],
+										"te-sub-domain":[
+											{
+												"sub-domain-id": $scope.input.addTeNodeConfig.subdomain,
+												"te-bsl":[
+													{
+														"bitstringlength": $scope.input.addTeNodeConfig.bsl,
+														"te-si":[
+															{
+																"si": $scope.input.addTeNodeConfig.si,
+																"te-bp":[
+																	{
+																		"tp-id": $scope.input.addTeNodeConfig.tpid['tp-id'],
+																		"bitposition": $scope.input.addTeNodeConfig.bitposition
+																	}
+																]
+
+															}
+														]
+													}
+												]
+											}
+										]
+									}
+								]
+							},
+							// success
+							function(data){
+								$scope.input.addTeNodeConfig = {};
+								$scope.input.addTeNodeConfigStatus = 'success';
+								dScope.displayAlert({
+									title: "Node  Added",
+									text: "Node " + nodeId + " has been added to the system",
+									type: "success",
+									timer: 500,
+									confirmButtonText: "Okay"
+								});
+								$scope.detailNode(nodeId);
+								$scope.closeAdd();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Node configure Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+
+						dScope.displayAlert({
+							title: "Node configure Not Added",
+							text: dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				$scope.addBSL = function(node){
+					$scope.input.addBSLStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.addBSL, ['bsl','si','tpid','bitposition']) &&
+						$scope.input.addBSL.tpid !== undefined){
+						var nodeId = node;
+						var bsl = [
+							{
+								"bitstringlength": $scope.input.addBSL.bsl,
+								"te-si":[
+									{
+										"si": $scope.input.addBSL.si,
+										"te-bp":[
+											{
+												"tp-id": $scope.input.addBSL.tpid['tp-id'],
+												"bitposition": $scope.input.addBSL.bitposition
+											}
+										]
+									}
+								]
+							}
+						];
+						BiermanRest.configTeNode(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'node-id': nodeId,
+								'te-domain':[
+									{
+										"domain-id": $scope.addDomainid,
+										"te-sub-domain":[
+											{
+												"sub-domain-id": $scope.addSubdomainid,
+												"te-bsl":bsl
+											}
+										]
+									}
+								]
+							},
+							// success
+							function(data){
+								$scope.input.addBSL = {};
+								$scope.input.addBSLStatus = 'success';
+								dScope.displayAlert({
+									title: "Node  Added",
+									text: "Node " + nodeId + " has been added to the system",
+									type: "success",
+									timer: 500,
+									confirmButtonText: "Okay"
+								});
+								$scope.detailNode(nodeId);
+								$scope.closeBslAdd();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Node configure Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+
+						dScope.displayAlert({
+							title: "Node configure Not Added",
+							text: dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				$scope.addTeSI = function(node){
+					$scope.input.addSIStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.addSI, ['si','tpid','bitposition']) &&
+						$scope.input.addSI.tpid !== undefined){
+						var nodeId = node;
+						var si = [
+							{
+								"si": $scope.input.addSI.si,
+								"te-bp":[
+									{
+										"tp-id": $scope.input.addSI.tpid['tp-id'],
+										"bitposition": $scope.input.addSI.bitposition
+									}
+								]
+							}
+						];
+						BiermanRest.configTeNode(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'node-id': nodeId,
+								'te-domain':[
+									{
+										"domain-id": $scope.addDomainid,
+										"te-sub-domain":[
+											{
+												"sub-domain-id": $scope.addSubdomainid,
+												"te-bsl":[
+													{
+														"bitstringlength": $scope.addBitstringlength,
+														"te-si":si
+													}
+												]
+											}
+										]
+									}
+								]
+							},
+							// success
+							function(data){
+								$scope.input.addSI = {};
+								$scope.input.addSIStatus = 'success';
+								dScope.displayAlert({
+									title: "Node  Added",
+									text: "Node " + nodeId + " has been added to the system",
+									type: "success",
+									timer: 500,
+									confirmButtonText: "Okay"
+								});
+								$scope.detailNode(nodeId);
+								$scope.closeSiAdd();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Node configure Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+
+						dScope.displayAlert({
+							title: "Node configure Not Added",
+							text: dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				$scope.addBP = function(node){
+					$scope.input.addBPStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.addBP, ['tpid','bitposition']) &&
+						$scope.input.addBP.tpid !== undefined){
+						var nodeId = node;
+						var bp = [
+							{
+								"tp-id": $scope.input.addBP.tpid['tp-id'],
+								"bitposition": $scope.input.addBP.bitposition
+							}
+						];
+						BiermanRest.configTeNode(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'node-id': nodeId,
+								'te-domain':[
+									{
+										"domain-id": $scope.addDomainid,
+										"te-sub-domain":[
+											{
+												"sub-domain-id": $scope.addSubdomainid,
+												"te-bsl":[
+													{
+														"bitstringlength": $scope.addBitstringlength,
+														"te-si":[
+															{
+																"si": $scope.addSI,
+																"te-bp":bp
+															}
+														]
+													}
+												]
+											}
+										]
+									}
+								]
+							},
+							// success
+							function(data){
+								$scope.input.addBP = {};
+								$scope.input.addBPStatus = 'success';
+								dScope.displayAlert({
+									title: "Node  Added",
+									text: "Node " + nodeId + " has been added to the system",
+									type: "success",
+									timer: 500,
+									confirmButtonText: "Okay"
+								});
+								$scope.detailNode(nodeId);
+								$scope.closeBpAdd();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Node configure Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+
+						dScope.displayAlert({
+							title: "Node configure Not Added",
+							text: dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				$scope.removeBSL = function(node, domain, subdomain, bsl){
+					BiermanRest.removeBSL (
+						{
+							'topology-id': dScope.appConfig.currentTopologyId,
+							'node-id': node,
+							'domain-id': domain,
+							'sub-domain-id': subdomain,
+							'bitstringlength':bsl
+						},
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "TE-BSL Removed ",
+								text: "BSL " + bsl + " removed from subdomain " + subdomain ,
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							$scope.detailNode(node);
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "TE-BSL Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.removeSI = function(node, domain, subdomain, bsl,si){
+					BiermanRest.removeSI (
+						{
+							'topology-id': dScope.appConfig.currentTopologyId,
+							'node-id': node,
+							'domain-id': domain,
+							'sub-domain-id': subdomain,
+							'bitstringlength':bsl,
+							'si':si
+						},
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "TE-SI Removed ",
+								text: "SI " + si + " removed from subdomain " + subdomain ,
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							$scope.detailNode(node);
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "TE-SI Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.removeBP = function(node, domain, subdomain, bsl,si, tp){
+					BiermanRest.removeBP (
+						{
+							'topology-id': dScope.appConfig.currentTopologyId,
+							'node-id': node,
+							'domain-id': domain,
+							'sub-domain-id': subdomain,
+							'bitstringlength':bsl,
+							'si':si,
+							'tp-id':tp
+						},
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "TE-SI Removed ",
+								text: "TP " + tp + " removed from subdomain " + subdomain ,
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							$scope.detailNode(node);
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "TE-BP Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.addBierTeLabelRange = function(nodeId){
+					$scope.input.addLabelStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.addLabel, ['base', 'size'])){
+						BiermanRest.configureBierTeLabelRange(
+							{
+								'input':{
+									"topology-id": dScope.appConfig.currentTopologyId,
+									"node-id": nodeId,
+									"label-base": $scope.input.addLabel.base,
+									"label-range-size":  $scope.input.addLabel.size
+								}
+							},
+							// success
+							function(data){
+								$scope.input.addLabel = {};
+								$scope.input.addLabelStatus = 'success';
+								dScope.displayAlert({
+									title: "Bier Te Label Range Added",
+									text: "The Range has been added to the node",
+									type: "success",
+									timer: 2000,
+									confirmButtonText: "Okay"
+								});
+								dScope.getBierTeLabelRange();
+								$scope.closeAddLabelRange();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Bier Te Label Range Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+						dScope.displayAlert({
+							title: "Bier Te Label Range Added",
+							text: "add a Label Range " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				$scope.editBierTeLabelRange = function(node){
+					var base = null;
+					var size = null;
+					if($scope.input.editLabel.base === undefined){
+						base = node.labelBase;
+					}
+					else{
+						base = $scope.input.editLabel.base;
+					}
+					if($scope.input.editLabel.size === undefined){
+						size = node.labelRangeSize;
+					}
+					else{
+						size = $scope.input.editLabel.size;
+					}
+					$scope.input.editNetconfStatus = 'inprogress';
+					BiermanRest.configureBierTeLabelRange(
+						{
+							'input':{
+								"topology-id": dScope.appConfig.currentTopologyId,
+								"node-id": node.nodeId,
+								"label-base": base,
+								"label-range-size":  size
+							}
+						},
+						// success
+						function(data){
+							$scope.input.editLabel = {};
+							$scope.input.editLabelStatus = 'success';
+							dScope.displayAlert({
+								title: "Bier Te Label Range Edited",
+								text: "The Label Range has been edited to the node",
+								type: "success",
+								timer: 2000,
+								confirmButtonText: "Okay"
+							});
+							dScope.getBierTeLabelRange();
+							$scope.closeEditLabelRange();
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Bier Te Label Range Not edited",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.removeBierTeLabelRange = function(nodeId){
+					BiermanRest.removeBierTeLabelRange (
+						{
+							'input':{
+								"topology-id": dScope.appConfig.currentTopologyId,
+								"node-id": nodeId
+							}
+						},
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "Node Te Label Range Removed ",
+								text: 'Label Range removed from node: '+ nodeId,
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							dScope.getBierTeLabelRange();
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Node Te Label Range Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.dScope = dScope;
+			},
+			templateUrl: 'src/app/bierapp/src/templates/bier-te-manager.tpl.html',
+			parent: angular.element(document.body),
+			clickOutsideToClose: true,
+			fullscreen: useFullScreen,
+			locals: {
+				dScope: $scope
+			}
+		})
+			.then(function(answer) {
+				$scope.status = 'You said the information was "' + answer + '".';
+			}, function() {
+				$scope.status = 'You cancelled the dialog.';
+			});
+		$scope.$watch(function() {
+			return $mdMedia('xs') || $mdMedia('sm');
+		}, function(wantsFullScreen) {
+			$scope.customFullscreen = (wantsFullScreen === true);
+		});
+	};
 
 
 

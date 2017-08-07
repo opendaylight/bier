@@ -1,0 +1,412 @@
+<md-dialog aria-label="Bier Te Manager" flex="50">
+    <md-dialog-content>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Bier Te Manager</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                    <i class="fa fa-close fa-2x" aria-label="Close dialog"></i>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <!-- Node Configure Block -->
+        <md-toolbar class="md-accent white">
+            <div class="md-toolbar-tools">
+                <h3>Node Configure</h3>
+            </div>
+        </md-toolbar>
+        <md-content flex>
+            <div>
+                <md-tabs md-dynamic-height md-border-bottom>
+                    <md-tab label="BIER Te Node Params" class="md-accent white" >
+                        <md-content class="md-dialog-content">
+                            <div ng-show="dScope.topologyData.nodes.length == 0">
+                                Topology has no nodes.
+                            </div>
+                            <div ng-show="dScope.topologyData == null">
+                                <md-progress-linear md-mode="query"></md-progress-linear>
+                                <div class="bottom-block channel-info">
+                                    <span>Loading available Nodes...</span>
+                                </div>
+                            </div>
+                            <div ng-show="typeOf(dScope.topologyData) == 'object'">
+                                <md-content>
+                                    <div ng-show="dScope.topologyData.nodes.length  > 0">
+                                        <md-content>
+                                            <md-list>
+                                                <md-list-item class="md-3-line" ng-repeat="node in dScope.topologyData.nodes  | paging:currentPage*listsPerPage | limitTo:listsPerPage ">
+                                                    <div class="md-list-item-text" layout="row">
+                                                        <!--node display mode-->
+                                                        <div ng-show="!tebsladd.adding && !tesiadd.adding && !nodedetail.detail && !nodeadd.adding && !tebpadd.adding || nodedetail.name != node['node-id']" class="w100 clear">
+                                                            <div class="channel-info align-left">
+                                                                <h3>{{node['node-id']}}</h3>
+                                                            </div>
+                                                            <div class="channel-actions align-right">
+                                                                <md-button ng-click="detailNode(node['node-id'])" class="md-primary">
+                                                                    Detail
+                                                                </md-button>
+                                                            </div>
+                                                        </div>
+                                                        <!-- detial display mode -->
+                                                        <div ng-show="nodedetail.detail && nodedetail.name == node['node-id']">
+                                                            <div layout="row">
+                                                                <div class="channel-info align-left">
+                                                                    <div ng-show="nodedetail.domain == null">
+                                                                        <div class="channel-info">
+                                                                            No domain added so far.
+                                                                        </div>
+                                                                    </div>
+                                                                    <!--domain display-->
+                                                                    <div ng-show="nodedetail.domain.length > 0">
+                                                                        <h3>node :{{node['node-id']}}</h3><br>
+                                                                        <md-list>
+                                                                            <md-list-item class="md-3-line" ng-repeat="domain in nodedetail.domain">
+                                                                                <div class="md-list-item-text" layout="row">
+                                                                                    <div class="channel-info align-left">
+                                                                                        <p><b> domain :{{domain['domain-id']}}</b></p>
+                                                                                        <!--display subdomain of nodes-->
+                                                                                        <md-list>
+                                                                                            <md-list-item class="md-3-line" ng-repeat="subdomain in domain['te-sub-domain']">
+                                                                                                <div class="md-list-item-text" layout="row">
+                                                                                                    <div class="channel-info">
+                                                                                                        <p><b> subdomain :{{subdomain['sub-domain-id']}}</b></p>
+                                                                                                        <md-list>
+                                                                                                            <b>　te-bsl</b>　　　　　　　　<md-button ng-click="addBsl(domain['domain-id'],subdomain['sub-domain-id'],node['node-id'])" class="md-primary">Add bsl</md-button>
+                                                                                                            <md-list-item class="md-3-line" ng-repeat="bsl in subdomain['te-bsl']">
+                                                                                                                <div class="md-list-item-text" layout="row">
+                                                                                                                    <div class="channel-info align-left">
+                                                                                                                        <p>bitstringlength :{{bsl.bitstringlength}}</p>
+                                                                                                                        <md-list>
+                                                                                                                            <b>　te-si</b>　　　　　　<md-button ng-click="addSi(domain['domain-id'], subdomain['sub-domain-id'], bsl.bitstringlength, node['node-id'])" class="md-primary">Add si</md-button>
+                                                                                                                            <md-list-item class="md-3-line" ng-repeat="tesi in bsl['te-si']">
+                                                                                                                                <div class="md-list-item-text" layout="row">
+                                                                                                                                    <div class="channel-info align-left">
+                                                                                                                                        <p>si :{{tesi.si}}</p>
+                                                                                                                                        <p>ft-label :{{tesi['ft-label']}}</p>
+                                                                                                                                        <md-list>
+                                                                                                                                            <b>　te-bp</b>　　　　<md-button ng-click="addBp(domain['domain-id'], subdomain['sub-domain-id'], bsl.bitstringlength, tesi.si)" class="md-primary">Add bp</md-button>
+                                                                                                                                            <md-list-item class="md-3-line" ng-repeat="bp in tesi['te-bp']">
+                                                                                                                                                <div class="md-list-item-text" layout="row">
+                                                                                                                                                    <div class="channel-info align-left">
+                                                                                                                                                        <p>tp-id :{{bp['tp-id']}}</p>
+                                                                                                                                                        <p>bitposition :{{bp.bitposition}}</p>
+                                                                                                                            
+                                                                                                                                                    </div>
+                                                                                                                                                    <div class="channel-actions align-right">
+                                                                                                                                                        <!--md-button ng-click="editbsl(domain['domain-id'], subdomain['sub-domain-id'], ipv4)" class="md-primary">
+                                                                                                                                                            Edit bp
+                                                                                                                                                        </md-button-></br-->
+                                                                                                                                                        <md-button ng-click="removeBP(node['node-id'], domain['domain-id'], subdomain['sub-domain-id'], bsl.bitstringlength, tesi.si, bp['tp-id'])" class="md-warn">
+                                                                                                                                                            Remove
+                                                                                                                                                        </md-button>
+                                                                                                                                                    </div>
+                                                                                                                                                </div>
+                                                                                                                                                <md-divider ng-if="!$last"></md-divider>
+                                                                                                                                            </md-list-item>
+                                                                                                                                        </md-list>
+                                                                                                            
+                                                                                                                                    </div>
+                                                                                                                                    <div class="channel-actions align-right">
+                                                                                                                                        <!--md-button ng-click="editbsl(domain['domain-id'], subdomain['sub-domain-id'], ipv4)" class="md-primary">
+                                                                                                                                            Edit si
+                                                                                                                                        </md-button></br-->
+                                                                                                                                        <md-button ng-click="removeSI(node['node-id'], domain['domain-id'], subdomain['sub-domain-id'], bsl.bitstringlength, tesi.si)" class="md-warn">
+                                                                                                                                            Remove
+                                                                                                                                        </md-button>
+                                                                                                                                    </div>
+                                                                                                                                </div>
+                                                                                                                                <md-divider ng-if="!$last"></md-divider>
+                                                                                                                            </md-list-item>
+                                                                                                                        </md-list>
+                                                                                            
+                                                                                                                    </div>
+                                                                                                                    <div class="channel-actions align-right">
+                                                                                                                        <md-button ng-click="removeBSL(node['node-id'], domain['domain-id'], subdomain['sub-domain-id'], bsl.bitstringlength)" class="md-warn">
+                                                                                                                            Remove
+                                                                                                                        </md-button>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <md-divider ng-if="!$last"></md-divider>
+                                                                                                            </md-list-item>
+                                                                                                        </md-list>
+                                                                            
+                                                                                                    </div>
+                                                                                                    <md-divider ng-if="!$last"></md-divider>
+                                                                                                </div>
+                                                                                            </md-list-item>
+                                                                                        </md-list>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <md-divider ng-if="!$last"></md-divider>
+                                                                            </md-list-item>
+                                                                        </md-list>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="channel-actions align-right">
+                                                                    <md-button ng-click="addTeNodeDomain(node['node-id'])" class="md-primary">
+                                                                        Add
+                                                                    </md-button><br>
+                                                                    <md-button ng-click="closedetail(node['node-id'])" class="md-primary">
+                                                                        Cancel
+                                                                    </md-button><br>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <!-- te add mode -->
+                                                        <div ng-show="nodeadd.adding && !nodedetail.detail && !tebsladd.adding && !tesiadd.adding && !tebpadd.adding && nodedetail.name == node['node-id']">
+                                                            <div layout="row">
+                                                                <div class="channel-info">
+                                                                    <md-input-container>
+                                                                        Domain
+                                                                        <select ng-model="input.addTeNodeConfig.domain" ng-options="Domain['domain-id'] for Domain in dScope.domainData" ng-change="dScope.changeDomainData(input.addTeNodeConfig.domain)" required>
+                                                                            <option value="">-select-</option>
+                                                                        </select>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        Subdomain
+                                                                        <select ng-model="input.addTeNodeConfig.subdomain" ng-options="subdomain['sub-domain-id'] as subdomain['sub-domain-id'] for subdomain in dScope.subdomainData" required>
+                                                                            <option value="">-select-</option>
+                                                                        </select>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        bitstringlength
+                                                                        <select ng-model="input.addTeNodeConfig.bsl" ng-options="bitstring.bsl as bitstring.bsl for bitstring in dScope.bitstringlength" required>
+                                                                            <option value="">-select-</option>
+                                                                        </select>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        <label for="cm-add-te-node-si">si</label>
+                                                                        <input ng-model="input.addTeNodeConfig.si" id="cm-add-te-node-si" required>
+                                                                    </md-input-container>
+                                                                    <!--md-input-container>
+                                                                        <label for="cm-add-te-node-tpid">tp-id</label>
+                                                                        <input ng-model="input.addTeNodeConfig.tpid" id="cm-add-te-node-tpid" required>
+                                                                    </md-input-container-->
+                                                                    <md-input-container>
+                                                                        tp-id
+                                                                        <select ng-model="input.addTeNodeConfig.tpid" ng-options="tpId['tp-id'] for tpId in tpId" required>
+                                                                            <option value="">-select-</option>
+                                                                        </select>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        <label for="cm-add-te-node-bitposition">bitposition</label>
+                                                                        <input ng-model="input.addTeNodeConfig.bitposition" id="cm-add-te-node-bitposition" required>
+                                                                    </md-input-container>
+                                                                </div>
+                                                                <div class="channel-actions">
+                                                                    <md-button ng-click="addTeNodeConfig(node['node-id'])" class="md-primary">
+                                                                        Save
+                                                                    </md-button>
+                                                                    <md-button ng-click="closeAdd(node['node-id'])" class="md-primary">
+                                                                        Cancel
+                                                                    </md-button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <!-- bsl add mode -->
+                                                        <div ng-show="tebsladd.adding && !nodedetail.detail && !nodeadd.adding && !tesiadd.adding && !tebpadd.adding && nodedetail.name == node['node-id']">
+                                                            <div layout="row">
+                                                                <div class="channel-info">
+                                                                    <md-input-container>
+                                                                        bitstringlength
+                                                                        <select ng-model="input.addBSL.bsl" ng-options="bitstring.bsl as bitstring.bsl for bitstring in dScope.bitstringlength" required>
+                                                                            <option value="">-select-</option>
+                                                                        </select>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        <label for="cm-add-te-node-addBSL-si">si</label>
+                                                                        <input ng-model="input.addBSL.si" id="cm-add-te-node-addBSL-si" required>
+                                                                    </md-input-container><br>
+                                                                    <md-input-container>
+                                                                        tp-id
+                                                                        <select ng-model="input.addBSL.tpid" ng-options="tpId['tp-id'] for tpId in tpId" required>
+                                                                            <option value="">-select-</option>
+                                                                        </select>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        <label for="cm-add-te-node-addBSL-bitposition">bitposition</label>
+                                                                        <input ng-model="input.addBSL.bitposition" id="cm-add-te-node-addBSL-bitposition" required>
+                                                                    </md-input-container>
+                                                                </div>
+                                                                <div class="channel-actions">
+                                                                    <md-button ng-click="addBSL(node['node-id'])" class="md-primary">
+                                                                        Save
+                                                                    </md-button>
+                                                                    <md-button ng-click="closeBslAdd()" class="md-primary">
+                                                                        Cancel
+                                                                    </md-button><br>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                
+                                                        <!-- te si add mode -->
+                                                        <div ng-show="tesiadd.adding && !tebsladd.adding && !nodedetail.detail && !nodeadd.adding && !tebpadd.adding && nodedetail.name == node['node-id']">
+                                                            <div layout="row">
+                                                                <div class="channel-info">
+                                                                    <md-input-container>
+                                                                        <label for="cm-add-te-node-addSI-si">si</label>
+                                                                        <input ng-model="input.addSI.si" id="cm-add-te-node-addSI-si" required>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        tp-id
+                                                                        <select ng-model="input.addSI.tpid" ng-options="tpId['tp-id'] for tpId in tpId" required>
+                                                                            <option value="">-select-</option>
+                                                                        </select>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        <label for="cm-add-node-addSI-bitposition">bitposition</label>
+                                                                        <input ng-model="input.addSI.bitposition" id="cm-add-node-addSI-bitposition" required>
+                                                                    </md-input-container>
+                                                                </div>
+                                                                <div class="channel-actions">
+                                                                    <md-button ng-click="addTeSI(node['node-id'])" class="md-primary">
+                                                                        Save
+                                                                    </md-button>
+                                                                    <md-button ng-click="closeSiAdd()" class="md-primary">
+                                                                        Cancel
+                                                                    </md-button><br>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <!-- te bp add mode -->
+                                                        <div ng-show="tebpadd.adding && !tebsladd.adding && !nodedetail.detail && !nodeadd.adding && nodedetail.name == node['node-id']">
+                                                            <div layout="row">
+                                                                <div class="channel-info">
+                                                                    <md-input-container>
+                                                                        tp-id
+                                                                        <select ng-model="input.addBP.tpid" ng-options="tpId['tp-id'] for tpId in tpId" required>
+                                                                            <option value="">-select-</option>
+                                                                        </select>
+                                                                    </md-input-container>
+                                                                    <md-input-container>
+                                                                        <label for="cm-add-te-node-addBP-bitposition">bitposition</label>
+                                                                        <input ng-model="input.addBP.bitposition" id="cm-add-te-node-addBP-bitposition" required>
+                                                                    </md-input-container>
+                                                                </div>
+                                                                <div class="channel-actions">
+                                                                    <md-button ng-click="addBP(node['node-id'])" class="md-primary">
+                                                                        Save
+                                                                    </md-button>
+                                                                    <md-button ng-click="closeBpAdd()" class="md-primary">
+                                                                        Cancel
+                                                                    </md-button><br>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <md-divider ng-if="!$last"></md-divider>
+                                                </md-list-item>
+                                            </md-list>
+                                        </md-content>
+                                        <div ng-show="!tebsladd.adding && !tesiadd.adding && !nodedetail.detail && !nodeadd.adding && !tebpadd.adding ">
+                                            <a class="step prevLink" ng-click="prevPage()">Previous</a>
+                                            <a ng-class="{true:'currentStep',false:'step'}[num == currentPage]" ng-repeat="num in pageNum" ng-click="setPage(num)">{{num+1}}</a>
+                                            <a class="step nextLink" ng-click="nextPage()">Next</a>
+                                        </div>
+                                    </div>
+                                </md-content>
+                            </div>
+                        </md-content>
+                    </md-tab>
+                    <md-tab label="BIER Te Lable Range" class="md-accent white" >
+                        <md-content class="md-dialog-content">
+                            <div ng-show="dScope.bierTeLabelRange.length == 0">
+                                Where are the nodes?
+                            </div>
+                            <div ng-show="dScope.bierTeLabelRange.length  > 0" >
+                                <md-content>
+                                    <md-list>
+                                        <md-list-item class="md-3-line" ng-repeat="node in dScope.bierTeLabelRange | paging:currentPage*listsPerPage | limitTo:listsPerPage">
+                                            <div class="md-list-item-text" layout="row">
+                                                <!--node display mode-->
+                                                <div ng-show="!labelRangeAdd.adding && !labelRangeEdit.editing && labelRangeDetail.detail || labelRangeDetail.name != node.nodeId" class="w100 clear">
+                                                    <div class="channel-info align-left">
+                                                        <h3>{{node.nodeId}}</h3>
+                                                        <p>&nbsp&nbsp labelBase: {{node.labelBase}}</p>
+                                                        <p>&nbsp&nbsp labelRangeSize: {{node.labelRangeSize}}</p>
+                                                    </div>
+                                                    <div class="channel-actions align-right">
+                                                        <md-button ng-click="addLabelRange(node.nodeId)" class="md-primary">
+                                                            Add
+                                                        </md-button>
+                                                        <md-button ng-click="editLabelRange(node.nodeId)" class="md-primary">
+                                                            Edit
+                                                        </md-button>
+                                                        <md-button ng-click="removeBierTeLabelRange(node.nodeId)" class="md-warn">
+                                                            Remove
+                                                        </md-button>
+                                                    </div>
+                                                </div>
+                                                <!-- add mode -->
+                                                <div ng-show="labelRangeAdd.adding && !labelRangeDetail.detail && !labelRangeEdit.editing && labelRangeDetail.name == node.nodeId">
+                                                    <div layout="row">
+                                                        <div class="channel-info">
+                                                            <md-input-container>
+                                                                <label for="cm-add-label-base">labelBase</label>
+                                                                <input ng-model="input.addLabel.base" id="cm-add-label-base" required>
+                                                            </md-input-container>
+                                                            <md-input-container>
+                                                                <label for="cm-add-label-size">labelRangeSize</label>
+                                                                <input ng-model="input.addLabel.size" id="cm-add-label-size" required>
+                                                            </md-input-container>
+                                                        </div>
+                                                        <div class="channel-actions">
+                                                            <md-button ng-click="addBierTeLabelRange(node.nodeId)" class="md-primary">
+                                                                Save
+                                                            </md-button>
+                                                            <md-button ng-click="closeAddLabelRange()" class="md-primary">
+                                                                Cancel
+                                                            </md-button><br>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- edit mode -->
+                                                <div ng-show="labelRangeEdit.editing && !labelRangeDetail.detail && !labelRangeAdd.adding && labelRangeDetail.name == node.nodeId">
+                                                    <div layout="row">
+                                                        <div class="channel-info">
+                                                            <md-input-container>
+                                                                <label for="cm-edit-label-base">labelBase</label>
+                                                                <input ng-model="input.editLabel.base" id="cm-edit-label-base" required>
+                                                            </md-input-container>
+                                                            <md-input-container>
+                                                                <label for="cm-edit-label-size">labelRangeSize</label>
+                                                                <input ng-model="input.editLabel.size" id="cm-edit-label-size" required>
+                                                            </md-input-container>
+                                                        </div>
+                                                        <div class="channel-actions">
+                                                            <md-button ng-click="editBierTeLabelRange(node)" class="md-primary">
+                                                                Save
+                                                            </md-button>
+                                                            <md-button ng-click="closeEditLabelRange()" class="md-primary">
+                                                                Cancel
+                                                            </md-button><br>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                    
+                                            </div>
+                                            <md-divider ng-if="!$last"></md-divider>
+                                        </md-list-item>
+                                    </md-list>
+                                </md-content>
+                                <div>
+                                    <a class="step prevLink" ng-click="prevPage()">Previous</a>
+                                    <a ng-class="{true:'currentStep',false:'step'}[num == currentPage]" ng-repeat="num in pageNum" ng-click="setPage(num)">{{num+1}}</a>
+                                    <a class="step nextLink" ng-click="nextPage()">Next</a>
+                                </div>
+                            </div>
+                        </md-content>
+                    </md-tab>
+                </md-tabs>
+            </div>
+        </md-content>
+    </md-dialog-content>
+    
+    <md-dialog-actions layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel()" class="md-primary">
+            Close
+        </md-button>
+    </md-dialog-actions>
+    </form>
+</md-dialog>
