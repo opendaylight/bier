@@ -1,0 +1,158 @@
+<md-dialog aria-label="Domain Manager" flex="50">
+    <md-dialog-content>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Domain Manager</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                    <i class="fa fa-close fa-2x" aria-label="Close dialog"></i>
+                </md-button>
+            </div>
+        </md-toolbar>
+        
+        <md-toolbar class="md-accent white">
+            <div class="md-toolbar-tools">
+                <h3>Add domain/subdomain</h3>
+            </div>
+        </md-toolbar>
+        <md-content flex>
+            <div>
+                <md-tabs md-dynamic-height md-border-bottom>
+                    <md-tab label="Add Domain" class="md-accent white" >
+                        <md-content class="md-dialog-content">
+                            <md-list>
+                                <div  class="md-inline-form  add-channel">
+                                    <md-list-item class="md-3-line" ng-repeat="(key,item) in items track by $index">
+                                        <div class="md-list-item-text" layout="row">
+                                            <md-input-container>
+                                                <label for="item[{{kye}}]">Domain ID:{{key}}</label>
+                                                <input ng-model="items[key]" id="item[{{kye}}]" required>
+                                            </md-input-container>
+                                            <md-button ng-click="Fn.del(key)" class="md-warn" id="delete-button">
+                                                Delete
+                                            </md-button>
+                                        </div>
+                                    </md-list-item>
+                                    <md-button ng-click="Fn.add()" class="md-primary">
+                                        <i class="fa fa-plus"></i>  Add Domain Number
+                                    </md-button>
+                                    <md-divider ng-if="!$last"></md-divider>
+                                </div>
+                                <md-button ng-click="addDomain()" class="md-raised md-primary">
+                                    Save
+                                </md-button>
+                            <md-list>
+                        </md-content>
+                    </md-tab>
+                    <md-tab label="Add Subdomain" class="md-accent white">
+                        <md-content class="md-dialog-content">
+                            <md-list>
+                                <div  class="md-inline-form  add-channel">
+                                    <md-list-item>
+                                        <md-input-container>
+                                            <!--label for="cm-add-subdomain-domain">domain</label-->domain
+                                            <select ng-model="input.addSubdomain.domain" ng-options="Domain['domain-id'] as Domain['domain-id'] for Domain in dScope.domainData"  id="cm-add-subdomain-domain" required>
+                                                <option value="">-select-</option>
+                                            </select>
+                                        </md-input-container>
+                                    </md-list-item>
+                                    
+                                    <md-list-item class="md-3-line" ng-repeat="(key,item) in subitems track by $index">
+                                        <div class="md-list-item-text" layout="row">
+                                            <md-input-container>
+                                                <label for="subitems[{{kye}}]">SubDomain ID:{{key}}</label>
+                                                <input ng-model="subitems[key]" id="subitems[{{kye}}]" required>
+                                            </md-input-container>
+                                            <md-button ng-click="subFn.del(key)" class="md-warn">
+                                                Delete
+                                            </md-button>
+                                        </div>
+                                    </md-list-item>
+                                    <md-button ng-click="subFn.add()" class="md-primary">
+                                        <i class="fa fa-plus"></i>  Add Subdomain Number
+                                    </md-button>
+                                    <md-divider ng-if="!$last"></md-divider>
+                                </div>
+                                <md-button ng-click="addSubDomain()" class="md-raised md-primary">
+                                    Save
+                                </md-button>
+                                <md-list>
+                        </md-content>
+                    </md-tab>
+                </md-tabs>
+            </div>
+        </md-content>
+        
+        <!--Domain Detials-->
+        <md-toolbar class="md-accent white">
+            <div class="md-toolbar-tools">
+                <h3>Domain Detials</h3>
+            </div>
+        </md-toolbar>
+        <div ng-show="dScope.domainData == null">
+            <md-progress-linear md-mode="query"></md-progress-linear>
+            <div class="bottom-block channel-info">
+                <span>Loading available domain...</span>{{dScope.domainData}}
+            </div>
+        </div>
+        <div ng-show="typeOf(dScope.domainData) == 'object'">
+            <md-content>
+                <div ng-show="dScope.domainData.length > 0">
+                    <md-list>
+                        <md-list-item class="md-3-line" ng-repeat="domain in dScope.domainData | orderBy:'name' ">
+                            <div class="md-list-item-text" layout="row">
+                                <!--div ng-show="!domainedit.editing || domainedit.name != domain['domain-id']" class="w100 clear"-->
+                                <div class="w100 clear">
+                                    <div class="bier-info align-left w70">
+                                        <h3>domain： {{domain['domain-id']}}</h3>
+                                        <md-list>
+                                            <md-list-item class="md-3-line" ng-repeat="subdomain in domain.subdomain  | orderBy:'name' ">
+                                                <div class="md-list-item-text" layout="row">
+                                                    <div class="w100 clear">
+                                                        <div class="bier-info align-left">
+                                                            <h3>subdomain: {{subdomain['sub-domain-id']}}</h3>
+    
+                                                        </div>
+                                                        <div class="channel-actions align-right">
+                                                            <!--md-button ng-click="" class="md-primary">
+                                                                Edit
+                                                            </md-button-->
+                                                            <md-button ng-click="removeSubdomain(domain['domain-id'],subdomain['sub-domain-id'])" class="md-warn" >
+                                                                Remove
+                                                            </md-button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <md-divider ng-if="!$last"></md-divider>
+                                            </md-list-item>
+                                        </md-list>
+                                    </div>
+                                    <div class="channel-actions align-right">
+                                        <md-button ng-click="removeDomain(domain['domain-id'])" class="md-warn">
+                                            Remove
+                                        </md-button>
+                                    </div>
+                                </div>
+                            </div>
+                            <md-divider ng-if="!$last"></md-divider>
+                        </md-list-item>
+                    </md-list>
+                </div>
+                <div ng-show="dScope.domainData.length == 0">
+                    <div class="channel-info">
+                        No domain defined so far.
+                    </div>
+                </div>
+            </md-content>
+        </div>
+        
+    </md-dialog-content>
+    
+    <md-dialog-actions layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel()" class="md-primary">
+            Close
+        </md-button>
+    </md-dialog-actions>
+    </form>
+</md-dialog>

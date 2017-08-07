@@ -14,11 +14,6 @@ define([
 	$rootScope['section_logo'] = 'src/app/bierapp/assets/images/bier.jpg';
 	
 	$scope.appConfig = {
-		// FOR MANUAL CONFIGURATION
-		'ipAutoDetection': true, // automatically substitute proxyHost with hostname in browser
-		'httpMaxTimeout': 10000, // Maximum timeout in milliseconds for HTTP requests
-		'maxPacketLoss': 10,
-
 		// DO NOT MODIFY CONFIGURATION BELOW
 		'mode': 'init', // Application mode (do not modify)
 		'queryTopology' : 'no',
@@ -27,9 +22,6 @@ define([
 		'currentTopologyId': null,
 		'currentDomain': null
 	};
-	// dynamic replacement of proxy hostname
-
-	//var BiermanRest = new BiermanRest1($scope.appConfig);
  
 	$scope.bitstringlength = [
 		{ "bsl" : "64-bit"},
@@ -236,7 +228,7 @@ define([
 					"notifications": [
 						"(urn:bier:topology:api?revision=2016-11-02)topo-change",
 						"(urn:bier:service:api?revision=2017-01-05)report-message",
-						//"(urn:bier:driver:reporter?revision=2017-02-13)driver-failure"
+						"(urn:bier:driver:reporter?revision=2017-02-13)driver-failure"
 					]
 				}
 				
@@ -1724,6 +1716,7 @@ define([
 		$scope.appConfig.currentPanel = panelCode;
 		$mdSidenav('right').open();
 	};
+
 	//open Channel Manager
 	$scope.openChannelManager = function() {
 		$scope.customFullscreen = $mdMedia('xs') || $mdMedia('sm');
@@ -2257,6 +2250,259 @@ define([
 			$scope.customFullscreen = (wantsFullScreen === true);
 		});
 	};
+
+	//open Bier Manager
+	$scope.openDomainManager = function() {
+		$scope.customFuBierllscreen = $mdMedia('xs') || $mdMedia('sm');
+		var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
+		$mdDialog.show({
+			controller: function($scope, $mdDialog, dScope){
+
+				$scope.input = {
+					'addDomain': {},
+					'addSubdomain': {},
+					'addDomainStatus': 'none',
+					'addSubdomainStatus': 'none'
+				};
+
+				// Hide dialog (close without discarding changes)
+				$scope.hide = function() {
+					$mdDialog.hide();
+				};
+				// Cancel (discard changes)
+				$scope.cancel = function() {
+					$mdDialog.cancel();
+				};
+				$scope.typeOf = function(val){
+					return typeof val;
+				};
+
+				$scope.items = [null];     // first input is null
+				$scope.subitems = [null];
+				var i = 1;
+				var j = 1;
+
+				$scope.inputDomain = [];
+				$scope.inputSubDomain = [];
+				$scope.processDomainResult=function(){      //process input domain
+					angular.forEach($scope.items,function(item,key){
+						if($scope.items[key])
+							$scope.inputDomain.push($scope.items[key]);
+					});
+					//console.log('inputDomain', $scope.inputDomain);
+				};
+				$scope.processSubDomainResult=function(){      //process input subdomain
+					angular.forEach($scope.subitems,function(item,key){
+						if($scope.subitems[key])
+							$scope.inputSubDomain.push($scope.subitems[key]);
+					});
+					//console.log('inputDomain', $scope.inputDomain);
+				};
+
+				//add input button dynamic
+				$scope.Fn= {
+					add: function () {
+						$scope.items[i] = null;
+						i++;
+					},
+					del: function (key) {
+						//console.log(key);
+						$scope.items.splice(key, 1);
+						i--;
+					}
+				};
+				$scope.subFn= {
+					add: function () {
+						$scope.subitems[j] = null;
+						j++;
+					},
+					del: function (key) {
+						//console.log(key);
+						$scope.subitems.splice(key, 1);
+						j--;
+					}
+				};
+
+				// add Domain id
+				$scope.addDomain = function(){
+					$scope.input.addDomainStatus = 'inprogress';
+					$scope.processDomainResult();
+					if($scope.inputDomain.length > 0){
+						BiermanRest.configureDomain(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'domain': $scope.inputDomain
+							},
+							// success
+							function(data){
+								$scope.input.addDomainStatus = 'success';
+								dScope.displayAlert({
+									title: "Domain Added",
+									text: "domain has been added to the system",
+									type: "success",
+									timer: 1500,
+									confirmButtonText: "Okay"
+								});
+								$scope.inputDomain = [];
+								dScope.queryDomain();
+							},
+							// error
+							function(err){
+								$scope.inputDomain = [];
+								console.error(err);
+								dScope.displayAlert({
+									title: "Domain Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+						dScope.displayAlert({
+							title: "Domain Not Added",
+							text: "create a domain " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+				// add Subdomain id
+				$scope.addSubDomain = function(){
+					$scope.input.addSubdomainStatus = 'inprogress';
+					$scope.processSubDomainResult();
+					if(biermanTools.hasOwnProperties($scope.input.addSubdomain, ['domain']) && $scope.inputSubDomain.length > 0){
+
+						BiermanRest.configureSubdomain(
+							{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'domain-id': $scope.input.addSubdomain.domain,
+								'sub-domain': $scope.inputSubDomain
+							},
+							// success
+							function(data){
+								$scope.input.addSubdomain = {};
+								$scope.input.addSubdomainStatus = 'success';
+								dScope.displayAlert({
+									title: "Subdomain Added",
+									text: "subdomain has been added to the system",
+									type: "success",
+									timer: 1500,
+									confirmButtonText: "Okay"
+								});
+								$scope.inputSubDomain = [];
+								dScope.queryDomain();
+							},
+							// error
+							function(err){
+								$scope.inputSubDomain = [];
+								console.error(err);
+								dScope.displayAlert({
+									title: "Subdomain Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+						dScope.displayAlert({
+							title: "Subdomain Not Added",
+							text: "create a subdomain " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+				// remove subdomain id
+				$scope.removeSubdomain = function(domain, subdomain){
+					BiermanRest.removeSubdomain (
+						{
+							'topology-id': dScope.appConfig.currentTopologyId,
+							'domain-id': domain,
+							'sub-domain-id': subdomain
+						},
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "Subdomain Removed ",
+								text: 'subdomain: '+ subdomain + " removed from domain: " + domain  ,
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							dScope.queryDomain();
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Subdomain Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+				// remove domain id
+				$scope.removeDomain = function(domain){
+					BiermanRest.removeDomain (
+						{
+							'topology-id': dScope.appConfig.currentTopologyId,
+							'domain-id': domain
+						},
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "Domain Removed ",
+								text: 'domain: '+ domain + " removed",
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							dScope.queryDomain();
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Domain Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.dScope = dScope;
+			},
+			templateUrl: 'src/app/bierapp/src/templates/domain-manager.tpl.html',
+			parent: angular.element(document.body),
+			clickOutsideToClose: true,
+			fullscreen: useFullScreen,
+			locals: {
+				dScope: $scope
+			}
+		})
+			.then(function(answer) {
+				$scope.status = 'You said the information was "' + answer + '".';
+			}, function() {
+				$scope.status = 'You cancelled the dialog.';
+			});
+		$scope.$watch(function() {
+			return $mdMedia('xs') || $mdMedia('sm');
+		}, function(wantsFullScreen) {
+			$scope.customFullscreen = (wantsFullScreen === true);
+		});
+	};
+
+
+
+
 
 
 	
