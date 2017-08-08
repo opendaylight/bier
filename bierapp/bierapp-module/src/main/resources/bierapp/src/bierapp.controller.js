@@ -3869,8 +3869,264 @@ define([
 		});
 	};
 
+	//open Netconf Manager
+	$scope.openNetconfManager = function() {
+		$scope.customFuBierllscreen = $mdMedia('xs') || $mdMedia('sm');
+		var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
+		$mdDialog.show({
+			controller: function($scope, $mdDialog, dScope){
+
+				$scope.netconfdetail = {
+					name: '',
+					detail: true
+				};
+				$scope.netconfadd = {
+					name: '',
+					adding: false
+				};
+				$scope.netconfedit = {
+					name: '',
+					editing: false
+				};
+
+				$scope.input = {
+					'addNetconf': {},
+					'addNetconfStatus': 'none',
+
+					'editNetconf': {},
+					'editNetconfStatus': 'none'
+				};
+
+				$scope.currentPage = 0;
+				$scope.listsPerPage = 20;
+				$scope.dataNum =  dScope.netconfNode.length;
+				$scope.pages = Math.ceil($scope.dataNum/20);
+				$scope.pageNum = [];
+
+				for(var i = 0; i < $scope.pages; i++){
+					$scope.pageNum.push(i);
+				}
+
+				// Hide dialog (close without discarding changes)
+				$scope.hide = function() {
+					$mdDialog.hide();
+				};
+				// Cancel (discard changes)
+				$scope.cancel = function() {
+					$mdDialog.cancel();
+				};
+				$scope.typeOf = function(val){
+					return typeof val;
+				};
+
+				$scope.addNetconf = function(val){
+					$scope.netconfadd.adding = true;
+					$scope.netconfdetail.detail = false;
+					$scope.netconfedit.editing = false;
+					$scope.netconfdetail.name = val;
+				};
+
+				$scope.closeAdd = function(){
+					$scope.netconfadd.adding = false;
+					$scope.netconfdetail.detail = true;
+					$scope.netconfedit.editing = false;
+
+				};
+
+				$scope.editNetconf = function(val){
+					$scope.netconfedit.editing = true;
+					$scope.netconfdetail.detail = false;
+					$scope.netconfadd.adding = false;
+					$scope.netconfdetail.name = val;
+				};
+
+				$scope.closeEdit = function(){
+					$scope.netconfedit.editing = false;
+					$scope.netconfdetail.detail = true;
+					$scope.netconfadd.adding = false;
+				};
+
+				$scope.select = '';
+
+				// add node netconf
+				$scope.addNodeNetconf = function(node){
+					$scope.input.addNetconfStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.addNetconf, ['ip', 'port'])){
+						BiermanRest.addNodeNetconf(
+							{
+                                "node":
+                                {
+                                    "node-id": node,
+                                    "netconf-node-topology:tcp-only": false,
+                                    "netconf-node-topology:host": $scope.input.addNetconf.ip,
+                                    "netconf-node-topology:keepalive-delay": 0,
+                                    "netconf-node-topology:port": $scope.input.addNetconf.port,
+                                    "netconf-node-topology:username": "zte",
+                                   // "netconf-node-topology:username": "admin",
+                                    "netconf-node-topology:password": "zte"
+                                    //"netconf-node-topology:password": "admin"
+                                }
+                            },
+							// success
+							function(){
+								$scope.input.addNetconf = {};
+								$scope.input.addNetconfStatus = 'success';
+								dScope.displayAlert({
+									title: "Netconf Added",
+									text: "The netconf has been added to the system",
+									type: "success",
+									timer: 2000,
+									confirmButtonText: "Okay"
+								});
+								setTimeout(function(){dScope.getNetconf();}, 2000);
+								$scope.closeAdd();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Netconf Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+						dScope.displayAlert({
+							title: "Netconf Not Added",
+							text: "add a netconf " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				// add node netconf
+				$scope.editNodeNetconf = function(node){
+					var port = null;
+					var ip = null;
+					if($scope.input.editNetconf.port === undefined){
+						port = node.port;
+					}
+					else{
+						port = $scope.input.editNetconf.port;
+					}
+					if($scope.input.editNetconf.ip === undefined){
+						ip = node.ip;
+					}
+					else{
+						ip = $scope.input.editNetconf.ip;
+					}
+					$scope.input.editNetconfStatus = 'inprogress';
+					BiermanRest.editNodeNetconf(
+						{
+							"node":
+							{
+								"node-id": node['node-id'],
+								"netconf-node-topology:tcp-only": false,
+								"netconf-node-topology:host": ip,
+								"netconf-node-topology:keepalive-delay": 0,
+								"netconf-node-topology:port": port,
+								"netconf-node-topology:username": "zte",
+								"netconf-node-topology:password": "zte"
+							}
+						},
+						// success
+						function(data){
+							$scope.input.editNetconf = {};
+							$scope.input.editNetconfStatus = 'success';
+							dScope.displayAlert({
+								title: "Netconf Edited",
+								text: "The netconf has been edited to the system",
+								type: "success",
+								timer: 2000,
+								confirmButtonText: "Okay"
+							});
+							setTimeout(function(){
+								dScope.getNetconf();
+							}, 2000);
+							$scope.closeEdit();
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Netconf Not edited",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				// remove netconf
+				$scope.removeNodeNetconf = function(node){
+					BiermanRest.removeNodeNetconf (
+						node,
+						// success
+						function(data){
+							dScope.displayAlert({
+								title: "Node Netconf Removed ",
+								text: 'node: '+ node + " removed "  ,
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+							dScope.getNetconf();
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Node Netconf Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.setPage = function(num){
+					$scope.currentPage = num;
+				};
+
+				$scope.prevPage = function(){
+					if($scope.currentPage > 0){
+						$scope.currentPage--;
+					}
+				};
+				$scope.nextPage = function(){
+					if ($scope.currentPage < $scope.pages-1){
+						$scope.currentPage++;
+					}
+				};
+
+				$scope.dScope = dScope;
+			},
+			templateUrl: 'src/app/bierapp/src/templates/netconf-manager.tpl.html',
+			parent: angular.element(document.body),
+			clickOutsideToClose: true,
+			fullscreen: useFullScreen,
+			locals: {
+				dScope: $scope
+			}
+		})
+			.then(function(answer) {
+				$scope.status = 'You said the information was "' + answer + '".';
+			}, function() {
+				$scope.status = 'You cancelled the dialog.';
+			});
+		$scope.$watch(function() {
+			return $mdMedia('xs') || $mdMedia('sm');
+		}, function(wantsFullScreen) {
+			$scope.customFullscreen = (wantsFullScreen === true);
+		});
+	};
 
 
-	
   }]);
 });

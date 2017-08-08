@@ -1,0 +1,120 @@
+<md-dialog aria-label="Netconf Manager" flex="50">
+    <md-dialog-content>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Netconf Manager</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                    <i class="fa fa-close fa-2x" aria-label="Close dialog"></i>
+                </md-button>
+            </div>
+        </md-toolbar>
+    
+        <!-- Node Configure Block -->
+        <md-toolbar class="md-accent white">
+            <div class="md-toolbar-tools">
+                <h3>Node</h3>
+            </div>
+        </md-toolbar>
+        <div ng-show="dScope.netconfNode.length == 0">
+            Where are the nodes?
+        </div>
+        
+        <div ng-show="dScope.netconfNode.length  > 0" >
+            <div class="topology-actions align-center">
+                <md-button class="md-raised md-primary " ng-click="dScope.getNetconf()">
+                    Update connection status
+                </md-button>
+            </div>
+            <md-content>
+                <md-list>
+                    <md-list-item class="md-3-line" ng-repeat="node in dScope.netconfNode | paging:currentPage*listsPerPage | limitTo:listsPerPage">
+                        <div class="md-list-item-text" layout="row">
+                            <!--node display mode-->
+                            <div ng-show="!netconfadd.adding && !netconfedit.editing && netconfdetail.detail || netconfdetail.name != node['node-id']" class="w100 clear">
+                                <div class="channel-info align-left">
+                                    <h3>{{node['node-id']}}</h3>
+                                    <p><i class="fa fa-arrow-right"></i> ip: {{node.ip}}</p>
+                                    <p><i class="fa fa-circle"></i> port: {{node.port}}</p>
+                                    <p><i class="fa fa-spinner"></i> status: {{node.status}}</p>
+                                </div>
+                                <div class="channel-actions align-right">
+                                    <md-button ng-click="addNetconf(node['node-id'])" class="md-primary">
+                                        Add
+                                    </md-button>
+                                    <md-button ng-click="editNetconf(node['node-id'])" class="md-primary">
+                                        Edit
+                                    </md-button>
+                                    <md-button ng-click="removeNodeNetconf(node['node-id'])" class="md-warn">
+                                        Remove
+                                    </md-button>
+                                </div>
+                            </div>
+                            <!-- add mode -->
+                            <div ng-show="netconfadd.adding && !netconfdetail.detail && !netconfedit.editing && netconfdetail.name == node['node-id']">
+                                <div layout="row">
+                                    <div class="channel-info">
+                                        <md-input-container>
+                                            <label for="cm-add-netconf-ip">IP</label>
+                                            <input ng-model="input.addNetconf.ip" id="cm-add-netconf-ip" required>
+                                        </md-input-container>
+                                        <md-input-container>
+                                            <label for="cm-add-netconf-port">Port</label>
+                                            <input ng-model="input.addNetconf.port" id="cm-add-netconf-port" required>
+                                        </md-input-container>
+                                    </div>
+                                    <div class="channel-actions">
+                                        <md-button ng-click="addNodeNetconf(node['node-id'])" class="md-primary">
+                                            Save
+                                        </md-button>
+                                        <md-button ng-click="closeAdd()" class="md-primary">
+                                            Cancel
+                                        </md-button><br>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- edit mode -->
+                            <div ng-show="netconfedit.editing && !netconfdetail.detail && !netconfadd.adding && netconfdetail.name == node['node-id']">
+                                <div layout="row">
+                                    <div class="channel-info">
+                                        <md-input-container>
+                                            <label for="cm-edit-netconf-ip">Ip</label>
+                                            <input ng-model="input.editNetconf.ip" id="cm-edit-netconf-ip" required>
+                                        </md-input-container>
+                                        <md-input-container>
+                                            <label for="cm-edit-netconf-port">Port</label>
+                                            <input ng-model="input.editNetconf.port" id="cm-edit-netconf-port" required>
+                                        </md-input-container>
+                                    </div>
+                                    <div class="channel-actions">
+                                        <md-button ng-click="editNodeNetconf(node)" class="md-primary">
+                                            Save
+                                        </md-button>
+                                        <md-button ng-click="closeEdit()" class="md-primary">
+                                            Cancel
+                                        </md-button><br>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        </div>
+                        <md-divider ng-if="!$last"></md-divider>
+                    </md-list-item>
+                </md-list>
+            </md-content>
+            <div>
+                <a class="step prevLink" ng-click="prevPage()">Previous</a>
+                <a ng-class="{true:'currentStep',false:'step'}[num == currentPage]" ng-repeat="num in pageNum" ng-click="setPage(num)">{{num+1}}</a>
+                <a class="step nextLink" ng-click="nextPage()">Next</a>
+            </div>
+        </div>
+    </md-dialog-content>
+    
+    <md-dialog-actions layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel()" class="md-primary">
+            Close
+        </md-button>
+    </md-dialog-actions>
+    </form>
+</md-dialog>
