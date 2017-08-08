@@ -1,0 +1,152 @@
+<md-toolbar class="md-theme-indigo" md-scroll-shrink>
+	<div class="md-toolbar-tools white">
+		<h3>Topology Manager</h3>
+	</div>
+</md-toolbar>
+
+<md-content flex>
+	<div>
+		<md-tabs md-dynamic-height md-border-bottom>
+			<md-tab label="Topology-Id">
+				<md-content>
+					<div class="topology-actions align-center">
+						<md-button class="md-raised md-primary " ng-click="LoadTopology()">
+							Update Topology ID
+						</md-button>
+					</div>
+					<div ng-show="topologyidData == null">
+						Where are the topology?
+					</div>
+					<div ng-show="topologyidData.length > 0">
+						<md-list>
+							<md-list-item ng-repeat="topoid in topologyidData">
+								<div class="topology-info align-left">
+									topologyId：{{topoid['topology-id']}}
+								</div>
+								<div class="topology-actions align-right">
+									<md-button ng-click="queryTopology(topoid['topology-id'])" class="md-primary">
+										Load
+									</md-button>
+								</div>
+								<md-divider ng-if="!$last"></md-divider>
+							</md-list-item>
+						</md-list>
+					</div>
+				</md-content>
+			</md-tab>
+			<md-tab label="Domain Topology">
+				<md-content>
+					<div ng-show="domainData == null">
+						Where are the domain?
+					</div>
+					<div ng-show="domainData.length > 0">
+						<md-list>
+							<md-list-item ng-repeat="domain in domainData">
+								<div class="topology-info align-left">
+									domain：{{domain['domain-id']}}
+								</div>
+								<div class="topology-actions align-right">
+									<!--md-button ng-click= class="md-primary"-->
+									<md-button ng-click="LoadDomainTopology(domain['domain-id'])" class="md-primary">
+										Load
+									</md-button>
+								</div>
+								<md-divider ng-if="!$last"></md-divider>
+							</md-list-item>
+						</md-list>
+					</div>
+				</md-content>
+			</md-tab>
+			<md-tab label="TeDomain Topology">
+				<md-content>
+					<div ng-show="domainData == null">
+						Where are the domain?
+					</div>
+					<div ng-show="domainData.length > 0">
+						<md-list>
+							<md-list-item ng-repeat="domain in domainData">
+								<div class="topology-info align-left">
+									domain：{{domain['domain-id']}}
+								</div>
+								<div class="topology-actions align-right">
+									<!--md-button ng-click= class="md-primary"-->
+									<md-button ng-click="LoadTeDomainTopology(domain['domain-id'])" class="md-primary">
+										Load
+									</md-button>
+								</div>
+								<md-divider ng-if="!$last"></md-divider>
+							</md-list-item>
+						</md-list>
+					</div>
+				</md-content>
+			</md-tab>
+			<md-tab label="Nodes">
+				<md-content>
+					<div ng-show="topologyData.nodes.length == 0">
+						Where are the nodes?
+					</div>
+					<div ng-show="topologyData.nodes.length > 0">
+						<md-list>
+							<md-list-item class="md-2-line" ng-repeat="node in topologyData.nodes">
+								<div class="md-list-item-text" ng-click="">
+									<b>{{node['node-id']}}</b><br>
+									<md-list>
+										<md-list-item  ng-repeat="tp in node.tp">
+											<div class="md-list-item-text" ng-click="">
+												tp-id: {{tp['tp-id']}}<br>
+											</div>
+										</md-list-item>
+									</md-list>
+								</div>
+								<md-divider ng-if="!$last"></md-divider>
+							</md-list-item>
+						</md-list>
+					</div>
+				</md-content>
+			</md-tab>
+			<md-tab label="Links">
+				<md-content>
+					<div ng-show="topologyData.links.length == 0">
+						Hey, I don't see no links!
+					</div>
+					<div ng-show="topologyData.links.length > 0">
+						<md-list>
+							<md-list-item class="md-2-line" ng-repeat="links in topologyData.links">
+								<div class="md-list-item-text" ng-click="">
+									 <b>{{links.source}} &harr; {{links.target}}</b><br>
+									<md-list>
+										<md-list-item class="md-2-line" ng-repeat="link in links.links">
+											<div class="md-list-item-text" ng-click="">
+												Node: {{link.sourceNode}} &harr; {{link.targetNode}}<br>
+												TP: {{link.sourceTP}} &harr; {{link.targetTP}}<br>
+											</div>
+										</md-list-item>
+									</md-list>
+								</div>
+								<md-divider ng-if="!$last"></md-divider>
+							</md-list-item>
+						</md-list>
+					</div>
+				</md-content>
+			</md-tab>
+			<md-tab label="Log">
+				<md-content>
+					<div class="topology-actions align-center">
+						<md-button class="md-raised md-primary " ng-click="clearLog()">
+							CLEAR LOG
+						</md-button>
+					</div>
+					<md-list>
+						<md-list-item class="md-3-line path-item" ng-repeat="logs in log.slice().reverse()">
+							<div class="md-list-item-text" ng-click="">
+								{{logs.message}}</br>
+								{{logs.time}}
+							</div>
+							<md-divider ng-if="!$last"></md-divider>
+						</md-list-item>
+					</md-list>
+				</md-content>
+			</md-tab>
+		</md-tabs>
+	</div>
+</md-content>

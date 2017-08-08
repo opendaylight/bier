@@ -1,0 +1,42 @@
+<md-toolbar class="md-theme-indigo" md-scroll-shrink>
+    <div class="md-toolbar-tools white">
+        <h3>Configuration</h3>
+    </div>
+</md-toolbar>
+
+<md-content flex>
+    <div>
+        <md-tabs md-dynamic-height md-border-bottom>
+            <md-tab label="bgp-ls">
+                <md-content>
+                    <div layout="row">
+                        <div class="channel-info">
+                            <md-input-container>
+                                <label for="cm-conf-bgp-router">router-id</label>
+                                <input ng-model="appConfig.bgpRouter" id="cm-conf-bgp-router" required>
+                            </md-input-container>
+                            <md-input-container>
+                                <label for="cm-conf-bgp-as">As</label>
+                                <input ng-model="appConfig.bgpAs" id="cm-conf-bgp-as" required>
+                            </md-input-container>
+                            <md-input-container>
+                                <label for="cm-conf-bgp-neighborid">neighbor-address</label>
+                                <input ng-model="appConfig.bgpNeighborId" id="cm-conf-bgp-neighborid" required>
+                            </md-input-container>
+                            <md-input-container>
+                                <label for="cm-conf-bgp-peeras">peer-as</label>
+                                <input ng-model="appConfig.bgpPeerAs" id="cm-conf-bgp-peeras" required>
+                            </md-input-container>
+                        </div>
+                    </div>
+                    <md-button ng-click="configBGP()" class="md-primary">
+                        Save
+                    </md-button>
+                    <md-button ng-click="getBGPConfig()" class="md-primary">
+                        Get
+                    </md-button>
+                </md-content>
+            </md-tab>
+        </md-tabs>
+    </div>
+</md-content>
