@@ -86,7 +86,7 @@ gulp.task('copy', function() {
     runSequence([
         'copyCss',
         'copyAssetsImages',
-        'copyAssetsJs',
+        //'copyAssetsJs',
         'copyTemplates',
         'copyAppJs',
         //'copyRootJs',

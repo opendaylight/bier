@@ -28,8 +28,8 @@ module.exports = {
 
     assets_files: {
         css: ['assets/css/*.css'],
-        images: ['assets/images/*.jpg'],
-        js: ['assets/js/*.js']
+        images: ['assets/images/*.jpg']
+        //js: ['assets/js/*.js']
     },
 
     /**
@@ -63,7 +63,7 @@ module.exports = {
             'angular-messages/angular-messages.min.js',
             'NeXt/js/next.min.js',
             'jquery/dist/jquery.min.js',
-            //'sweetalert/dist/sweetalert.min.js',
+            'sweetalert/dist/sweetalert.min.js',
             'checklist-model/checklist-model.js',
             'restangular/dist/restangular.js',
             'lodash/lodash.js'
@@ -73,7 +73,7 @@ module.exports = {
             'bootstrap/dist/css/bootstrap.min.css',
             'font-awesome/css/font-awesome.min.css',
             'NeXt/css/next.min.css',
-            //'sweetalert/dist/sweetalert.css'
+            'sweetalert/dist/sweetalert.css'
 
         ],
         fonts: [

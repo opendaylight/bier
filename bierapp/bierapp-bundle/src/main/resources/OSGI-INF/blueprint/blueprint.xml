@@ -15,10 +15,11 @@
                 <!--value>src/app/bierapp/bierapp-custom.css</value-->
                 <value>src/app/bierapp/assets/css/loading.css</value>
                 <value>src/app/bierapp/assets/css/style.css</value>
-                <value>src/app/bierapp/assets/css/sweetalert.css</value>
+                <!--value>src/app/bierapp/assets/css/sweetalert.css</value-->
                 <value>src/app/bierapp/vendor/angular-material/angular-material.min.css</value>
                 <value>src/app/bierapp/vendor/NeXt/css/next.min.css</value>
                 <value>src/app/bierapp/vendor/font-awesome/css/font-awesome.min.css</value>
+                <value>src/app/bierapp/vendor/sweetalert/dist/sweetalert.css</value>
                 <value>src/app/bierapp/vendor/bootstrap/dist/css/bootstrap.min.css</value>     
             </list>
         </property>
