@@ -22,10 +22,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <artifactId>odl-bier-app</artifactId>
     <version>0.2.0-SNAPSHOT</version>
     <packaging>feature</packaging>
-    <name>OpenDaylight :: bier :: ${project.artifactId}</name>
-    <!--properties>
-        <mdsal.version>1.6.0-SNAPSHOT</mdsal.version>
-    </properties-->
+    <name>OpenDaylight :: bier :: bierapp</name>
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.dlux</groupId>
@@ -38,13 +35,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <groupId>org.opendaylight.dluxapps</groupId>
             <artifactId>odl-dluxapps-yangman</artifactId>
             <version>0.6.0-SNAPSHOT</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.netconf</groupId>
-            <artifactId>odl-mdsal-apidocs</artifactId>
-            <version>1.6.0-SNAPSHOT</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
