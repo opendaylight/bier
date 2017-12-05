@@ -28,6 +28,17 @@ module bier-channel {
            }
   	  }
 
+  typedef bp-assignment-strategy{
+     type enumeration {
+          enum "manual" {
+              value 1;
+          }
+          enum "automatic" {
+              value 2;
+          }
+     }
+  }
+
   container bier-network-channel {
     list bier-channel {
       key "topology-id";
@@ -65,6 +76,9 @@ module bier-channel {
           }
         leaf bier-forwarding-type {
             type bier-forwarding-type;
+        }
+        leaf bp-assignment-strategy {
+            type bp-assignment-strategy;
         }
 
       }
