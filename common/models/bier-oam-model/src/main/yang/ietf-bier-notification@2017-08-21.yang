@@ -1,0 +1,148 @@
+module ietf-bier-notification {
+	yang-version 1.1;
+	namespace "urn:ietf:params:xml:ns:yang:ietf-bier-notification";
+	prefix biernotification;
+		
+	import ietf-bier-rpcs {
+    	prefix bierrpcs;
+    	revision-date 2017-08-08;
+	}
+	
+
+	import ietf-inet-types {
+    	prefix "inet";
+    	revision-date 2013-07-15;
+	}
+
+
+	organization
+	"IETF BIER(Bit Indexed Explicit Replication ) Working Group";
+
+	contact
+		"WG List:  <mailto:bier@ietf.org>
+		WG Chair: Tony Przygienda
+				<mailto:tonysietf@gmail.com>
+		WG Chair: Greg Shepherd
+				<mailto:gjshep@gmail.com>
+		Editor:   Ran Chen
+				<mailto:chen.ran@zte.com.cn>        
+		Editor:   Fangwei Hu
+				<mailto:hu.fangwei@zte.com.cn>
+				
+		";
+		
+		description
+		"The YANG module defines BIER notification data model.";
+
+		revision 2017-08-21{
+			description
+			"00 revision";
+			reference
+			"";
+	    }
+
+
+	typedef return-code {
+		type enumeration{
+		 enum no-return-code{
+		   value 0;
+			description
+				  "No return code.";
+			 }
+		 enum malformed-echo-req{
+		   value 1;
+			description
+				  "Malformed Echo Request received.";
+
+		   }
+		  enum unknown-tlvs{
+			 value 2;
+			   description
+				  "One or more of the TLVs was not understood.";
+						}
+
+		  enum the-only-bfer{
+			 value 3;
+			   description
+				  "Replying BFR is the only BFER in header Bitstring";
+			}
+		  enum one-of-bfers{
+			 value 4;
+			   description
+				  "Replying BFR is one of the BFER in header Bitstring";
+			}
+		  enum forward-success{
+			 value 5;
+			   description
+				  "Packet-Forward-Success";
+			}
+		  enum invalid-multipath{
+			 value 6;
+			   description
+				  "Invalid Multipath Info Request";
+			}
+		  enum no-entry-matched{
+			 value 8;
+			   description
+				  "No matching entry in forwarding table.";
+			}
+		  enum si-mismatch{
+			 value 9;
+			   description
+				  "Set-Identifier Mismatch.";
+			}
+		  enum bfr-not-in-path{
+			 value 10;
+			   description
+				  "Replying BFR is not in the path to any target BFER.";
+			}
+		  enum fec-not-match{
+			 value 11;
+			   description
+				  "Mapping for this FEC is not the given bitposition in bitstring.";
+			}
+		}
+		description "Return code.";
+	}
+
+	grouping bier-echo-reply {
+
+		choice address-info {
+			case bier {
+				uses bierrpcs:bier-address;
+			}
+			case bier-te {
+				uses bierrpcs:bier-te-address;
+			}
+		}
+
+		list return-info {
+			leaf index {
+				type uint16;
+			}
+			leaf ttl {
+				type uint16;
+			}
+			leaf return-code {
+				type return-code;
+			}
+			leaf return-sub-code {
+				type uint16;
+			}
+			leaf responder-bfr {
+				type inet:ip-address;
+			}
+			leaf incoming-interfafce {
+				type inet:ip-address;
+			}
+		}
+
+	}
+	notification bier-echo-reply-notify {
+		uses bier-echo-reply;
+		description
+			 "BFR sends info of echo-reply to controller by this notification.";
+	}
+
+}
+

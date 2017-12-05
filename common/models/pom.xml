@@ -33,7 +33,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <module>ietf-bier-te-2016-10-13</module>
     <module>bier-te-forwarding-model</module>
     <module>bier-te-path-model</module>
+    <module>bier-oam-model</module>
 </modules>
+
+<properties>
+    <mdsal.model.version>1.3.1-SNAPSHOT</mdsal.model.version>
+    <ietf.interaces.version>2014.05.08.12.0-SNAPSHOT</ietf.interaces.version>
+    <yang.types.version>2013.07.15.12.0-SNAPSHOT</yang.types.version>
+    <yang.ex.version>2013.09.07.12.0-SNAPSHOT</yang.ex.version>
+</properties>
+
 <dependencies>
     <dependency>
         <groupId>org.opendaylight.mdsal.model</groupId>
