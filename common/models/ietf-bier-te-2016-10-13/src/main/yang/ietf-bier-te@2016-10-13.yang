@@ -75,17 +75,17 @@ module ietf-bier-te {
             description "The adjacency index of the frr paths.";
             leaf frr-index {
                 type uint16;
-                mandatory true;
+                //mandatory true;
                 description "The frr adjacency index.";
             }
             leaf frr-si{
                 type uint16;
-                mandatory true;
+                //mandatory true;
                 description "The set identifier of this forwarding item.";
             }
             leaf frr-bsl {
                 type uint16;
-                mandatory true;
+                //mandatory true;
                 description "The value of bitstringlength.";
             }
             list addbitmask {
@@ -101,7 +101,7 @@ module ietf-bier-te {
     grouping te-adj-type {
         description "The collection of all possible adjacency type.";
         choice te-adj-type {
-            mandatory true;
+            //mandatory true;
             case connected {
                 leaf connected {
                     type empty;
@@ -139,7 +139,7 @@ module ietf-bier-te {
     grouping te-adjID-type {
         description "The collection of all possible adjacency type.";
         choice te-adjID-type {
-            mandatory true;
+            //mandatory true;
             case p2p {
                 description "Describes p2p adjacency.";
             }
@@ -190,13 +190,13 @@ module ietf-bier-te {
             description "This ID information of one adjacency.";
             leaf adjID {
                 type adjid;
-                mandatory true;
+                //mandatory true;
                 description "The adjacency id.";
             }
             leaf adj-if {
                 /* type if:if-index; */
                 type uint32;  /* for compilation */
-                mandatory true;
+                //mandatory true;
                 description "The corresponding interface of this adjacency.";
             }
             uses te-adjID-type;
@@ -211,7 +211,7 @@ module ietf-bier-te {
             description "The index of the ecmp paths.";
             leaf index {
                 type uint32;
-                mandatory true;
+                //mandatory true;
                 description "The ecmp index.";
             }
             list number {
@@ -219,13 +219,13 @@ module ietf-bier-te {
                 description "The list of the ecmp paths.";
                 leaf number {
                     type uint16;
-                    mandatory true;
+                    //mandatory true;
                     description "The number of the ecmp paths.";
                 }
                 leaf out-if {
                     /* type if:if-index; */
                     type uint32; /* for compilation */
-                    mandatory true;
+                    //mandatory true;
                     description "The outgoing interface.";
                 }
             }
@@ -237,13 +237,12 @@ module ietf-bier-te {
         uses te-adj-type;
         leaf f-bm {
             type bit-string;
-            mandatory true;
             description "The bitmask of the forwarding item.";
         }
         leaf f-intf {
             /* type if:if-index; */
             type uint32; /* for compilation */
-            mandatory true;
+            //mandatory true;
             description "The out interface of this forwarding item.";
         }
         leaf out-label {
@@ -286,7 +285,7 @@ module ietf-bier-te {
             description "The forwarding items of one set identifier.";
             leaf si {
                 type bier:si;
-                    mandatory true;
+                    //mandatory true;
                 description "The set identifier of this forwarding item.";
             }
             leaf ft-label {
@@ -298,7 +297,7 @@ module ietf-bier-te {
                 description "The forwarding information of one BIER TE item.";
                 leaf te-f-index {
                     type bit-string;
-                                mandatory true;
+                    //mandatory true;
                     description "The bit index of BIER TE forwarding item.";
                 }
                 uses te-items;

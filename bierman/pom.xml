@@ -11,7 +11,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>odlparent</artifactId>
-    <version>2.0.5</version>
+    <version>3.0.2</version>
     <relativePath/>
   </parent>
 
@@ -38,7 +38,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <module>api</module>
     <module>impl</module>
     <module>artifacts</module>
-    <module>cli</module>
   </modules>
 
   <!-- DO NOT install or deploy the repo root pom as it's only needed to initiate a build -->
