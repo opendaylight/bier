@@ -1,0 +1,54 @@
+ module bier-mstatic-model {
+     namespace "urn:bier:mstatic";
+
+     prefix "bier-mstatic";
+
+     import ietf-multicast-information {
+       prefix multicast-info;
+       revision-date 2016-10-28;
+     }
+
+     import yang-ext {
+       prefix "ext";
+       revision-date 2013-07-09;
+     }
+
+     organization
+       "zte";
+     contact
+       "zte";
+     description
+       "This module defines a static multicast route info.";
+     revision "2017-11-07" {
+       description "initial revision";
+     }
+
+
+     augment "/multicast-info:multicast-information/multicast-info:pure-multicast/multicast-info:pure-multicast"
+     + "/multicast-info:multicast-overlay/multicast-info:bier-information"{
+        ext:augment-identifier "bier-mstatic-iif";
+        container incoming-interface {
+            leaf incoming-interface-index {
+                type uint32;
+                description "The incoming interface index  of ingress node of multicast flow.";
+            }
+
+        }
+
+     }
+
+
+    augment "/multicast-info:multicast-information/multicast-info:pure-multicast/multicast-info:pure-multicast"
+    + "/multicast-info:multicast-overlay" {
+      ext:augment-identifier "bier-mstatic-oif";
+      container outgoing-interfaces {
+            list outgoing-interfaces-indexes {
+                leaf interface-index {
+                    type uint32;
+                    description "The outgoing interface index  of egress node of multicast flow.";
+                }
+
+            }
+        }
+    } 
+}
