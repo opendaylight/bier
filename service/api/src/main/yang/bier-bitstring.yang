@@ -36,6 +36,7 @@ module bier-bitstring{
                 }
                 list path-bitstring {
                      key "path-id";
+                     ordered-by user;
                      uses bier-te-path:te-path;
                 }
          }

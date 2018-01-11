@@ -3,13 +3,54 @@ module bier-service-api {
     namespace "urn:bier:service:api";
     prefix "bier-service-api";
 
+    import ietf-bier-rpcs {
+        prefix bier-rpcs;
+    }
+    import bier-pce {
+        prefix bier-pce;
+    }
+
     revision "2017-01-05" {
         description "Initial revision of service model";
     }
 
     notification report-message {
-            leaf failure-reason {
-                type string;
+        leaf failure-reason {
+            type string;
+        }
+    }
+
+     rpc get-target-bitstring {
+        input {
+            leaf channel-name {
+              type string;
             }
-    	}
+            leaf topology-id {
+              type string;
+            }
+            list target-node-ids {
+                key target-node-id;
+                leaf target-node-id {
+                    type string;
+                }
+            }
+
+        }
+        output {
+            list target-node-ids {
+                key target-node-id;
+                leaf target-node-id {
+                    type string;
+                }
+                container bitstring-info {
+                    uses bier-rpcs:bier-te-address;
+                }
+                container path-info {
+                    uses bier-pce:links;
+                }
+
+            }
+
+        }
+     }
 }
