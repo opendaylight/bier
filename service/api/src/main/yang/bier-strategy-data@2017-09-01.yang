@@ -1,0 +1,197 @@
+module bier-strategy-data-persistence {
+	namespace "urn:bier:strategy:data";
+	prefix "bier-strategy-data";
+
+	import bier-common {
+	    prefix "common";
+	}
+
+	import ietf-bier {
+        prefix bier;
+    }
+
+    import bier-pce {
+        prefix pce;
+    }
+
+	organization "zte";
+
+    revision 2017-09-01 {
+        description "Initial revision.";
+    }
+
+    container strategy-data-persistence {
+        //Abstract strategy data structures
+        list bsl-used-in-subdomain {
+            key "subdomain-id";
+            ordered-by user;
+            leaf subdomain-id {
+                type uint16;
+            }
+            list bsl-of-subdomain {
+                key "bsl-value";
+                leaf bsl-value {
+                    type uint16;
+                }
+            }
+        }
+
+        list si-used-in-subdomain-bsl {
+            key "subdomain-id bsl";
+            ordered-by user;
+            uses subdomain-bsl;
+            list si-of-subdomain-bsl {
+                key "si-value";
+                ordered-by user;
+                leaf si-value {
+                    type uint16;
+                }
+            }
+        }
+
+        list bp-used-in-subdomain-bsl-si {
+            key "subdomain-id bsl si";
+            ordered-by user;
+            uses subdomain-bsl-si;
+            list bp-of-subdomain-bsl-si {
+                key "bp-value";
+                ordered-by user;
+                leaf bp-value {
+                    type uint16;
+                }
+            }
+        }
+
+        list bfer-list-of-channel {
+            key "channel-name";
+            ordered-by user;
+            leaf channel-name {
+                type string;
+            }
+            list bfer-of-channel {
+                 key "bfer-node-id";
+                 leaf bfer-node-id {
+                     type string;
+                 }
+                 container bier-path {
+                     uses pce:links;
+                 }
+            }
+        }
+
+        list channel-bfer-subdomain-bsl-si-map {
+            key "channel-name bfer-node-id";
+            ordered-by user;
+            uses channel-name-bfer-node-id;
+            uses subdomain-bsl-si;
+        }
+
+        //Topo based strategy data structures
+        list node-connected-tp-id-map {
+            key "subdomain-id";
+            ordered-by user;
+            leaf subdomain-id {
+                type uint16;
+            }
+            list node-tp-id {
+                key "node-id";
+                ordered-by user;
+                leaf node-id {
+                    type string;
+                }
+                list connected-tp-id {
+                    key "tp-id";
+                    ordered-by user;
+                    leaf tp-id {
+                        type string;
+                    }
+                }
+            }
+        }
+
+        list node-local-decap-bp-map {
+            key "subdomain-id";
+            ordered-by user;
+            leaf subdomain-id {
+                type uint16;
+            }
+            list node-bp {
+                key "node-id";
+                ordered-by user;
+                leaf node-id {
+                    type string;
+                }
+                leaf bp {
+                    type uint16;
+                }
+                leaf tpId {
+                    type string;
+                }
+            }
+        }
+
+        list link-connected-bp-map {
+            key "subdomain-id";
+            ordered-by user;
+            leaf subdomain-id {
+                type uint16;
+            }
+            list link-bp {
+                key "src-node dst-node";
+                ordered-by user;
+                uses src-dst-connected;
+                leaf bp {
+                    type uint16;
+                }
+            }
+        }
+
+        list subdomain-deployed-channel {
+            key "subdomain-id";
+            ordered-by user;
+            leaf subdomain-id {
+                type uint16;
+            }
+        }
+    }
+
+    grouping subdomain-bsl {
+        leaf subdomain-id {
+            type uint16;
+        }
+        leaf bsl {
+            type bier:bsl;
+        }
+    }
+
+    grouping src-dst-connected {
+        leaf src-node {
+            type string;
+        }
+        leaf dst-node {
+            type string;
+        }
+    }
+
+    grouping subdomain-bsl-si {
+        leaf subdomain-id {
+            type uint16;
+        }
+        leaf bsl {
+            type bier:bsl;
+        }
+        leaf si {
+             type bier:si;
+        }
+    }
+
+    grouping channel-name-bfer-node-id {
+        leaf channel-name {
+            type string;
+        }
+        leaf bfer-node-id {
+            type string;
+        }
+    }
+
+}
