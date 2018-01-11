@@ -47,6 +47,8 @@ public class ChannelInputCheck implements InputCheck {
             + " be both ingress and egress.";
     public static final String FORWARDING_TYPE_CONFLICT = "forwarding-type conflict! can not change forwarding-type,"
             + " when update deploy-channel info.";
+    public static final String STRATEGY_CONFLICT = "assignment-strategy conflict! can not change strategy, when update "
+            + "deploy-channel info.";
 
     private static final Integer MULTICAST_IPV4_1ST_SEGMENT_MIN = 224;
     private static final Integer MULTICAST_IPV4_1ST_SEGMENT_MAX = 239;

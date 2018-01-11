@@ -16,6 +16,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannel
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.deploy.channel.input.egress.node.RcvTp;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BpAssignmentStrategy;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
@@ -47,8 +48,12 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
         if (bierForwardingTypeConflict(channel,deployChannelInput)) {
             return new CheckResult(true, FORWARDING_TYPE_CONFLICT);
         }
-
-        result = checkNodesInSubdomain();
+        if (bierBpStrategyConflict(channel,deployChannelInput)) {
+            return new CheckResult(true, STRATEGY_CONFLICT);
+        }
+        BpAssignmentStrategy bpAssignmentStrategy = getBpStrategy(channel.getBpAssignmentStrategy(),
+                deployChannelInput.getBpAssignmentStrategy());
+        result = checkNodesInSubdomain(bpAssignmentStrategy);
         if (result.isInputIllegal()) {
             return result;
         }
@@ -57,6 +62,17 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
             return result;
         }
         return new CheckResult(false, "");
+    }
+
+    private BpAssignmentStrategy getBpStrategy(BpAssignmentStrategy oldBpStrategy, BpAssignmentStrategy newBpStrategy) {
+        return oldBpStrategy == null ? newBpStrategy : oldBpStrategy;
+    }
+
+    private boolean bierBpStrategyConflict(Channel channel, DeployChannelInput deployChannelInput) {
+        if (channel.getBpAssignmentStrategy() != null && deployChannelInput.getBpAssignmentStrategy() != null) {
+            return !channel.getBpAssignmentStrategy().equals(deployChannelInput.getBpAssignmentStrategy());
+        }
+        return false;
     }
 
     private boolean bierForwardingTypeConflict(Channel channel, DeployChannelInput deployChannelInput) {
@@ -77,7 +93,7 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
         return new CheckResult(false, "");
     }
 
-    private CheckResult checkNodesInSubdomain() {
+    private CheckResult checkNodesInSubdomain(BpAssignmentStrategy bpAssignmentStrategy) {
         if (!nodeInSubdomain(deployChannelInput.getTopologyId(),deployChannelInput.getIngressNode(),
                 channel.getDomainId(),channel.getSubDomainId(),deployChannelInput.getBierForwardingType())) {
             return new CheckResult(true, INGRESS_NOT_IN_SUBDOMIN);
@@ -86,7 +102,8 @@ public class DeployChannelInputCheck extends ChannelInputCheck {
                 channel.getDomainId(),channel.getSubDomainId(),deployChannelInput.getBierForwardingType())) {
             return new CheckResult(true,EGRESS_NOT_IN_SUBDOMIN);
         }
-        if (deployChannelInput.getBierForwardingType().equals(BierForwardingType.BierTe)) {
+        if (deployChannelInput.getBierForwardingType().equals(BierForwardingType.BierTe)
+                && bpAssignmentStrategy == BpAssignmentStrategy.Manual) {
             if (!srcTpInSubdomain(deployChannelInput.getTopologyId(), deployChannelInput.getIngressNode(),
                     channel.getDomainId(), channel.getSubDomainId(),deployChannelInput.getSrcTp())) {
                 return new CheckResult(true, SRCTP_NOT_IN_SUBDOMIN);

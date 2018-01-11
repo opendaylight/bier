@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.DeployChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.ModifyChannelInput;
@@ -23,6 +24,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.RemoveChannel
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannelBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BpAssignmentStrategy;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannelKey;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
@@ -227,43 +229,61 @@ public class ChannelDBUtil {
             egressNodeList.add(new EgressNodeBuilder()
                     .setNodeId(egressNode.getNodeId())
                     .setEgressBfrId(getNodeBfrId(input.getTopologyId(),egressNode.getNodeId(),
-                            channel.getDomainId(),channel.getSubDomainId(),input.getBierForwardingType()))
+                            channel.getDomainId(),channel.getSubDomainId()))
                     .setRcvTp(rcvTpList.isEmpty() ? null : rcvTpList)
                     .build());
         }
         return new ChannelBuilder(channel)
                 .setBierForwardingType(input.getBierForwardingType())
+                .setBpAssignmentStrategy(getStrategy(channel.getBpAssignmentStrategy(),input.getBpAssignmentStrategy()))
                 .setIngressNode(input.getIngressNode())
                 .setIngressBfrId(getNodeBfrId(input.getTopologyId(),input.getIngressNode(),
-                        channel.getDomainId(),channel.getSubDomainId(),input.getBierForwardingType()))
+                        channel.getDomainId(),channel.getSubDomainId()))
                 .setSrcTp(input.getSrcTp())
                 .setEgressNode(egressNodeList).build();
     }
 
-    private BfrId getNodeBfrId(String topologyId, String nodeId, DomainId domainId, SubDomainId subDomainId,
-                               BierForwardingType type) {
-        if (type.equals(BierForwardingType.BierTe)) {
-            return null;
+    private BpAssignmentStrategy getStrategy(BpAssignmentStrategy oldStrategy, BpAssignmentStrategy newStrategy) {
+        if (oldStrategy == null && newStrategy == null) {
+            return BpAssignmentStrategy.Automatic;
+        } else if (oldStrategy != null && newStrategy == null) {
+            return oldStrategy;
+        } else if (oldStrategy == null && newStrategy != null) {
+            return newStrategy;
+        } else {
+            return newStrategy;
         }
+    }
+
+    private BfrId getNodeBfrId(String topologyId, String nodeId, DomainId domainId, SubDomainId subDomainId) {
+
         BierGlobal bierGlobal = readBierGlobal(buildTopoId(topologyId),nodeId,domainId);
-        BfrId globalBfrId = bierGlobal.getBfrId();
-        if (bierGlobal.getSubDomain() != null) {
-            for (SubDomain subDomain : bierGlobal.getSubDomain()) {
-                if (subDomain.getSubDomainId().equals(subDomainId) && subDomain.getBfrId() != null
-                        && subDomain.getBfrId().getValue() != 0) {
-                    return subDomain.getBfrId();
+        if (bierGlobal != null) {
+            BfrId globalBfrId = bierGlobal.getBfrId();
+            if (bierGlobal.getSubDomain() != null) {
+                for (SubDomain subDomain : bierGlobal.getSubDomain()) {
+                    if (subDomain.getSubDomainId().equals(subDomainId) && subDomain.getBfrId() != null
+                            && subDomain.getBfrId().getValue() != 0) {
+                        return subDomain.getBfrId();
+                    }
                 }
             }
+            return globalBfrId;
         }
-        return globalBfrId;
+        return null;
     }
 
     private BierGlobal readBierGlobal(String topologyId, String nodeId, DomainId domainId) {
         ReadOnlyTransaction rtx = context.newReadOnlyTransaction();
         try {
-            return rtx.read(LogicalDatastoreType.CONFIGURATION,
-                    buildBierGlobalPath(topologyId,nodeId,domainId)).get().get();
-        } catch (ExecutionException | InterruptedException | IllegalStateException e) {
+            Optional<BierGlobal> optional =rtx.read(LogicalDatastoreType.CONFIGURATION,
+                    buildBierGlobalPath(topologyId,nodeId,domainId)).checkedGet();
+            if (optional.isPresent()) {
+                return optional.get();
+            } else {
+                return null;
+            }
+        } catch (ReadFailedException | IllegalStateException e) {
             LOG.warn("Channel:occur exception when read databroker {}", e);
             return null;
         }
