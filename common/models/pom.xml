@@ -35,6 +35,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <module>bier-te-path-model</module>
     <module>bier-oam-model</module>
     <module>bier-mstatic-model</module>
+    <module>bier-frr-model</module>
 </modules>
 
 <properties>

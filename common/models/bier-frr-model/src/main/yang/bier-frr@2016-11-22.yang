@@ -1,0 +1,77 @@
+module bier-frr {
+	namespace "urn:bier:frr";
+	prefix "bier-frr";
+  
+    import ietf-bier {
+        prefix bier;
+    }
+	
+	import bier-common {
+        prefix bier-common;
+    }
+	
+	import ietf-bier-te {
+		prefix bier-te;
+	}
+
+	import bier-topology {
+		prefix bier-topology;
+	}
+
+	import bier-channel {
+		prefix bier-channel;
+	}
+	
+	organization "zte";	
+	
+	revision 2017-11-22 {
+		description "Initial revision.";
+	}
+  
+	container te-frr-configure {
+		list topology-te-frr {
+			key "topology-id";
+			ordered-by user;
+			leaf topology-id {
+				type string; 
+			}
+			list link-te-frr {
+				key "link-id";
+				ordered-by user;
+				leaf link-id {
+					type string;
+				}
+				list te-frr-domain {
+					key "domain-id";
+					leaf domain-id {
+						type bier-common:domain-id;
+					}
+					list te-frr-sub-domain{
+						key "sub-domain-id";
+						leaf sub-domain-id{
+							type bier:sub-domain-id;
+						}
+						list te-frr-bsl{
+							key "bitstringlength";
+							leaf bitstringlength {
+								type bier:bsl;
+							}
+							list te-frr-si {
+								key "si";
+								leaf si{
+									type bier:si;
+								}
+								leaf assignment-strategy {
+									type bier-channel:bp-assignment-strategy;
+								}
+								leaf te-frr-bp {
+									type bier-te:bit-string;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}				

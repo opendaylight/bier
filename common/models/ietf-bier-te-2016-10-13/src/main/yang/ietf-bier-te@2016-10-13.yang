@@ -71,26 +71,28 @@ module ietf-bier-te {
     grouping te-frr {
         description "The TE fast reroute information.";
         list btaft {
-            key "adj-index";
+            key "frr-index";
             description "The adjacency index of the frr paths.";
-            leaf adj-index {
-                type uint32;
+            leaf frr-index {
+                type uint16;
                 mandatory true;
                 description "The frr adjacency index.";
             }
-            leaf bitposition {
-                type bit-string;
+            leaf frr-si{
+                type uint16;
                 mandatory true;
-                description "The bitposition information.";
+                description "The set identifier of this forwarding item.";
             }
-            leaf resetbitmask {
-                type bit-string;
+            leaf frr-bsl {
+                type uint16;
                 mandatory true;
-                description "The deleting bitmask of the forwarding item.";
+                description "The value of bitstringlength.";
             }
-            leaf addbitmask {
-                type bit-string;
-                mandatory true;
+            list addbitmask {
+                key "bitmask";
+                leaf bitmask {
+                    type bit-string;
+                }
                 description "The adding bitmask of the forwarding item.";
             }
         }
@@ -258,8 +260,24 @@ module ietf-bier-te {
         }
         leaf frr {
             type boolean;
+            default false;
             description "The capibility of fast re-route.";
         }
+
+        leaf frr-index {
+            type uint16;
+            description "The index of frr path.";
+        }
+
+        list resetbitmask {
+            key "bitmask";
+            leaf bitmask {
+                type bit-string;
+            }
+            description "The deleting bitmask of the forwarding item.";
+        }
+
+
     }
 
     grouping te-fwd-item {
@@ -311,9 +329,9 @@ module ietf-bier-te {
                 uses te-fwd-item;
             }
             uses te-ecmp;
-            uses te-frr {
-                if-feature bier-te-frr;
-            }
+            if-feature bier-te-frr;
+            uses te-frr;
+
         }
     }
 
