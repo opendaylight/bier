@@ -1,0 +1,159 @@
+module bier-oam-api {
+
+    namespace "urn:bier:oam:api";
+    prefix "bier-oam-api";
+    import ietf-bier {
+        prefix bier;
+    }
+
+    import bier-common {
+        prefix bier-common;
+    }
+
+    import ietf-bier-rpcs {
+        prefix bierrpcs;
+    }
+    organization "zte";	
+	
+    contact
+      "zte";
+	  
+    description
+      "The YANG module defines a bier oam rpc model.";
+
+	revision 2017-08-08 {
+        description "Initial revision.";
+		reference "oam-connectless";
+    }
+
+	
+    typedef check-type {
+        type enumeration {
+            enum "proactive" {
+                description
+                    "The current check is proactive";
+            }
+            enum "on-demand" {
+                description
+                    "The current check is on-demand.";
+            }
+        }        
+        description
+          "Check type enum";
+    }
+    typedef mode-type{
+        type enumeration {
+            enum "ping" {
+                description
+                    "The ping mode";
+            }
+            enum "trace" {
+                description
+                    "The trace mode.";
+           }
+        }        
+        description
+          "Mode type enum";
+    }
+    typedef network-type {
+        type enumeration {
+            enum "bier" {
+                description
+                    "bier";
+            }
+            enum "bier-te" {
+                description
+                    "bier-te.";
+           }
+        }
+        description
+          "Network type enum";
+    }
+
+	rpc start-echo-request {
+	    description "rpc.";
+	    input {
+		    leaf topology-id {
+			    type string; 
+				description "topology id.";
+		    }
+			leaf channel-name {
+				type string;
+				description "channel name.";
+			}
+			list target-node-ids {
+				key target-node-id;
+				leaf target-node-id {
+					type string;
+					description "target node id.";
+				}
+				description "target node ids.";
+			}			
+			
+	        leaf check-type {
+		        type check-type;
+		        description "check type.";
+	        }
+	  	    leaf mode-type {
+		        type mode-type;
+		        description "mode type.";
+	        }
+		    leaf reply-mode{
+                type bierrpcs:reply-mode;
+         	    description
+                    "the reply mode.";
+            }
+            leaf max-ttl {
+	            type uint16;
+		        description "max ttl.";
+	        }
+	    }
+	    output {
+			uses bier-common:configure-result;
+	    }
+    }
+
+    notification receive-echo-reply {
+        leaf subdomain-id {
+            type bier:sub-domain-id;
+        }
+        leaf ingress-node-id {
+            type string;
+        }
+        list egress-node-ids {
+            leaf egress-node-id {
+                type string;
+            }
+        }
+        choice respond {
+            case ping {
+                list ping-target-node-ids {
+                    leaf ping-target-node-id {
+                        type string;
+                    }
+                    leaf ping-result {
+                        type string;
+                    }
+                }
+            }
+            case trace {
+                list trace-target-node-ids {
+                    leaf trace-target-node-id {
+                        type string;
+                    }
+                    list trace-responder-node-ids {
+                        leaf index {
+                            type uint16;
+                        }
+                        leaf trace-responder-node-id {
+                            type string;
+                        }
+                    }
+                    leaf trace-result {
+                        type string;
+                    }
+                }
+            }
+        }
+    }
+}
