@@ -23,7 +23,7 @@ import org.opendaylight.bier.adapter.api.DeviceInterfaceReader;
 import org.opendaylight.bierman.impl.topo.NetConfigStateChangeListenerImpl;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkDestBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkSourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyBuilder;
@@ -50,7 +50,7 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
-public class NetConfigStateChanngeListenerTest extends AbstractDataBrokerTest {
+public class NetConfigStateChanngeListenerTest extends AbstractConcurrentDataBrokerTest {
 
     @Mock
     DataTreeModification<Node> dataTreeModification;

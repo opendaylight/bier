@@ -33,7 +33,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataObjectModification.Mod
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
@@ -111,7 +111,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class TeChannelChangeListenerTest extends AbstractDataBrokerTest {
+public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TeChannelChangeListenerTest.class);
 

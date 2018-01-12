@@ -19,7 +19,7 @@ import org.opendaylight.bierman.impl.topo.BierLinkChangeListenerImpl;
 import org.opendaylight.bierman.impl.topo.BierNodeChangeListenerImpl;
 import org.opendaylight.bierman.impl.topo.BierTpChangeListenerImpl;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
@@ -47,7 +47,7 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.nt.l3.unicast.igp
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.nt.l3.unicast.igp.topology.rev131021.igp.link.attributes.IgpLinkAttributesBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
-public class BierChangeListenerTest extends AbstractDataBrokerTest {
+public class BierChangeListenerTest extends AbstractConcurrentDataBrokerTest {
     private BierDataManager topoManager;
     private BierNodeChangeListenerImpl bierNodeChangeListener;
     private BierLinkChangeListenerImpl bierLinkChangeLintener;

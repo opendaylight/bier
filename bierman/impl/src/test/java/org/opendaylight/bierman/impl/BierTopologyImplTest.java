@@ -17,7 +17,7 @@ import org.junit.Test;
 import org.opendaylight.bierman.impl.bierconfig.BierConfigServiceImpl;
 import org.opendaylight.bierman.impl.teconfig.BierTeConfigServiceImpl;
 import org.opendaylight.bierman.impl.topo.BierTopologyServiceImpl;
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
 import org.opendaylight.yang.gen.v1.urn.bier.config.api.rev161102.ConfigureNodeInputBuilder;
@@ -108,7 +108,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
-public class BierTopologyImplTest extends AbstractDataBrokerTest {
+public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
     private BierDataManager topoManager;
     private BierTopologyServiceImpl topoImpl;
     private BierConfigServiceImpl bierConfigImpl;

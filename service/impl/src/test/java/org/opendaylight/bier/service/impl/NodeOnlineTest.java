@@ -24,7 +24,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataObjectModification.Mod
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannel;
@@ -77,7 +77,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.PathArgument;
 
 
-public class NodeOnlineTest extends AbstractDataBrokerTest {
+public class NodeOnlineTest extends AbstractConcurrentDataBrokerTest {
 
     private BierConfigWriterMock bierConfigWriterMock;
     private ChannelConfigWriterMock channelConfigWriterMock;

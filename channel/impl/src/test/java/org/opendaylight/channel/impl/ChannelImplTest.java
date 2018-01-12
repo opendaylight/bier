@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.opendaylight.channel.util.ChannelDBContext;
 import org.opendaylight.channel.util.ChannelDBUtil;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelInput;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.AddChannelInputBuilder;
@@ -89,7 +89,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 
 
-public class ChannelImplTest extends AbstractDataBrokerTest {
+public class ChannelImplTest extends AbstractConcurrentDataBrokerTest {
     private static final String DEFAULT_TOPO = "example-linkstate-topology";
     private ChannelImpl channelImpl;
     private ChannelDBContext context;
