@@ -246,4 +246,130 @@ a.prevLink:hover,a.nextLink:hover {
     z-index: 10;
 }
 
+table.gridtable {
+    font-family: verdana,arial,sans-serif;
+    font-size:11px;
+    color:#333333;
+    border-width: 1px;
+    border-color: #666666;
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+table.gridtable th {
+    border-width: 1px;
+    padding: 8px;
+    border-style: solid;
+    border-color: #666666;
+    background-color: #dedede;
+}
+
+table.gridtable td {
+    border-width: 1px;
+    padding: 8px;
+    border-style: solid;
+    border-color: #666666;
+    background-color: #ffffff;
+}
+
+.min-width {
+    min-width: 70px !important;
+    margin: 6px 1px !important;
+}
+
+md-dialog md-dialog-content h2,
+md-dialog md-dialog-content h3,
+md-dialog md-dialog-content .md-raised span {
+    color: white;
+}
+
+md-dialog md-dialog-content .md-primary span {
+    color: dodgerblue;
+}
+
+md-dialog md-dialog-content .md-warn span {
+    color: orangered;
+}
+
+md-dialog md-dialog-content .md-warn:disabled span,
+md-dialog md-dialog-content .md-primary:disabled span {
+    color: rgb(0, 0, 0, 0.38);
+}
+
+.padding-left {
+    padding-left: 20px;
+}
+
+div.popUpDevInfo {
+    position: absolute;
+    width: 14%;
+    left: 60px;
+    top: 120px;
+    z-index: 1;
+    background: #f5f5f5;
+    border: 1px solid #74757a;
+    padding: 20px;
+    border-radius: 4px;
+}
+
+.list-click:hover,
+.list-click:focus {
+    color: #3ea8eb;
+    text-decoration: none;
+}
+
+.selected {
+    color: #3ea8eb;
+}
+
+section.legendBox{
+    position: absolute !important;
+    right: 0;
+    top: 100px;
+    z-index: 1;
+    width: 200px;
+}
+
+section.legendBox ul li {
+    list-style-type: none;
+}
+
+section.legendBox ul .line {
+    display: -moz-inline-stack;
+    display: inline-block;
+    vertical-align: top;
+    zoom: 1;
+    margin: 9px 5px 0 0;
+    width: 50px;
+}
+
+section.legendBox ul .circle {
+    display: -moz-inline-stack;
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin: 0px 23px 0px 17px;
+    border-radius: 50%;
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+}
+
+section.legendBox ul .circle.red {
+    background-color:#FF3366;
+}
+
+section.legendBox ul .circle.black {
+    background-color:#000000;
+}
+
+section.legendBox ul .line.green {
+    border-top: 3px solid #009933;
+}
+
+section.legendBox ul .line.blue {
+    border-top: 3px solid #0033cc;
+}
+
+
 /* Modal window */
