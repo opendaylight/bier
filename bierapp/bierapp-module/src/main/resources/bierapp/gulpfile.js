@@ -4,6 +4,7 @@ var gulp = require('gulp'),
     concat = require('gulp-concat'),
     runSequence = require('run-sequence'),
     install = require("gulp-install");
+    jshint = require('gulp-jshint');
 
 var config = require( './build.config.js' );
 
@@ -95,9 +96,15 @@ gulp.task('copy', function() {
     ], 'copyVendorJs');
 });
 
+gulp.task('lint:js', function () {
+    return gulp.src(config.app_files.js)
+        .pipe(jshint())
+        .pipe(jshint.reporter('default'));
+});
+
 /**
  * Build task
  */
 gulp.task('build', function(){
-    runSequence('clean', 'copy');
+    runSequence('clean','lint:js', 'copy');
 });

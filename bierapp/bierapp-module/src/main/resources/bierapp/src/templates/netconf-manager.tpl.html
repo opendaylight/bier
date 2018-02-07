@@ -62,6 +62,14 @@
                                             <label for="cm-add-netconf-port">Port</label>
                                             <input ng-model="input.addNetconf.port" id="cm-add-netconf-port" required>
                                         </md-input-container>
+                                        <md-input-container>
+                                            <label for="cm-add-netconf-username">User</label>
+                                            <input ng-model="input.addNetconf.username" id="cm-add-netconf-username" required>
+                                        </md-input-container>
+                                        <md-input-container>
+                                            <label for="cm-add-netconf-password">Password</label>
+                                            <input ng-model="input.addNetconf.password" id="cm-add-netconf-password" required>
+                                        </md-input-container>
                                     </div>
                                     <div class="channel-actions">
                                         <md-button ng-click="addNodeNetconf(node['node-id'])" class="md-primary">
@@ -84,6 +92,14 @@
                                         <md-input-container>
                                             <label for="cm-edit-netconf-port">Port</label>
                                             <input ng-model="input.editNetconf.port" id="cm-edit-netconf-port" required>
+                                        </md-input-container>
+                                        <md-input-container>
+                                            <label for="cm-edit-netconf-username">User</label>
+                                            <input ng-model="input.editNetconf.username" id="cm-edit-netconf-username" required>
+                                        </md-input-container>
+                                        <md-input-container>
+                                            <label for="cm-edit-netconf-password">Password</label>
+                                            <input ng-model="input.editNetconf.password" id="cm-edit-netconf-password" required>
                                         </md-input-container>
                                     </div>
                                     <div class="channel-actions">
