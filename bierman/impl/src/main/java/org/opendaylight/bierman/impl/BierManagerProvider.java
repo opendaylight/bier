@@ -9,6 +9,7 @@ package org.opendaylight.bierman.impl;
 
 import org.opendaylight.bier.adapter.api.DeviceInterfaceReader;
 import org.opendaylight.bierman.impl.bierconfig.BierConfigServiceImpl;
+import org.opendaylight.bierman.impl.teconfig.BierBpAllocateParamsConfigServiceImpl;
 import org.opendaylight.bierman.impl.teconfig.BierTeConfigServiceImpl;
 import org.opendaylight.bierman.impl.topo.BierLinkChangeListenerImpl;
 import org.opendaylight.bierman.impl.topo.BierNodeChangeListenerImpl;
@@ -19,6 +20,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.BierBpAllocateParamsConfigService;
 import org.opendaylight.yang.gen.v1.urn.bier.config.api.rev161102.BierConfigApiService;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.BierTeConfigApiService;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.BierTopologyApiService;
@@ -42,6 +44,7 @@ public class BierManagerProvider {
     private RpcRegistration<BierTopologyApiService> topoService = null;
     private RpcRegistration<BierConfigApiService> bierCfgService = null;
     private RpcRegistration<BierTeConfigApiService> bierTeCfgService = null;
+    private RpcRegistration<BierBpAllocateParamsConfigService> bpAllocateService = null;
 
     public BierManagerProvider(final DataBroker dataBroker, final RpcProviderRegistry rpcRegistry,
                                 final NotificationPublishService notificationService,
@@ -71,6 +74,10 @@ public class BierManagerProvider {
 
         bierTeCfgService = rpcRegistry.addRpcImplementation(BierTeConfigApiService.class,
                 new BierTeConfigServiceImpl(topoManager));
+
+        bpAllocateService = rpcRegistry.addRpcImplementation(BierBpAllocateParamsConfigService.class,
+                new BierBpAllocateParamsConfigServiceImpl(dataBroker));
+
 
         topoManager.start();
         bierNodeChangeListener = new BierNodeChangeListenerImpl(dataBroker);
@@ -107,6 +114,9 @@ public class BierManagerProvider {
         }
         if (netConfStateChangeListener != null) {
             netConfStateChangeListener.close();
+        }
+        if (bpAllocateService != null) {
+            bpAllocateService.close();
         }
     }
 }

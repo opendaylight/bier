@@ -17,14 +17,35 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.opendaylight.bierman.impl.teconfig.BierBpAllocateParamsConfigServiceImpl;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.AddSubdomainBslSiInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.AddSubdomainBslSiOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.BierBpAllocateParams;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.BpAllocateModel;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.DeleteSubdomainBslSiInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.DeleteSubdomainBslSiOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.bier.bp.allocate.params.TopoBpAllocateParams;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.bier.bp.allocate.params.TopoBpAllocateParamsBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.bier.bp.allocate.params.TopoBpAllocateParamsKey;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.subdomain.bsl.si.list.SubdomainBpAllocate;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.subdomain.bsl.si.list.SubdomainBpAllocateKey;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.subdomain.bsl.si.list.subdomain.bp.allocate.BslBpAllocate;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.subdomain.bsl.si.list.subdomain.bp.allocate.BslBpAllocateKey;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.subdomain.bsl.si.list.subdomain.bp.allocate.bsl.bp.allocate.SiBpAllocate;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.subdomain.bsl.si.list.subdomain.bp.allocate.bsl.bp.allocate.SiBpAllocateBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.bp.allocate.rev170818.subdomain.bsl.si.list.subdomain.bp.allocate.bsl.bp.allocate.SiBpAllocateKey;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
+import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeSubdomainInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierTeLabelRangeSize;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkDestBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkSourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
@@ -43,6 +64,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParamsBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRange;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRangeBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeNodeParams;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeNodeParamsBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPoint;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTerminationPointBuilder;
@@ -51,10 +73,19 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.DomainBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomain;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomainKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomainKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.TeBsl;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.TeBslBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.TeBslKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.TeSi;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.TeSiBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.TeSiKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBp;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBpBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBpKey;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BierEncapsulationMpls;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.Bsl;
@@ -66,6 +97,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -704,45 +736,115 @@ public class BierDataManager {
         return false;
     }
 
-    public boolean delTeBslFromNode(String topologyId,final DomainId domainId,
-                                     final SubDomainId subDomainId,Bsl bitstringlength,final BierNode node) {
-        BierDataProcess<BierNode> processor =  new BierDataProcess<BierNode>(dataBroker,
-                BierDataProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
-        final InstanceIdentifier<BierNode> path = getNodePath(topologyId,node.getNodeId());
-
+    public boolean delTeDomainFromNode(String topologyId,final DomainId domainId,final BierNode node) {
+        BierDataProcess<TeDomain> processor =  new BierDataProcess<TeDomain>(dataBroker,
+                BierDataProcess.FLAG_WRITE,(new TeDomainBuilder()).build());
+        final InstanceIdentifier<TeDomain>  path = getTeDomainPath(topologyId, node.getNodeId(), domainId);
         processor.enqueueOperation(new BierDataOperation() {
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
-                BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
-                int teBslDomainIndex = getTeDomainIndex(domainId,node);
-                int teBslSubDomainIndex = getTeSubDomainIndex(domainId,subDomainId,node);
-                int teBslIndex = getTeBslIndex(domainId,subDomainId,bitstringlength,node);
-                List<TeBsl> newTeBslList = newNodeBuilder.getBierTeNodeParams().getTeDomain()
-                        .get(teBslDomainIndex).getTeSubDomain().get(teBslSubDomainIndex).getTeBsl();
-                newTeBslList.remove(teBslIndex);
-                if (newTeBslList.isEmpty()) {
-                    List<TeSubDomain> newTeSubdomainList = newNodeBuilder.getBierTeNodeParams()
-                            .getTeDomain().get(teBslSubDomainIndex).getTeSubDomain();
-                    newTeSubdomainList.remove(teBslSubDomainIndex);
-                    if (newTeSubdomainList.isEmpty()) {
-                        List<TeDomain> newTeDomainList = newNodeBuilder.getBierTeNodeParams().getTeDomain();
-                        newTeDomainList.remove(teBslDomainIndex);
-                    }
-                }
-                transaction.put(datastoreType,path,newNodeBuilder.build());
+                transaction.delete(datastoreType,path);
             }
 
             @SuppressWarnings("unchecked")
             @Override
-            public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
+            public ListenableFuture<Optional<TeDomain>> readOperation(ReadWriteTransaction transaction) {
                 return null;
             }
         });
 
-        Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
+        Future<ListenableFuture<TeDomain>> future = EXECUTOR.submit(processor);
 
         try {
-            ListenableFuture<BierNode> result = future.get();
+            ListenableFuture<TeDomain> result = future.get();
+            if (null == result.get()) {
+                LOG.error("Del Te-Domain failed!");
+                return false;
+            }
+
+            LOG.info("Del Te-Domain succeed!");
+            return true;
+        } catch (InterruptedException e) {
+            LOG.error("Del Te-Domain is Interrupted by", e);
+        } catch (ExecutionException e) {
+            LOG.error("Del Te-Domain is faild cause by", e);
+        }
+
+        LOG.error("Del Te-Domain failed!");
+        return false;
+    }
+
+    public boolean delTeSubDomainFromNode(String topologyId,final DomainId domainId,final SubDomainId subDomainId,
+                                          final BierNode node) {
+        BierDataProcess<TeSubDomain> processor =  new BierDataProcess<TeSubDomain>(dataBroker,
+                BierDataProcess.FLAG_WRITE,(new TeSubDomainBuilder()).build());
+        final InstanceIdentifier<TeSubDomain>  path = getTeSubDomainPath(topologyId,node.getNodeId(),
+                domainId,subDomainId);
+        BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
+        int teBslDomainIndex = getTeDomainIndex(domainId,node);
+        List<TeSubDomain> newTeSubDomainlList = newNodeBuilder.getBierTeNodeParams().getTeDomain()
+                .get(teBslDomainIndex).getTeSubDomain();
+        if (newTeSubDomainlList.size() == 1) {
+            return delTeDomainFromNode(topologyId,domainId,node);
+        } else {
+            processor.enqueueOperation(new BierDataOperation() {
+                @Override
+                public void writeOperation(ReadWriteTransaction transaction) {
+                    transaction.delete(datastoreType,path);
+                }
+
+                @SuppressWarnings("unchecked")
+                @Override
+                public ListenableFuture<Optional<TeSubDomain>> readOperation(ReadWriteTransaction transaction) {
+                    return null;
+                }
+            });
+
+            Future<ListenableFuture<TeSubDomain>> future = EXECUTOR.submit(processor);
+
+            try {
+                ListenableFuture<TeSubDomain> result = future.get();
+                if (null == result.get()) {
+                    LOG.error("Del Te-SubDomain failed!");
+                    return false;
+                }
+
+                LOG.info("Del Te-SubDomain succeed!");
+                return true;
+            } catch (InterruptedException e) {
+                LOG.error("Del Te-SubDomain is Interrupted by", e);
+            } catch (ExecutionException e) {
+                LOG.error("Del Te-SubDomain is faild cause by", e);
+            }
+
+            LOG.error("Del Te-SubDomain failed!");
+            return false;
+        }
+    }
+
+    public boolean delTeBslFromNode(String topologyId,final DomainId domainId,
+                                     final SubDomainId subDomainId,Bsl bitstringlength,final BierNode node) {
+        BierDataProcess<TeBsl> processor =  new BierDataProcess<TeBsl>(dataBroker,
+                BierDataProcess.FLAG_WRITE,(new TeBslBuilder()).build());
+        final InstanceIdentifier<TeBsl>  path = getTeBslPath(topologyId,node.getNodeId(),
+                domainId,subDomainId,bitstringlength);
+        processor.enqueueOperation(new BierDataOperation() {
+            @Override
+            public void writeOperation(ReadWriteTransaction transaction) {
+                transaction.delete(datastoreType,path);
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public ListenableFuture<Optional<TeBsl>> readOperation(ReadWriteTransaction transaction) {
+                return null;
+            }
+        });
+
+        Future<ListenableFuture<TeBsl>> future = EXECUTOR.submit(processor);
+
+        try {
+            ListenableFuture<TeBsl> result = future.get();
             if (null == result.get()) {
                 LOG.error("Del Te-Bsl failed!");
                 return false;
@@ -762,139 +864,104 @@ public class BierDataManager {
 
     public boolean delTeSiFromNode(String topologyId,final DomainId domainId,final SubDomainId subDomainId,
                                    final Bsl bitstringlength,final Si si ,final BierNode node) {
-        BierDataProcess<BierNode> processor =  new BierDataProcess<BierNode>(dataBroker,
-                BierDataProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
-        final InstanceIdentifier<BierNode> path = getNodePath(topologyId,node.getNodeId());
-
-        processor.enqueueOperation(new BierDataOperation() {
-            @Override
-            public void writeOperation(ReadWriteTransaction transaction) {
-                int teSiDomainIndex = getTeDomainIndex(domainId,node);
-                int teSiSubDomainIndex = getTeSubDomainIndex(domainId,subDomainId,node);
-                int teSiBslIndex = getTeBslIndex(domainId,subDomainId,bitstringlength,node);
-                int teSiIndex = getTeSiIndex(domainId,subDomainId,bitstringlength,si,node);
-                BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
-                List<TeSi> newTeSiList = newNodeBuilder.getBierTeNodeParams().getTeDomain().get(teSiDomainIndex)
-                        .getTeSubDomain().get(teSiSubDomainIndex).getTeBsl().get(teSiBslIndex).getTeSi();
-                newTeSiList.remove(teSiIndex);
-                if (newTeSiList.isEmpty()) {
-                    List<TeBsl> newTeBslList = newNodeBuilder.getBierTeNodeParams().getTeDomain()
-                            .get(teSiDomainIndex).getTeSubDomain().get(teSiSubDomainIndex).getTeBsl();
-                    newTeBslList.remove(teSiBslIndex);
-                    if (newTeBslList.isEmpty()) {
-                        List<TeSubDomain> newTeSubdomainList = newNodeBuilder.getBierTeNodeParams().getTeDomain()
-                                .get(teSiDomainIndex).getTeSubDomain();
-                        newTeSubdomainList.remove(teSiSubDomainIndex);
-                        if (newTeSubdomainList.isEmpty()) {
-                            List<TeDomain> newTeDomainList = newNodeBuilder.getBierTeNodeParams().getTeDomain();
-                            newTeDomainList.remove(teSiDomainIndex);
-                        }
-                    }
+        BierDataProcess<TeSi> processor =  new BierDataProcess<TeSi>(dataBroker,
+                BierDataProcess.FLAG_WRITE,(new TeSiBuilder()).build());
+        final InstanceIdentifier<TeSi>  path = getTeSiPath(topologyId,node.getNodeId(),
+                domainId,subDomainId,bitstringlength,si);
+        int teSiDomainIndex = getTeDomainIndex(domainId,node);
+        int teSiSubDomainIndex = getTeSubDomainIndex(domainId,subDomainId,node);
+        int teSiBslIndex = getTeBslIndex(domainId,subDomainId,bitstringlength,node);
+        BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
+        List<TeSi> newTeSiList = newNodeBuilder.getBierTeNodeParams().getTeDomain().get(teSiDomainIndex)
+                .getTeSubDomain().get(teSiSubDomainIndex).getTeBsl().get(teSiBslIndex).getTeSi();
+        if (newTeSiList.size() == 1) {
+            return delTeBslFromNode(topologyId,domainId,subDomainId,bitstringlength,node);
+        } else {
+            processor.enqueueOperation(new BierDataOperation() {
+                @Override
+                public void writeOperation(ReadWriteTransaction transaction) {
+                    transaction.delete(datastoreType,path);
                 }
-                transaction.put(datastoreType,path,newNodeBuilder.build());
+
+                @SuppressWarnings("unchecked")
+                @Override
+                public ListenableFuture<Optional<TeSi>> readOperation(ReadWriteTransaction transaction) {
+                    return null;
+                }
+            });
+
+            Future<ListenableFuture<TeSi>> future = EXECUTOR.submit(processor);
+
+            try {
+                ListenableFuture<TeSi> result = future.get();
+                if (null == result.get()) {
+                    LOG.error("Del Te-Si failed!");
+                    return false;
+                }
+
+                LOG.info("Del Te-Si succeed!");
+                return true;
+            } catch (InterruptedException e) {
+                LOG.error("Del Te-Si is Interrupted by", e);
+            } catch (ExecutionException e) {
+                LOG.error("Del Te-Si is faild cause by", e);
             }
 
-            @SuppressWarnings("unchecked")
-            @Override
-            public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
-                return null;
-            }
-        });
-
-        Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
-
-        try {
-            ListenableFuture<BierNode> result = future.get();
-            if (null == result.get()) {
-                LOG.error("Del Te-Si failed!");
-                return false;
-            }
-
-            LOG.info("Del Te-Si succeed!");
-            return true;
-        } catch (InterruptedException e) {
-            LOG.error("Del Te-Si is Interrupted by", e);
-        } catch (ExecutionException e) {
-            LOG.error("Del Te-Si is faild cause by", e);
+            LOG.error("Del Te-Si failed!");
+            return false;
         }
-
-        LOG.error("Del Te-Si failed!");
-        return false;
     }
-
 
     public boolean delTeBpFromNode(String topologyId,final DomainId domainId,final SubDomainId subDomainId,
                                    final Bsl bitstringlength,final Si si , final String tpId, final BierNode node) {
-        BierDataProcess<BierNode> processor =  new BierDataProcess<BierNode>(dataBroker,
-                BierDataProcess.FLAG_WRITE,(new BierNodeBuilder()).build());
-        final InstanceIdentifier<BierNode> path = getNodePath(topologyId,node.getNodeId());
-
-        processor.enqueueOperation(new BierDataOperation() {
-            @Override
-            public void writeOperation(ReadWriteTransaction transaction) {
-                BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
-                int teBpDomainIndex = getTeDomainIndex(domainId,node);
-                int teBpSubDomainIndex = getTeSubDomainIndex(domainId,subDomainId,node);
-                int teBpBslIndex = getTeBslIndex(domainId,subDomainId,bitstringlength,node);
-                int teBpSiIndex = getTeSiIndex(domainId,subDomainId,bitstringlength,si,node);
-                int teBpIndex = getTeBpIndex(domainId,subDomainId,bitstringlength,si,tpId,node);
-                List<TeBp> newTeBpList = newNodeBuilder.getBierTeNodeParams().getTeDomain().get(teBpDomainIndex)
-                        .getTeSubDomain().get(teBpSubDomainIndex).getTeBsl().get(teBpBslIndex).getTeSi()
-                        .get(teBpSiIndex).getTeBp();
-                newTeBpList.remove(teBpIndex);
-                if (newTeBpList.isEmpty()) {
-                    List<TeSi> newTeSiList = newNodeBuilder.getBierTeNodeParams().getTeDomain()
-                            .get(teBpDomainIndex).getTeSubDomain().get(teBpSubDomainIndex).getTeBsl()
-                            .get(teBpBslIndex).getTeSi();
-                    newTeSiList.remove(teBpSiIndex);
-                    if (newTeSiList.isEmpty()) {
-                        List<TeBsl> newTeBslList = newNodeBuilder.getBierTeNodeParams()
-                                .getTeDomain().get(teBpDomainIndex).getTeSubDomain().get(teBpSubDomainIndex)
-                                .getTeBsl();
-                        newTeBslList.remove(teBpBslIndex);
-                        if (newTeBslList.isEmpty()) {
-                            List<TeSubDomain> newTeSubdomainList = newNodeBuilder
-                                    .getBierTeNodeParams().getTeDomain().get(teBpDomainIndex)
-                                    .getTeSubDomain();
-                            newTeSubdomainList.remove(teBpSubDomainIndex);
-                            if (newTeSubdomainList.isEmpty()) {
-                                List<TeDomain> newTeDomainList = newNodeBuilder.getBierTeNodeParams()
-                                        .getTeDomain();
-                                newTeDomainList.remove(teBpDomainIndex);
-                            }
-                        }
-                    }
+        BierDataProcess<TeBp> processor =  new BierDataProcess<TeBp>(dataBroker,
+                BierDataProcess.FLAG_WRITE,(new TeBpBuilder()).build());
+        final InstanceIdentifier<TeBp> path = getTeBpPath(topologyId,node.getNodeId(),
+                domainId,subDomainId,bitstringlength,si,tpId);
+        BierNodeBuilder newNodeBuilder = new BierNodeBuilder(node);
+        int teBpDomainIndex = getTeDomainIndex(domainId,node);
+        int teBpSubDomainIndex = getTeSubDomainIndex(domainId,subDomainId,node);
+        int teBpBslIndex = getTeBslIndex(domainId,subDomainId,bitstringlength,node);
+        int teBpSiIndex = getTeSiIndex(domainId,subDomainId,bitstringlength,si,node);
+        List<TeBp> newTeBpList = newNodeBuilder.getBierTeNodeParams().getTeDomain().get(teBpDomainIndex)
+                .getTeSubDomain().get(teBpSubDomainIndex).getTeBsl().get(teBpBslIndex).getTeSi()
+                .get(teBpSiIndex).getTeBp();
+        if (newTeBpList.size() == 1) {
+            return delTeSiFromNode(topologyId,domainId,subDomainId,bitstringlength,si,node);
+        } else {
+            processor.enqueueOperation(new BierDataOperation() {
+                @Override
+                public void writeOperation(ReadWriteTransaction transaction) {
+                    transaction.delete(datastoreType,path);
                 }
 
-                transaction.put(datastoreType,path,newNodeBuilder.build());
+                @SuppressWarnings("unchecked")
+                @Override
+                public ListenableFuture<Optional<TeBp>> readOperation(ReadWriteTransaction transaction) {
+                    return null;
+                }
+            });
+
+            Future<ListenableFuture<TeBp>> future = EXECUTOR.submit(processor);
+
+            try {
+                ListenableFuture<TeBp> result = future.get();
+                if (null == result.get()) {
+                    LOG.error("Del Te-Bp failed!");
+                    return false;
+                }
+
+                LOG.info("Del Te-Bp succeed!");
+                return true;
+            } catch (InterruptedException e) {
+                LOG.error("Del Te-Bp is Interrupted by", e);
+            } catch (ExecutionException e) {
+                LOG.error("Del Te-Bp is faild cause by", e);
             }
 
-            @SuppressWarnings("unchecked")
-            @Override
-            public ListenableFuture<Optional<BierNode>> readOperation(ReadWriteTransaction transaction) {
-                return null;
-            }
-        });
-
-        Future<ListenableFuture<BierNode>> future = EXECUTOR.submit(processor);
-
-        try {
-            ListenableFuture<BierNode> result = future.get();
-            if (null == result.get()) {
-                LOG.error("Del Te-Bp failed!");
-                return false;
-            }
-
-            LOG.info("Del Te-Bp succeed!");
-            return true;
-        } catch (InterruptedException e) {
-            LOG.error("Del Te-Bp is Interrupted by", e);
-        } catch (ExecutionException e) {
-            LOG.error("Del Te-Bp is faild cause by", e);
+            LOG.error("Del Te-Bp failed!");
+            return false;
         }
-
-        LOG.error("Del Te-Bp failed!");
-        return false;
     }
 
     public boolean delNodeFromDomain(String topologyId,final DomainId domainId,
@@ -1706,6 +1773,40 @@ public class BierDataManager {
         return path;
     }
 
+    public InstanceIdentifier<TeDomain> getTeDomainPath(String topologyId,String nodeId,DomainId domainId) {
+        InstanceIdentifier<TeDomain> path = getNodePath(topologyId,nodeId).child(BierTeNodeParams.class)
+                .child(TeDomain.class, new TeDomainKey(domainId));
+        return path;
+    }
+
+    public InstanceIdentifier<TeSubDomain> getTeSubDomainPath(String topologyId,String nodeId,
+                                                              DomainId domainId,SubDomainId subDomainId) {
+        InstanceIdentifier<TeSubDomain> path = getTeDomainPath(topologyId,nodeId,domainId)
+                .child(TeSubDomain.class, new TeSubDomainKey(subDomainId));
+        return path;
+    }
+
+    public InstanceIdentifier<TeBsl> getTeBslPath(String topologyId,String nodeId,DomainId domainId,
+                                                  SubDomainId subDomainId,Bsl bitstringlength) {
+        InstanceIdentifier<TeBsl> path = getTeSubDomainPath(topologyId, nodeId, domainId, subDomainId)
+                .child(TeBsl.class, new TeBslKey(bitstringlength));
+        return path;
+    }
+
+    public InstanceIdentifier<TeSi> getTeSiPath(String topologyId,String nodeId,DomainId domainId,
+                                                SubDomainId subDomainId,Bsl bitstringlength,Si si) {
+        InstanceIdentifier<TeSi> path = getTeBslPath(topologyId, nodeId, domainId, subDomainId, bitstringlength)
+                .child(TeSi.class, new TeSiKey(si));
+        return path;
+    }
+
+    public InstanceIdentifier<TeBp> getTeBpPath(String topologyId,String nodeId,DomainId domainId,
+                                                SubDomainId subDomainId,Bsl bitstringlength,Si si,String tpId) {
+        InstanceIdentifier<TeBp> path = getTeSiPath(topologyId, nodeId, domainId, subDomainId, bitstringlength, si)
+                .child(TeBp.class, new TeBpKey(tpId));
+        return path;
+    }
+
     public  List<String> nodesOnline(String queryId) {
         final BierTopology topoOnline = topoAdapter.getBierTopology(dataBroker, queryId);
         final List<BierNode> bierNode = topoOnline.getBierNode();
@@ -2231,6 +2332,55 @@ public class BierDataManager {
         return errorMsg;
     }
 
+
+    public boolean checkBierTeSubdomainExist(ConfigureTeSubdomainInput input) {
+        BierDomain bierDomain = getDomainData(input.getTopologyId(),input.getDomainId());
+        if (bierDomain == null) {
+            return false;
+        }
+        List<BierSubDomain> bierSubDomainList = bierDomain.getBierSubDomain();
+        SubDomainId subDomainId = input.getSubDomainId();
+        boolean teSubDomainExistFlag = false;
+        for (int i = 0; i < bierSubDomainList.size(); i++) {
+            SubDomainId bierSubDomain = bierSubDomainList.get(i).getSubDomainId();
+            if (subDomainId.equals(bierSubDomain)) {
+                teSubDomainExistFlag = true;
+                break;
+            }
+        }
+        if (!teSubDomainExistFlag) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public String checkBierTeSubdomain(ConfigureTeSubdomainInput input) {
+        String errorMsg = "";
+        BierNode bierNode = getNodeData(input.getTopologyId(), input.getNodeId());
+        BierTeNodeParams bierTeNodeParams = bierNode.getBierTeNodeParams();
+        if (null != bierTeNodeParams) {
+            List<TeDomain> teDomainList = bierTeNodeParams.getTeDomain();
+            LOG.info("check teDomainList " + teDomainList);
+            if (null != teDomainList) {
+                for (int iloop = 0; iloop < teDomainList.size(); iloop++) {
+                    DomainId teDomainId = teDomainList.get(iloop).getDomainId();
+                    if (teDomainId.equals(input.getDomainId())) {
+                        List<TeSubDomain> tesubDomainList = teDomainList.get(iloop).getTeSubDomain();
+                        for (int jloop = 0; jloop < tesubDomainList.size(); jloop++) {
+                            SubDomainId tesubDomainId = tesubDomainList.get(jloop).getSubDomainId();
+                            if (tesubDomainId.equals(input.getSubDomainId())) {
+                                errorMsg = "te-SubDomain already configured !";
+                                return errorMsg;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return errorMsg;
+    }
+
     public String checkLableRangeParams(BierTeLableRangeBuilder teLableRangeBuilder) {
         String errorMsg = "";
 
@@ -2253,4 +2403,242 @@ public class BierDataManager {
 
         return errorMsg;
     }
+
+    public boolean addSubdomainBslSi(String topologyId, SubDomainId subDomainId, Bsl bsl, Si si) {
+        AddSubdomainBslSiInputBuilder addSubdomainBslSiInputBuilder = new AddSubdomainBslSiInputBuilder();
+        addSubdomainBslSiInputBuilder.setTopologyId(topologyId);
+        addSubdomainBslSiInputBuilder.setSubdomainValue(subDomainId);
+        addSubdomainBslSiInputBuilder.setBslValue(bsl);
+        addSubdomainBslSiInputBuilder.setSiValue(si);
+        addSubdomainBslSiInputBuilder.setAllocateModel(BpAllocateModel.AllocateModel.MANUAL);
+        BierBpAllocateParamsConfigServiceImpl impl = new BierBpAllocateParamsConfigServiceImpl(dataBroker);
+        Future<RpcResult<AddSubdomainBslSiOutput>> future = impl.addSubdomainBslSi(addSubdomainBslSiInputBuilder
+                .build());
+
+        try {
+            LOG.info("Add SubdomainBslSi computation!");
+            AddSubdomainBslSiOutput output = future.get().getResult();
+            if (ConfigureResult.Result.SUCCESS == output.getConfigureResult().getResult()) {
+                LOG.info("SubdomainBslSi add succeed! " + output);
+                return true;
+            }
+            LOG.error("SubdomainBslSi add failed!");
+            return false;
+
+        } catch (InterruptedException | ExecutionException e) {
+            LOG.error("Add SubdomainBslSi is Interrupted by", e);
+        }
+        return false;
+    }
+
+    public boolean deleteManualTeSi(String topologyId, SubDomainId subDomainId, Bsl bsl, Si si) {
+        if (checkManualSI(topologyId, subDomainId, bsl, si)) {
+            DeleteSubdomainBslSiInputBuilder deleteSubdomainBslSiInputBuilder = new DeleteSubdomainBslSiInputBuilder();
+            deleteSubdomainBslSiInputBuilder.setTopologyId(topologyId);
+            deleteSubdomainBslSiInputBuilder.setSubdomainValue(subDomainId);
+            deleteSubdomainBslSiInputBuilder.setBslValue(bsl);
+            deleteSubdomainBslSiInputBuilder.setSiValue(si);
+            deleteSubdomainBslSiInputBuilder.setAllocateModel(BpAllocateModel.AllocateModel.MANUAL);
+            BierBpAllocateParamsConfigServiceImpl impl = new BierBpAllocateParamsConfigServiceImpl(dataBroker);
+            Future<RpcResult<DeleteSubdomainBslSiOutput>> future = impl.deleteSubdomainBslSi(
+                    deleteSubdomainBslSiInputBuilder.build());
+
+            try {
+                LOG.info("Delete SubdomainBslSi computation!");
+                DeleteSubdomainBslSiOutput output = future.get().getResult();
+                if (ConfigureResult.Result.SUCCESS == output.getConfigureResult().getResult()) {
+                    LOG.info("SubdomainBslSi Delete succeed! " + output);
+                    return true;
+                }
+                LOG.error("SubdomainBslSi Delete failed!");
+                return false;
+
+            } catch (InterruptedException | ExecutionException e) {
+                LOG.error("Delete SubdomainBslSi is Interrupted by", e);
+            }
+            return false;
+        }
+        LOG.info("SubdomainBslSi used in other position");
+        return true;
+    }
+
+    public boolean checkManualSI(String topologyId, SubDomainId subDomainId, Bsl bsl, Si si) {
+        LOG.info("checkManualSI");
+        int siNum = 0;
+        BierTopology bierTopology = getTopologyData(topologyId);
+        List<BierNode> bierNodeList = bierTopology.getBierNode();
+        for (int iloop = 0; iloop < bierNodeList.size(); iloop++) {
+            BierNode bierNode = bierNodeList.get(iloop);
+            List<TeDomain> teDomainList = bierNode.getBierTeNodeParams().getTeDomain();
+            if (null != teDomainList) {
+                for (int jloop = 0; jloop < teDomainList.size(); jloop++) {
+                    DomainId domainId = teDomainList.get(jloop).getDomainId();
+                    int siIndex = getTeSiIndex(domainId, subDomainId, bsl, si, bierNode);
+                    LOG.info("siIndex=" + siIndex);
+                    if (siIndex >= 0) {
+                        siNum++;
+                        if (siNum > 1) {
+                            LOG.info("siNum=" + siNum);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        LOG.info("siNum=" + siNum);
+        return true;
+    }
+
+    public boolean deleteManualTeBSL(String topologyId, DomainId domainId,SubDomainId subDomainId, Bsl bsl, BierNode bierNode) {
+        List<TeDomain> teDomainList = bierNode.getBierTeNodeParams().getTeDomain();
+        if (null != teDomainList) {
+            for (int iloop = 0; iloop < teDomainList.size(); iloop++) {
+                if (domainId.equals(teDomainList.get(iloop).getDomainId())) {
+                    List<TeSubDomain> teSubDomainList = teDomainList.get(iloop).getTeSubDomain();
+                    if (null != teSubDomainList) {
+                        for (int jloop = 0; jloop < teSubDomainList.size(); jloop++) {
+                            if (subDomainId.equals(teSubDomainList.get(jloop).getSubDomainId())) {
+                                List<TeBsl> teBslList = teSubDomainList.get(jloop).getTeBsl();
+                                if (null != teBslList) {
+                                    if (!processBslSi2(topologyId, subDomainId, bsl,teBslList)) {
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean processBslSi2(String topologyId, SubDomainId subDomainId, Bsl bsl,List<TeBsl> teBslList) {
+        for (int bslloop = 0; bslloop < teBslList.size(); bslloop++) {
+            if (bsl.equals(teBslList.get(bslloop).getBitstringlength())) {
+                List<TeSi> teSiList = teBslList.get(bslloop).getTeSi();
+                if (null != teSiList) {
+                    for (int siloop = 0; siloop < teSiList.size(); siloop++) {
+                        Si si = teSiList.get(siloop).getSi();
+                        BpAllocateModel.AllocateModel model = readSIModel(topologyId, subDomainId, bsl, si);
+                        if (model.equals(BpAllocateModel.AllocateModel.MANUAL)) {
+                            boolean result = deleteManualTeSi(topologyId, subDomainId, bsl, si);
+                            if (!result) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean deleteManualTeSD(String topologyId, DomainId domainId,SubDomainId subDomainId, BierNode bierNode) {
+        List<TeDomain> teDomainList = bierNode.getBierTeNodeParams().getTeDomain();
+        if (null != teDomainList) {
+            for (int iloop = 0; iloop < teDomainList.size(); iloop++) {
+                if (domainId.equals(teDomainList.get(iloop).getDomainId())) {
+                    List<TeSubDomain> teSubDomainList = teDomainList.get(iloop).getTeSubDomain();
+                    if (null != teSubDomainList) {
+                        for (int jloop = 0; jloop < teSubDomainList.size(); jloop++) {
+                            if (subDomainId.equals(teSubDomainList.get(jloop).getSubDomainId())) {
+                                List<TeBsl> teBslList = teSubDomainList.get(jloop).getTeBsl();
+                                if (null != teBslList) {
+                                    if (!processBslSi1(topologyId, subDomainId, teBslList)) {
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean processBslSi1(String topologyId, SubDomainId subDomainId,List<TeBsl> teBslList) {
+        for (int bslloop = 0; bslloop < teBslList.size(); bslloop++) {
+            Bsl bsl = teBslList.get(bslloop).getBitstringlength();
+            List<TeSi> teSiList = teBslList.get(bslloop).getTeSi();
+            if (null != teSiList) {
+                for (int siloop = 0; siloop < teSiList.size(); siloop++) {
+                    Si si = teSiList.get(siloop).getSi();
+                    LOG.info("subDomainId=" + subDomainId + " bsl=" + bsl + " si="+ si);
+                    BpAllocateModel.AllocateModel model = readSIModel(topologyId, subDomainId, bsl, si);
+                    if (model.equals(BpAllocateModel.AllocateModel.MANUAL)) {
+                        boolean result = deleteManualTeSi(topologyId, subDomainId, bsl, si);
+                        if (!result) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public BierLink transferBierLink(BierLink bierLink) {
+        BierTopology bierTopology = getTopologyData(TOPOLOGY_ID);
+        List<BierNode> bierNodeList = bierTopology.getBierNode();
+
+        LinkSourceBuilder linkSourceBuilder = new LinkSourceBuilder(bierLink.getLinkSource());
+        LinkDestBuilder linkDestBuilder = new LinkDestBuilder(bierLink.getLinkDest());
+        for (BierNode bierNode:bierNodeList) {
+            if (bierNode.getNodeId().equals(bierLink.getLinkSource().getSourceNode())) {
+                List<BierTerminationPoint> tpList = bierNode.getBierTerminationPoint();
+                for (BierTerminationPoint tp:tpList) {
+                    if (null != tp.getTpIpPrefix() && bierLink.getLinkSource().getSourceTp().equals(tp.getTpIpPrefix()
+                            .getIpv4Address().getValue())) {
+                        String ifName = tp.getIfName();
+                        if (null != ifName) {
+                            linkSourceBuilder.setSourceTp(tp.getIfName());
+                        }
+                    }
+                }
+            }
+            if(bierNode.getNodeId().equals(bierLink.getLinkDest().getDestNode())) {
+                List<BierTerminationPoint> tpList = bierNode.getBierTerminationPoint();
+                for (BierTerminationPoint tp:tpList) {
+                    if (null != tp.getTpIpPrefix() && bierLink.getLinkDest().getDestTp().equals(tp.getTpIpPrefix()
+                            .getIpv4Address().getValue())) {
+                        String ifName = tp.getIfName();
+                        if (null != ifName) {
+                            linkDestBuilder.setDestTp(tp.getIfName());
+                        }
+                    }
+                }
+            }
+        }
+
+        BierLinkBuilder bierLinkBuilder = new BierLinkBuilder(bierLink);
+        bierLinkBuilder.setLinkSource(linkSourceBuilder.build());
+        bierLinkBuilder.setLinkDest(linkDestBuilder.build());
+        return bierLinkBuilder.build();
+
+    }
+    public BpAllocateModel.AllocateModel readSIModel(String topologyId, SubDomainId subdomainId, Bsl bsl, Si si) {
+        InstanceIdentifier<SiBpAllocate> siIID = InstanceIdentifier.create(BierBpAllocateParams.class)
+                .child(TopoBpAllocateParams.class, new TopoBpAllocateParamsKey(topologyId))
+                .child(SubdomainBpAllocate.class, new SubdomainBpAllocateKey(subdomainId))
+                .child(BslBpAllocate.class, new BslBpAllocateKey(bsl))
+                .child(SiBpAllocate.class, new SiBpAllocateKey(si));
+        ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
+        SiBpAllocateBuilder builder = new SiBpAllocateBuilder();
+
+        SiBpAllocate siBpAllocate = builder.build();
+        try {
+            Optional<SiBpAllocate> optinal = tx.read(LogicalDatastoreType.CONFIGURATION, siIID)
+                    .checkedGet();
+            if (optinal.isPresent()) {
+                siBpAllocate = optinal.get();
+            }
+        } catch (ReadFailedException e) {
+            LOG.info("Read SIModel failed!");
+        }
+        BpAllocateModel.AllocateModel model = siBpAllocate.getAllocateModel();
+        return model;
+    }
+
 }

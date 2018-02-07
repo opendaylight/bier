@@ -29,6 +29,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <artifactId>ietf-bier-2016-07-23</artifactId>
         <version>${project.version}</version>
     </dependency>
+      <dependency>
+          <groupId>org.opendaylight.bier</groupId>
+          <artifactId>ietf-bier-te-2016-10-13</artifactId>
+          <version>${project.version}</version>
+      </dependency>
     <dependency>
         <groupId>org.opendaylight.bier</groupId>
         <artifactId>bier-common-model</artifactId>

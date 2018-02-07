@@ -43,6 +43,47 @@ module bier-te-config-api {
        uses bier-common:configure-result;
 		}
 	}
+
+	rpc configure-te-subdomain {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+			leaf node-id {
+			    type string; 
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+		      type bier:sub-domain-id;
+		    }
+		    
+		}
+		output {
+       uses bier-common:configure-result;
+		}
+	}
+
+	rpc delete-te-subdomain {
+		input {
+		    leaf topology-id {
+			    type string; 
+		    }
+			leaf node-id {
+			    type string; 
+		    }
+		    leaf domain-id {
+			    type bier-common:domain-id; 
+		    }
+		    leaf sub-domain-id {
+		      type bier:sub-domain-id;
+		    }
+		}
+		output {
+       uses bier-common:configure-result;
+		}
+	}
 	
 	rpc configure-te-label {
 		input {
@@ -165,4 +206,34 @@ module bier-te-config-api {
        uses bier-common:configure-result;
 		}
 	}
+
+	notification te-subdomain-add {
+	    leaf topology-id {
+            type string;
+        }
+        leaf node-id {
+            type string;
+        }
+        leaf domain-id {
+            type bier-common:domain-id;
+        }
+        leaf sub-domain-id {
+          type bier:sub-domain-id;
+        }
+	}
+
+    notification te-subdomain-delete {
+        leaf topology-id {
+            type string;
+        }
+        leaf node-id {
+            type string;
+        }
+        leaf domain-id {
+            type bier-common:domain-id;
+        }
+        leaf sub-domain-id {
+          type bier:sub-domain-id;
+        }
+    }
 }

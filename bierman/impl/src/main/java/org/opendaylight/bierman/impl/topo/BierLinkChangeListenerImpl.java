@@ -54,11 +54,13 @@ public class BierLinkChangeListenerImpl
     private static final Logger LOG =  LoggerFactory.getLogger(BierLinkChangeListenerImpl.class);
 
     private final ExecutorService executor = Executors.newFixedThreadPool(7);
+    private BierDataManager bierDataManager;
 
     public BierLinkChangeListenerImpl(final DataBroker dataBroker) {
         super(dataBroker, InstanceIdentifier
                 .create(NetworkTopology.class)
                 .child(Topology.class, new TopologyKey(new TopologyId(TOPOLOGY_IID))).child(Link.class));
+        bierDataManager = new BierDataManager(dataBroker);
     }
 
     @Override
@@ -83,7 +85,8 @@ public class BierLinkChangeListenerImpl
 
     public void processRemovedLink(final DataTreeModification<Link> modification) {
         final Link link = modification.getRootNode().getDataBefore();
-        final BierLink bierLink = BIER_TOPOLOGY_ADAPTER.toBierLink(link);
+        BierLink bierLink = BIER_TOPOLOGY_ADAPTER.toBierLink(link);
+        bierLink = bierDataManager.transferBierLink(bierLink);
         final String linkId = bierLink.getLinkId();
         BierDataProcess<BierLink> processor =  new BierDataProcess<BierLink>(dataBroker,
                 BierDataProcess.FLAG_WRITE, (new BierLinkBuilder()).build());
@@ -117,13 +120,16 @@ public class BierLinkChangeListenerImpl
         Long metric2 = linkAfter.getAugmentation(Link1.class).getIgpLinkAttributes().getMetric();
         if (metric1 != metric2) {
             BierLink bierLink = BIER_TOPOLOGY_ADAPTER.toBierLink(linkAfter);
+            bierLink = bierDataManager.transferBierLink(bierLink);
             final String linkIdInTopology = bierLink.getLinkId();
             if (linkIdInTopology != null) {
                 final InstanceIdentifier<BierLink> iiToTopologyLink = provideIIToTopologyLink(linkIdInTopology);
                 sendToTransactionChain(bierLink, iiToTopologyLink);
                 notifyTopoChange(BierDataManager.TOPOLOGY_ID);
                 BierLink oldLink = BIER_TOPOLOGY_ADAPTER.toBierLink(linkBefore);
+                oldLink = bierDataManager.transferBierLink(oldLink);
                 BierLink newLink = BIER_TOPOLOGY_ADAPTER.toBierLink(linkAfter);
+                newLink = bierDataManager.transferBierLink(newLink);
                 notifyLinkChange(oldLink,newLink);
             } else {
                 LOG.debug("Inventory link key is null. Data can't be written to topology");
@@ -134,6 +140,7 @@ public class BierLinkChangeListenerImpl
     public void processAddedLink(final DataTreeModification<Link> modification) {
         final Link link = modification.getRootNode().getDataAfter();
         BierLink bierLink = BIER_TOPOLOGY_ADAPTER.toBierLink(link);
+        bierLink = bierDataManager.transferBierLink(bierLink);
         final String linkIdInTopology = bierLink.getLinkId();
         if (linkIdInTopology != null) {
             final InstanceIdentifier<BierLink> iiToTopologyLink = provideIIToTopologyLink(linkIdInTopology);
