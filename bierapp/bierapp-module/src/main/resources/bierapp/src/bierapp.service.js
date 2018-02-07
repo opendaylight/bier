@@ -1047,6 +1047,27 @@ define(['app/bierapp/src/bierapp.module'], function(bierapp) {
         });
     };
 
+    s.startEchoReq = function(input, successCbk, errorCbk) {
+      console.log('startEchoReq input', input);
+      var restObj = BierRestangular.one('restconf').one('operations').one('bier-oam-api:start-echo-request');
+      var reqData = input;
+      restObj.customPOST(reqData).then(
+          function(data) {
+              console.log('startEchoReq data', data);
+              successCbk(data.output);
+          },function(res) {
+              if (res.data.hasOwnProperty('errors')) {
+                  var errDetails = '';
+                  for(var i = 0; i < res.data.errors.error.length; i++){
+                      errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+                  }
+                  errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+              }
+              else {
+                  errorCbk(res);
+              }
+          });
+    };
 
     s.configBGP = function(input, successCbk, errorCbk) {
       console.log('configBGP input', input);

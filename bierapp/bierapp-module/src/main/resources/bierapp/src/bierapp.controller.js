@@ -47,6 +47,27 @@ define([
 		{ "type" : "ISIS"}
 	];
 
+    $scope.networkType = [
+        { "type" : "bier"},
+        { "type" : "bier-te"}
+    ];
+
+    $scope.modeType = [
+        { "type" : "ping"},
+        { "type" : "trace"}
+    ];
+
+    $scope.replyModeType = [
+        { "type" : "do not Reply"},
+        { "type" : "reply via IPv4/IPv6 UDP packet"},
+        { "type" : "reply via BIER-TE packet"}
+    ];
+
+    $scope.checkType = [
+        { "type" : "proactive"},
+        { "type" : "on-demand"}
+    ];
+
 	$scope.topologyData = null;
 
 	$scope.netconfNode = [];
@@ -123,6 +144,36 @@ define([
 		'teSubdomainNodeIndex':0,
 		'teSubdomainLinkIndex':0
 	};
+
+    //echo request
+    $scope.echoRequestData = {
+        'networkType':null,
+        'topologyId':null,
+        'channelName':null,
+        'subdomainId':0,
+        'ingressNodeId':null,
+        'egressNodeIds':[],
+        'targetNodeIds':[],
+        'targetNodeString':[],
+        'checkType':null,
+        'modeType':null,
+        'replyMode':null,
+        'maxTTL':0,
+        'hasStarted':null
+    };
+
+    //echo reply
+    $scope.echoReplyData = {
+        'subdomainId':0,
+        'ingressNodeId':null,
+        'egressNodeIds':[],
+        'hasPingResult':null,
+        'pingResult':[],
+        'pingResultNode':[],
+        'hasTraceResult':null,
+        'traceResult':[],
+        'traceResultNode':[]
+    };
 
 	$scope.queryTeSubdomainNum = 0;
 	$scope.returnTeSubdomainNum = 0;
@@ -228,7 +279,8 @@ define([
 					"notifications": [
 						"(urn:bier:topology:api?revision=2016-11-02)topo-change",
 						"(urn:bier:service:api?revision=2017-01-05)report-message",
-						"(urn:bier:driver:reporter?revision=2017-02-13)driver-failure"
+						"(urn:bier:driver:reporter?revision=2017-02-13)driver-failure",
+                        			"(urn:bier:oam:api?revision=2017-08-08)receive-echo-reply"
 					]
 				}
 				
@@ -354,6 +406,116 @@ define([
 					confirmButtonText: "Close"
 				});
 			}
+
+            var echoReply =xmlDoc.getElementsByTagName("receive-echo-reply");
+            if(echoReply.length > 0){
+                //var replyTime = xmlDoc.getElementsByTagName("eventTime")[0].childNodes[0].nodeValue;
+                $scope.echoReplyData.subdomainId = xmlDoc.getElementsByTagName("subdomain-id")[0].childNodes[0].nodeValue;
+                if($scope.echoReplyData.subdomainId!=$scope.echoRequestData.subdomainId){
+                    console.log("check oam request and reply --$scope.echoRequestData.subdomainId ",$scope.echoRequestData.subdomainId);
+                    console.log("check oam request and reply --$scope.echoReplyData.subdomainId ",$scope.echoReplyData.subdomainId);
+                    return;
+                }
+                $scope.echoReplyData.ingressNodeId = xmlDoc.getElementsByTagName("ingress-node-id")[0].childNodes[0].nodeValue;
+                if($scope.echoReplyData.ingressNodeId!=$scope.echoRequestData.ingressNodeId){
+                    console.log("check oam request and reply --$scope.echoRequestData.ingressNodeId ",$scope.echoRequestData.ingressNodeId);
+                    console.log("check oam request and reply --$scope.echoReplyData.ingressNodeId ",$scope.echoReplyData.ingressNodeId);
+                    return;
+                }
+                var idx = 0;
+
+                for (idx=0;idx<xmlDoc.getElementsByTagName("egress-node-id").length ;idx++) {
+                    var egressNodeId = xmlDoc.getElementsByTagName("egress-node-id")[idx].childNodes[0].nodeValue;
+
+                    if($scope.echoRequestData.egressNodeIds.indexOf(egressNodeId)==-1){
+                        console.log("check oam request and reply --$scope.echoRequestData.egressNodeIds ",$scope.echoRequestData.egressNodeIds);
+                        console.log("check oam request and reply --echoReply egressNodeId ",egressNodeId);
+                        return;
+                    }
+                    if ($scope.echoReplyData.egressNodeIds.indexOf(egressNodeId)==-1){
+                        $scope.echoReplyData.egressNodeIds.push(egressNodeId);
+                    }
+
+                }
+                if($scope.echoRequestData.egressNodeIds.length != $scope.echoReplyData.egressNodeIds.length){
+                    console.log("check oam request and reply --$scope.echoRequestData.egressNodeIds ",$scope.echoRequestData.egressNodeIds);
+                    console.log("check oam request and reply --$scope.echoReplyData.egressNodeIds ",$scope.echoReplyData.egressNodeIds);
+                    return;
+                }
+                if ($scope.echoRequestData.modeType == "ping") {
+                    for (idx=0;idx<xmlDoc.getElementsByTagName("ping-target-node-id").length ;idx++) {
+                        var pingInfo = {"targetNode":" ","pingResult":" "};
+                        pingInfo.targetNode = xmlDoc.getElementsByTagName("ping-target-node-id")[idx].childNodes[0].nodeValue;
+                        if($scope.echoRequestData.targetNodeString.indexOf(pingInfo.targetNode)==-1){
+                            console.log("check oam request and reply --$scope.echoRequestData.targetNodeIds ",$scope.echoRequestData.targetNodeIds);
+                            console.log("check oam request and reply --echoReply targetNode ",pingInfo.targetNode);
+                            return;
+                        }
+                        pingInfo.pingResult = xmlDoc.getElementsByTagName("ping-result")[idx].childNodes[0].nodeValue;
+
+                        if ($scope.echoReplyData.pingResultNode.indexOf(pingInfo.targetNode)==-1){
+                            $scope.echoReplyData.pingResultNode.push(pingInfo.targetNode);
+                            $scope.echoReplyData.pingResult.push(pingInfo);
+
+                        }
+
+                    }
+                    if($scope.echoRequestData.targetNodeIds.length != $scope.echoReplyData.pingResult.length){
+                        console.log("check oam request and reply --$scope.echoRequestData.targetNodeIds ",$scope.echoRequestData.targetNodeIds);
+                        console.log("check oam request and reply --$scope.echoReplyData.pingResult ",$scope.echoReplyData.pingResult);
+                        return;
+                    }
+                    if ( idx>0 ) {
+                        $scope.echoReplyData.hasPingResult = "yes";
+                    }
+                    return;
+
+                }
+
+
+                for (idx=0;idx<xmlDoc.getElementsByTagName("trace-target-node-id").length ;idx++) {
+                    var traceInfo = {"targetNode" : " ","traceResult" : " ","routeInfo":" "};
+                    traceInfo.targetNode = xmlDoc.getElementsByTagName("trace-target-node-id")[idx].childNodes[0].nodeValue;
+                    if($scope.echoRequestData.targetNodeString.indexOf(traceInfo.targetNode)==-1){
+                        console.log("check oam request and reply --$scope.echoRequestData.targetNodeIds ",$scope.echoRequestData.targetNodeString);
+                        console.log("check oam request and reply --echoReply targetNode ",traceInfo.targetNode);
+                        return;
+                    }
+                    traceInfo.traceResult = xmlDoc.getElementsByTagName("trace-result")[idx].childNodes[0].nodeValue;
+                    var traceElement = xmlDoc.getElementsByTagName("trace-target-node-id")[idx].nextElementSibling;
+                    var idxResp = 0;
+                    var arrayResps = [];
+                    while(traceElement!=null) {
+                        var arrayResp = {"index":0,"nodeId":" "};
+                        arrayResp.index = traceElement.childNodes[1].childNodes[0].nodeValue;
+                        arrayResp.nodeId = traceElement.childNodes[3].childNodes[0].nodeValue;
+                        arrayResps.push(arrayResp);
+                        traceElement = traceElement.nextElementSibling;
+                        idxResp++;
+
+                    }
+                    arrayResps.sort(function(a,b){
+                        return a.index-b.index});
+
+                    var routeInfo = $scope.echoReplyData.ingressNodeId;
+                    for (var nodeIdx =0;nodeIdx<arrayResps.length;nodeIdx++) {
+                        routeInfo = routeInfo + "-->" + arrayResps[nodeIdx]['nodeId'];
+                    }
+                    traceInfo.routeInfo = routeInfo;
+                    if ($scope.echoReplyData.traceResultNode.indexOf(traceInfo.targetNode)==-1){
+                        $scope.echoReplyData.traceResultNode.push(traceInfo.targetNode);
+                        $scope.echoReplyData.traceResult.push(traceInfo);
+                    }
+                }
+                if($scope.echoRequestData.targetNodeIds.length != $scope.echoReplyData.traceResult.length){
+                    console.log("check oam request and reply --$scope.echoRequestData.targetNodeIds ",$scope.echoRequestData.targetNodeIds);
+                    console.log("check oam request and reply --$scope.echoReplyData.traceResult ",$scope.echoReplyData.traceResult);
+                    return;
+                }
+                if (idx>0) {
+                    $scope.echoReplyData.hasTraceResult = "yes";
+                }
+            }
 		};
 
 		ws.onclose = function() {
@@ -1716,6 +1878,237 @@ define([
 		$scope.appConfig.currentPanel = panelCode;
 		$mdSidenav('right').open();
 	};
+
+    //open OAM Manager
+    $scope.openOamManager = function() {
+        $scope.customFullscreen = $mdMedia('xs') || $mdMedia('sm');
+        $scope.clearEchoRequestData = function() {
+            $scope.echoRequestData.hasStarted = null;
+        }
+        $scope.clearEchoReplyData = function() {
+            $scope.echoReplyData.egressNodeIds.length = 0;
+            $scope.echoReplyData.hasPingResult = null;
+            $scope.echoReplyData.pingResult.length = 0;
+            $scope.echoReplyData.pingResultNode.length = 0;
+            $scope.echoReplyData.hasTraceResult = null;
+            $scope.echoReplyData.traceResult.length = 0;
+            $scope.echoReplyData.traceResultNode.length = 0;
+        }
+        var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
+        $mdDialog.show({
+            controller: function($scope, $mdDialog, dScope){
+
+                $scope.edit = {
+                    name: '',
+                    editing: false
+                };
+                $scope.input = {
+                    'startEchoReq': {},
+                    'startEchoReqStatus': 'none',
+                    'getEchoReply': {}
+                };
+
+                // Hide dialog (close without discarding changes)
+                $scope.hide = function() {
+                    $mdDialog.hide();
+                };
+                // Cancel (discard changes)
+                $scope.cancel = function() {
+                    dScope.clearEchoRequestData();
+                    dScope.clearEchoReplyData();
+                    console.log("OAM--clear request and reply data.");
+                    $mdDialog.cancel();
+                };
+                $scope.typeOf = function(val){
+                    return typeof val;
+                };
+
+                $scope.chooseTargetNodeData = [];
+                $scope.selectedTargetNodeIndex = [];
+                $scope.isChecked = function(index){
+                    return $scope.selectedTargetNodeIndex.indexOf(index) >= 0 ;
+                } ;
+
+                $scope.updateSelection = function($event,index){
+                    var checkbox = $event.target ;
+                    var checked = checkbox.checked ;
+                    if(checked){
+                        $scope.selectedTargetNodeIndex.push(index) ;
+                    }else{
+                        var idx = $scope.selectedTargetNodeIndex.indexOf(index) ;
+                        $scope.selectedTargetNodeIndex.splice(idx,1) ;
+                    }
+                    console.log("All egress nodes : ",$scope.chooseTargetNodeData);
+                    console.log("OAM target nodes selected: ",$scope.selectedTargetNodeIndex);
+                } ;
+
+
+                //ttl default is 255
+                $scope.input.startEchoReq.maxTTL = 255;
+
+                $scope.setEchoRequestDataByChannel = function(channel) {
+                    dScope.echoRequestData.channelName = channel['name'];
+                    dScope.echoRequestData.ingressNodeId = channel['ingress-node'];
+                    var egressNodes = channel["egress-node"];
+                    console.log("setEchoRequestDataByChannel egressNodes",egressNodes);
+                    dScope.echoRequestData.egressNodeIds.length = 0;
+                    for (var index=0;index<egressNodes.length;index++) {
+                        dScope.echoRequestData.egressNodeIds.push(egressNodes[index]["node-id"]);
+                    }
+
+                    dScope.echoRequestData.subdomainId = channel["sub-domain-id"];
+                    console.log("setEchoRequestDataByChannel--dScope.echoRequestData:  ",dScope.echoRequestData);
+                };
+
+                $scope.getNodeByIndex = function(index) {
+                    for(var i = 0; i < $scope.chooseTargetNodeData.length; i++){
+                        if ($scope.chooseTargetNodeData[i].index == index) {
+                            return $scope.chooseTargetNodeData[i].node['node-id'];
+                        }
+
+                    }
+
+                }
+
+                $scope.setEchoRequestDataForTargetNodes = function() {
+                    var echoReqTargetNodes =  [] ;
+                    dScope.echoRequestData.targetNodeString.length = 0;
+                    for(var i = 0; i < $scope.selectedTargetNodeIndex.length; i++){
+                        var echoReqTargetNode = {};
+                        var nodeName = $scope.getNodeByIndex($scope.selectedTargetNodeIndex[i]);
+                        echoReqTargetNode['target-node-id'] = nodeName;
+                        echoReqTargetNodes.push(echoReqTargetNode);
+                        dScope.echoRequestData.targetNodeString.push(nodeName);
+                    }
+                    dScope.echoRequestData.targetNodeIds = echoReqTargetNodes;
+                    console.log("setEchoRequestDataForTargetNodes--dScope.echoRequestData:  ",dScope.echoRequestData);
+                };
+
+                $scope.chooseTargetNodeId = function(channel) {
+                    var nodes = channel["egress-node"];
+                    $scope.chooseTargetNodeData.length = 0;
+                    for (var i = 0; i< nodes.length; i++) {
+                        var targetNode = {'index':0,'node':''};
+                        targetNode.index = i+1;
+                        targetNode.node = nodes[i];
+                        $scope.chooseTargetNodeData.push(targetNode);
+                    }
+                    console.log("choose target nodes from channel egress nodes:  ",$scope.chooseTargetNodeData);
+                    $scope.setEchoRequestDataByChannel(channel);
+
+                };
+
+
+
+                $scope.setEchoRequestData = function() {
+                    $scope.setEchoRequestDataForTargetNodes();
+                    //dScope.echoRequestData.networkType = $scope.input.startEchoReq.networkType;
+                    dScope.echoRequestData.topologyId = dScope.appConfig.currentTopologyId;
+                    dScope.echoRequestData.checkType = "on-demand";
+                    dScope.echoRequestData.modeType = $scope.input.startEchoReq.modeType;
+                    dScope.echoRequestData.replyMode = $scope.input.startEchoReq.replyModeType;
+                    dScope.echoRequestData.maxTTL = $scope.input.startEchoReq.maxTTL;
+                };
+
+                $scope.isTtlValid = function(ttl){
+                    if (ttl>255 || ttl<=0) {
+                        return false;
+                    }
+                    return true;
+                };
+
+                $scope.startEchoReq = function(){
+                    $scope.input.startEchoReqStatus = 'inprogress';
+                    console.log("$scope.selectedTargetNodeIndex", $scope.selectedTargetNodeIndex);
+                    if(biermanTools.hasOwnProperties($scope.input.startEchoReq, ['channelName', 'modeType', 'replyModeType','maxTTL'])
+                        && $scope.selectedTargetNodeIndex.length != 0){
+                        console.log("$scope.input.startEchoReq.maxTTL",$scope.input.startEchoReq.maxTTL);
+                        if(!$scope.isTtlValid($scope.input.startEchoReq.maxTTL)) {
+                            dScope.displayAlert({
+                                title: "Echo request failed",
+                                text: "TTL value should not be smaller than 1 or larger than 255",
+                                type: "error",
+                                confirmButtonText: "Close"
+                            });
+                            return;
+                        }
+                        $scope.setEchoRequestData();
+                        dScope.clearEchoReplyData();
+                        dScope.echoRequestData.hasStarted = "yes";
+                        console.log("echo request data : ",dScope.echoRequestData);
+                        BiermanRest.startEchoReq(
+                            {
+                                'input': {
+                                    //'network-type': dScope.echoRequestData.networkType,
+                                    'topology-id': dScope.echoRequestData.topologyId,
+                                    'channel-name': dScope.echoRequestData.channelName,
+                                    'target-node-ids': dScope.echoRequestData.targetNodeIds,
+                                    'check-type': "on-demand",
+                                    'mode-type': dScope.echoRequestData.modeType,
+                                    'reply-mode': dScope.echoRequestData.replyMode,
+                                    'max-ttl': dScope.echoRequestData.maxTTL
+                                }
+                            },
+                            // success
+                            function(data){
+                                //$scope.input.startEchoReq = {};
+                                $scope.input.startEchoReqStatus = 'success';
+                                dScope.displayAlert({
+                                    title: "Echo request started",
+                                    text: "The channel " + dScope.echoRequestData.channelName + "is been checking",
+                                    type: "success",
+                                    timer: 1500,
+                                    confirmButtonText: "Okay"
+                                });
+                            },
+                            // error
+                            function(err){
+                                dScope.clearEchoRequestData();
+                                dScope.clearEchoReplyData();
+                                console.error(err);
+                                dScope.displayAlert({
+                                    title: "Echo request failed",
+                                    text: err.errMsg,
+                                    type: "error",
+                                    confirmButtonText: "Close"
+                                });
+                            }
+                        );
+
+                    }
+                    else{
+                        dScope.clearEchoRequestData();
+                        dScope.clearEchoReplyData();
+                        dScope.displayAlert({
+                            title: "Echo request failed",
+                            text: "start echo failed " + dScope.errMsg1,
+                            type: "error",
+                            confirmButtonText: "Close"
+                        });
+                    }
+                };
+
+                $scope.dScope = dScope;
+            },
+            templateUrl: 'src/app/bierapp/src/templates/oam-manager.tpl.html',
+            parent: angular.element(document.body),
+            clickOutsideToClose: true,
+            fullscreen: useFullScreen,
+            locals: {
+                dScope: $scope
+            }
+        })
+            .then(function(answer) {
+                $scope.status = 'You said the information was "' + answer + '".';
+            }, function() {
+                $scope.status = 'You cancelled the dialog.';
+            });
+        $scope.$watch(function() {
+            return $mdMedia('xs') || $mdMedia('sm');
+        }, function(wantsFullScreen) {
+            $scope.customFullscreen = (wantsFullScreen === true);
+        });
+    };
 
 	//open Channel Manager
 	$scope.openChannelManager = function() {

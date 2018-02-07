@@ -1,0 +1,145 @@
+<md-dialog aria-label="OAM Manager" flex="50">
+    <md-dialog-content>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>OAM Manager</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                    <i class="fa fa-close fa-2x" aria-label="Close dialog"></i>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <!-- Add Channel Block -->
+        <md-toolbar class="md-accent white">
+            <div class="md-toolbar-tools">
+                <h3>Echo Request</h3>
+            </div>
+        </md-toolbar>
+        <md-content class="md-dialog-content">
+            <form>
+                <div  class="md-inline-form layout-column start-echo-request">
+                    <div>
+                        <div class="channel-info md-inline-form">
+                            Channel Name
+                            <select ng-model="input.startEchoReq.channelName" ng-options="Channel['name'] for Channel in dScope.channelData"ng-change="chooseTargetNodeId(input.startEchoReq.channelName)" required>
+                                <option value="">-select-</option>
+                            </select>&nbsp&nbsp&nbsp&nbsp
+                            Target Nodes
+                            <label ng-repeat="targetNode in chooseTargetNodeData">
+                                <input type="checkbox"  ng-checked="isChecked(targetNode.index)"
+                                       ng-click="updateSelection($event,targetNode.index)" />{{targetNode.node['node-id']}}
+                            </label>
+                        </div>
+                        <!--md-input-container>
+                            Network Type
+                            <select ng-model="input.startEchoReq.networkType" ng-options="network.type as network.type for network in dScope.networkType" required>
+                                <option value="">-select-</option>
+                            </select>
+                        </md-input-container-->
+                        <md-input-container>
+                            Ping or Trace
+                            <select ng-model="input.startEchoReq.modeType" ng-options="mode.type as mode.type for mode in dScope.modeType" required>
+                                <option value="">-select-</option>
+                            </select>
+                        </md-input-container>
+                        <md-input-container>
+                            Reply Mode
+                            <select ng-model="input.startEchoReq.replyModeType" ng-options="replymode.type as replymode.type for replymode in dScope.replyModeType" required>
+                                <option value="">-select-</option>
+                            </select>
+                        </md-input-container>
+                        <div  class="ttl-info md-inline-form">
+                            <md-input-container>
+                                <label for="cm-max-ttl">Max TTL</label>
+                                <input ng-model="input.startEchoReq.maxTTL" id="cm-max-ttl">
+                            </md-input-container>
+                        </div>
+                    </div>
+                </div>
+                <md-button ng-click="startEchoReq()" class="md-raised" style="background: dodgerblue;">
+                    Start
+                </md-button>
+            </form>
+        </md-content>
+        <!-- Result -->
+        <md-toolbar class="md-accent white">
+            <div class="md-toolbar-tools">
+                <h3>Result</h3>
+            </div>
+        </md-toolbar>
+        <form>
+            <div  class="md-inline-form layout-column get-echo-reply">
+                <div ng-show="dScope.echoReplyData.hasPingResult==null && dScope.echoReplyData.hasTraceResult==null && dScope.echoRequestData.hasStarted!=null">
+                    <md-progress-linear md-mode="query"></md-progress-linear>
+                    <div class="bottom-block echo-request">
+                        <span>Waiting for the result...</span>
+                    </div>
+                </div>                <!--div ng-show="typeOf(dScope.echoReplyData) == 'object'"-->
+                    <!--md-content-->
+
+                <div ng-show="dScope.echoReplyData.hasPingResult!=null || dScope.echoReplyData.hasTraceResult!=null">
+                    <h4 align="center">Channel Info</h4>
+                    <table class="gridtable">
+                        <tr>
+                            <th>SubDomain</th>
+                            <th>Ingress Node</th>
+                            <th colspan={{dScope.echoReplyData.egressNodeIds.length}}>Egress Node</th>
+                        </tr>
+                        <tr>
+                            <td>{{dScope.echoReplyData.subdomainId}}</td>
+                            <td>{{dScope.echoReplyData.ingressNodeId}}</td>
+                            <td ng-repeat="egress in dScope.echoReplyData.egressNodeIds">{{egress}}</td>
+                        </tr>
+                    </table>
+
+                </div>
+                <div ng-show="dScope.echoReplyData.hasPingResult!=null">
+                    <h4 align="center">Ping Result</h4>
+                    <table class="gridtable">
+                        <tr>
+                            <th>Target Node</th>
+                            <th>Result</th>
+                        </tr>
+                        <tr ng-repeat="result in dScope.echoReplyData.pingResult">
+                            <td>{{result.targetNode}}</td>
+                            <td>{{result.pingResult}}</td>
+                        </tr>
+                    </table>
+
+                </div>
+                <div ng-show="dScope.echoReplyData.hasTraceResult!=null">
+                    <h4 align="center">Trace Result</h4>
+                    <table class="gridtable">
+                        <tr>
+                            <th>Target Node</th>
+                            <th>Result</th>
+                            <th>Route</th>
+                        </tr>
+                        <tr ng-repeat="result in dScope.echoReplyData.traceResult">
+                            <td>{{result.targetNode}}</td>
+                            <td>{{result.traceResult}}</td>
+                            <!--td> {{egress['egressNodeId']}}
+                                <p ng-repeat="node in result.responderNode">
+                                    {{node['nodeId']}}
+                                </p>
+                            </td-->
+                            <td>{{result.routeInfo}}</td>
+
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+        </form>
+
+
+
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel()" class="md-primary">
+            Close
+        </md-button>
+    </md-dialog-actions>
+    </form>
+</md-dialog>
