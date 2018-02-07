@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright © 2016 ZTE,Inc. and others. All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+  xmlns:odl="http://opendaylight.org/xmlns/blueprint/v1.0.0"
+  odl:use-default-for-reference-types="true">
+
+  <reference id="dataBroker"
+    interface="org.opendaylight.controller.md.sal.binding.api.DataBroker"
+    odl:type="default" />
+  <reference id="rpcRegistry"
+             interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry" />
+  <reference id="notificationService"
+             interface="org.opendaylight.controller.md.sal.binding.api.NotificationPublishService"/>
+  <reference id="bierOamStartEchoRequestCheck"
+             interface="org.opendaylight.bier.adapter.api.BierOamStartEchoRequestCheck"/>
+  <!--reference id="oamImpl"
+             interface="org.opendaylight.bier.oam.impl.OamImpl"/-->
+
+
+  <bean id="oamImpl" class="org.opendaylight.bier.oam.impl.OamImpl">
+  </bean>
+
+  <bean id="provider" class="org.opendaylight.bier.oam.impl.OamProvider"
+        init-method="init" destroy-method="close">
+    <argument ref="dataBroker" />
+    <argument ref="rpcRegistry" />
+    <argument ref="notificationService" />
+    <argument ref="bierOamStartEchoRequestCheck" />
+    <argument ref="oamImpl" />
+  </bean>
+
+
+  <odl:notification-listener ref="oamImpl"/>
+
+</blueprint>
