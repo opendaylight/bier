@@ -22,7 +22,7 @@
         
         <div ng-show="dScope.netconfNode.length  > 0" >
             <div class="topology-actions align-center">
-                <md-button class="md-raised md-primary " ng-click="dScope.getNetconf()">
+                <md-button class="md-raised" ng-click="dScope.getNetconf()" style="background: dodgerblue;">
                     Update connection status
                 </md-button>
             </div>
@@ -101,6 +101,7 @@
                                             <label for="cm-edit-netconf-password">Password</label>
                                             <input ng-model="input.editNetconf.password" id="cm-edit-netconf-password" required>
                                         </md-input-container>
+
                                     </div>
                                     <div class="channel-actions">
                                         <md-button ng-click="editNodeNetconf(node)" class="md-primary">

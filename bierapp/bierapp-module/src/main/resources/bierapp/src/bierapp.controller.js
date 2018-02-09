@@ -2196,13 +2196,14 @@ define([
 						$scope.input.change.node = null;
                 	},
                 	del: function (key) {
-                		$scope.egressNode.splice(key,1)
+                		$scope.egressNode.splice(key,1);
                 	}
 				};
 
 				$scope.chooseNodeData = [];
 				$scope.chooseTpIdData = [];
 				$scope.items = [null];
+				$scope.selectedTp = [];
 				var i = 1;
 				//add input button dynamic
 				$scope.Channel= {
@@ -2529,6 +2530,49 @@ define([
 					});
 				};
 
+				$scope.isChecked = function(key,tp){
+
+					if ($scope.selectedTp.length == 0) {
+						return false;
+					}
+					if ($scope.selectedTp[key] === undefined) {
+						return false;
+					}
+					if ($scope.selectedTp[key].length == 0) {
+						return false;
+					}
+					return $scope.selectedTp[key].indexOf(tp) >=0 ;
+				} ;
+
+				$scope.updateSelection = function($event,key,tp){
+
+					var checkbox = $event.target ;
+					var checked = checkbox.checked ;
+
+					console.log("beginning--- $scope.selectedTp ",$scope.selectedTp);
+
+					if(checked){
+						if ($scope.selectedTp[key] === undefined) {
+							var tpId = [];
+							var tpLeaf = [];
+							tpId.push(tp.tp);
+							tpLeaf.push(tp);
+							$scope.selectedTp[key] = tpId;
+							$scope.items[key]['rcv-tp'] = tpLeaf;
+						} else {
+							$scope.selectedTp[key].push(tp.tp);
+							$scope.items[key]['rcv-tp'].push(tp);
+						}
+					}else{
+						var idx = $scope.selectedTp[key].indexOf(tp.tp) ;
+						$scope.selectedTp[key].splice(idx,1) ;
+						$scope.items[key]['rcv-tp'].splice(idx,1) ;
+					}
+
+					console.log("BIER-TE updateSelection, egress nodes : ",$scope.selectedTp);
+					console.log("BIER-TE updateSelection,items : ",$scope.items);
+				};
+
 				$scope.checkEgressNodes = function(){
 					console.log('$scope.items',$scope.items);
 					if($scope.items.length > 0){
@@ -2613,6 +2657,7 @@ define([
 									$scope.chooseTpIdData = [];
 									$scope.chooseNodeData = [];
 									$scope.items = [null];
+									$scope.selectedTp.length = 0;
 								},
 								// error callback
 								function(err){
@@ -2682,6 +2727,12 @@ define([
 				};
 
 				$scope.chooseTpId = function(nodeId,key) {
+					if ($scope.selectedTp[key] !== undefined) {
+						$scope.selectedTp[key].length = 0;
+					}
+					if (($scope.items[key] !== undefined) && ($scope.items[key]['rcv-tp'] !== undefined)){
+						$scope.items[key]['rcv-tp'].length = 0;
+					}
 					var flag =false;
 					if($scope.checkModel()){
 						console.log("topologyData", dScope.topologyData);
@@ -2693,9 +2744,9 @@ define([
 							}
 						}
 					} else {
-						for(var i = 0; i < $scope.chooseNodeData.length; i++){
-							if(nodeId == $scope.chooseNodeData[i]['node-id']){
-								$scope.chooseTpIdData[key] = $scope.chooseNodeData[i].tp;
+						for(var j = 0; j < $scope.chooseNodeData.length; j++){
+							if(nodeId == $scope.chooseNodeData[j]['node-id']){
+								$scope.chooseTpIdData[key] = $scope.chooseNodeData[j].tp;
 								flag =true;
 							}
 						}
@@ -2718,9 +2769,9 @@ define([
 							}
 						}
 					} else {
-						for(var i = 0; i < $scope.chooseNodeData.length; i++){
-							if(nodeId == $scope.chooseNodeData[i]['node-id']){
-								$scope.chooseIngressTpIdData = $scope.chooseNodeData[i].tp;
+						for(var j = 0; j < $scope.chooseNodeData.length; j++){
+							if(nodeId == $scope.chooseNodeData[j]['node-id']){
+								$scope.chooseIngressTpIdData = $scope.chooseNodeData[j].tp;
 								flag =true;
 								break;
 							}
@@ -3885,9 +3936,9 @@ define([
 
 				$scope.addAutoConfig = function(node){
 					$scope.input.autoConfigureStatus = 'inprogress';
-					if(biermanTools.hasOwnProperties($scope.input.autoConfigure, ['domain','subdomain'])
-						&& $scope.input.autoConfigure.domain !== undefined
-						&& $scope.input.autoConfigure.subdomain !== undefined){
+					if(biermanTools.hasOwnProperties($scope.input.autoConfigure, ['domain','subdomain']) &&
+						$scope.input.autoConfigure.domain !== undefined &&
+						$scope.input.autoConfigure.subdomain !== undefined){
 						var nodeId = node;
 						BiermanRest.autoConfigTeNode(
 							{
@@ -4591,8 +4642,8 @@ define([
 							if (data != 'null'){
 								var flag = false;
 								for (var i = 0; i < data['topo-bp-allocate-params'].length; i++) {
-									if (data['topo-bp-allocate-params'][i]['topology-id']
-										=== dScope.appConfig.currentTopologyId) {
+									if (data['topo-bp-allocate-params'][i]['topology-id'] ===
+										dScope.appConfig.currentTopologyId) {
 										dScope.appConfig.rbsl = data['topo-bp-allocate-params'][i]
 											['recommend-bsl']['recommend-bsl'];
 										flag = true;
@@ -4636,8 +4687,8 @@ define([
 							if (data != 'null'){
 								var flag = false;
 								for (var i = 0; i < data['topo-bp-allocate-params'].length; i++) {
-									if (data['topo-bp-allocate-params'][i]['topology-id']
-										=== dScope.appConfig.currentTopologyId) {
+									if (data['topo-bp-allocate-params'][i]['topology-id'] ===
+										dScope.appConfig.currentTopologyId) {
 										if (data['topo-bp-allocate-params'][i].hasOwnProperty('subdomain-bp-allocate')) {
 											$scope.siList = data['topo-bp-allocate-params'][i]
 												['subdomain-bp-allocate'];
@@ -4678,8 +4729,8 @@ define([
 					for (var d = 0; d < $scope.nodedetail.domain.length; d++) {
 						for (var sdindex = 0; sdindex < $scope.nodedetail.domain[d]['te-sub-domain'].length; sdindex++) {
 							for (var sdloop = 0; sdloop < $scope.siList.length; sdloop++) {
-								if ($scope.nodedetail.domain[d]['te-sub-domain'][sdindex]['sub-domain-id']
-									=== $scope.siList[sdloop]['subdomain-value']) {
+								if ($scope.nodedetail.domain[d]['te-sub-domain'][sdindex]['sub-domain-id'] ===
+									$scope.siList[sdloop]['subdomain-value']) {
 									if ($scope.nodedetail.domain[d]['te-sub-domain'][sdindex].hasOwnProperty('te-bsl')){
 										$scope.processBSL(d, sdindex, sdloop);
 									}

@@ -241,6 +241,7 @@ define(['app/bierapp/src/bierapp.module','next'], function(bierapp) {
                         else if (id == $scope.$parent.currentTree.ingress) {
                             $scope.$parent.currentTree.ingress = null;
                             $scope.$parent.appConfig.mode = 'start';
+                            $scope.$parent.currentTree.egress.length = 0;
                         }
                         // if the node is egress
                         else if (nodeIndex > -1) {
