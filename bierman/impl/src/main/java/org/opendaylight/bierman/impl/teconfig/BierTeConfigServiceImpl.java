@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import org.opendaylight.bierman.impl.BierDataManager;
+import org.opendaylight.bierman.impl.NotificationProvider;
 import org.opendaylight.bierman.impl.RpcUtil;
 import org.opendaylight.bierman.impl.bierconfig.BierConfigServiceImpl;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
@@ -22,6 +23,9 @@ import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTe
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeNodeInput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeNodeOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeNodeOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeSubdomainInput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeSubdomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeSubdomainOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeBpInput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeBpOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeBpOutputBuilder;
@@ -34,6 +38,13 @@ import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeLab
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSiInput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSiOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSiOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSubdomainInput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSubdomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSubdomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.TeSubdomainAdd;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.TeSubdomainAddBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.TeSubdomainDelete;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.TeSubdomainDeleteBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRangeBuilder;
@@ -167,8 +178,12 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             nodeBuilder.setBierTeNodeParams(bierTeNodeParamsBuilder.build());
             LOG.info("Build TeNode" + nodeBuilder.build());
         }
-
-        if (!topoManager.setNodeData(topologyId, nodeBuilder.build())) {
+        SubDomainId subDomainId = input.getTeDomain().get(0).getTeSubDomain().get(0).getSubDomainId();
+        Bsl bsl = input.getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0).getBitstringlength();
+        Si si = input.getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0).getTeSi().get(0).getSi();
+        boolean setNode =  topoManager.setNodeData(topologyId, nodeBuilder.build());
+        boolean addSubdomainBslSi = topoManager.addSubdomainBslSi(topologyId, subDomainId, bsl, si);
+        if (!setNode || !addSubdomainBslSi) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"write node to datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
@@ -188,14 +203,17 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
 
-        BierNode nodeForBsl = topoManager.getNodeData(input.getTopologyId(),input.getNodeId());
-        if (!topoManager.checkBitstringlengthExist(input.getTopologyId(),input.getDomainId(),
+        BierNode nodeForBsl = topoManager.getNodeData(input.getTopologyId(), input.getNodeId());
+        if (!topoManager.checkBitstringlengthExist(input.getTopologyId(), input.getDomainId(),
                 input.getSubDomainId(), input.getBitstringlength(),nodeForBsl)) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"Te-Bsl is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
-        if (!topoManager.delTeBslFromNode(input.getTopologyId(),input.getDomainId(),
-                input.getSubDomainId(), input.getBitstringlength(),nodeForBsl)) {
+        boolean deleteSubdomainBslSi = topoManager.deleteManualTeBSL(input.getTopologyId(), input.getDomainId(),
+                input.getSubDomainId(), input.getBitstringlength(), nodeForBsl);
+        boolean delTeBslFromNode = topoManager.delTeBslFromNode(input.getTopologyId(),input.getDomainId(),
+                input.getSubDomainId(), input.getBitstringlength(),nodeForBsl);
+        if (!delTeBslFromNode || !deleteSubdomainBslSi) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,
                     "delete Te-Bsl form datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
@@ -227,8 +245,11 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"Te-Si is not exist!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
-        if (!topoManager.delTeSiFromNode(input.getTopologyId(),input.getDomainId(),input.getSubDomainId(),
-                input.getBitstringlength(),input.getSi(),nodeForSi)) {
+        boolean deleteSubdomainBslSi = topoManager.deleteManualTeSi(input.getTopologyId(),input.getSubDomainId(),
+                input.getBitstringlength(),input.getSi());
+        boolean delTeSiFromNode =  topoManager.delTeSiFromNode(input.getTopologyId(),input.getDomainId(),
+            input.getSubDomainId(),input.getBitstringlength(),input.getSi(),nodeForSi);
+        if (!delTeSiFromNode || !deleteSubdomainBslSi) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"delete Te-Si form datastore failed!"));
             return RpcResultBuilder.success(builder.build()).buildFuture();
         }
@@ -345,6 +366,108 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
         builder.setConfigureResult(RpcUtil.getConfigResult(true,""));
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
+
+    public Future<RpcResult<ConfigureTeSubdomainOutput>> configureTeSubdomain(ConfigureTeSubdomainInput input) {
+        ConfigureTeSubdomainOutputBuilder builder = new ConfigureTeSubdomainOutputBuilder();
+        if (null == input) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,"input is null!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+        String nodeId = input.getNodeId();
+        String topologyId = input.getTopologyId();
+        DomainId domainId = input.getDomainId();
+        SubDomainId subDomainId = input.getSubDomainId();
+        if (nodeId == null || nodeId.equals("") || topologyId == null || topologyId.equals("")
+                || domainId == null || subDomainId == null) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,"input param is error!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        BierNode node = topoManager.getNodeData(topologyId, nodeId);
+        if (null == node) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,"node is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+
+        if (!topoManager.checkBierTeSubdomainExist(input)) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,"domain or subdomain is not exist!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+        String errorMsg = topoManager.checkBierTeSubdomain(input);
+        if (!errorMsg.equals("")) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,errorMsg));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        SubDomainId teSubDomainId = input.getSubDomainId();
+        TeSubDomainBuilder teSubDomainBuilder = new TeSubDomainBuilder();
+        teSubDomainBuilder.setSubDomainId(teSubDomainId);
+        teSubDomainBuilder.setKey(new TeSubDomainKey(teSubDomainId));
+        List<TeSubDomain> teSubDomainList = new ArrayList<TeSubDomain>();
+        teSubDomainList.add(teSubDomainBuilder.build());
+
+        DomainId teDomainId = input.getDomainId();
+        TeDomainBuilder teDomainBuilder = new TeDomainBuilder();
+        teDomainBuilder.setTeSubDomain(teSubDomainList);
+        teDomainBuilder.setDomainId(teDomainId);
+        teDomainBuilder.setKey(new TeDomainKey(teDomainId));
+        List<TeDomain> teDomainList = new ArrayList<TeDomain>();
+        teDomainList.add(teDomainBuilder.build());
+
+        BierTeNodeParamsBuilder bierTeNodeParamsBuilder = new BierTeNodeParamsBuilder();
+        bierTeNodeParamsBuilder.setTeDomain(teDomainList);
+        BierNodeBuilder nodeBuilder = new BierNodeBuilder(node);
+        nodeBuilder.setBierTeNodeParams(bierTeNodeParamsBuilder.build());
+
+        if (!topoManager.setNodeData(topologyId, nodeBuilder.build())) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,"write node to datastore failed!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        builder.setConfigureResult(RpcUtil.getConfigResult(true,""));
+        TeSubdomainAdd teSubdomainAdd = new TeSubdomainAddBuilder()
+                .setTopologyId(input.getTopologyId())
+                .setDomainId(input.getDomainId())
+                .setSubDomainId(input.getSubDomainId())
+                .setNodeId(input.getNodeId())
+                .build();
+        NotificationProvider.getInstance().notify(teSubdomainAdd);
+        return RpcResultBuilder.success(builder.build()).buildFuture();
+    }
+
+    public Future<RpcResult<DeleteTeSubdomainOutput>> deleteTeSubdomain(DeleteTeSubdomainInput input) {
+        DeleteTeSubdomainOutputBuilder builder = new DeleteTeSubdomainOutputBuilder();
+
+        String subdomainErrorCause = checkTeNode(input,input.getTopologyId(),input.getDomainId(),
+                input.getSubDomainId(), input.getNodeId());
+        if (!subdomainErrorCause.equals("")) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,subdomainErrorCause));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        BierNode nodeForSubdomain = topoManager.getNodeData(input.getTopologyId(),input.getNodeId());
+        boolean deleteManuslTeSD = topoManager.deleteManualTeSD(input.getTopologyId(), input.getDomainId(),
+                input.getSubDomainId(), nodeForSubdomain);
+        boolean deleteTeSubDomainFromNode = topoManager.delTeSubDomainFromNode(input.getTopologyId(),
+                input.getDomainId(), input.getSubDomainId(),nodeForSubdomain);
+        if (!deleteTeSubDomainFromNode || !deleteManuslTeSD) {
+            builder.setConfigureResult(RpcUtil.getConfigResult(false,
+                    "delete Te-SubDomain form datastore failed!"));
+            return RpcResultBuilder.success(builder.build()).buildFuture();
+        }
+
+        builder.setConfigureResult(RpcUtil.getConfigResult(true,""));
+        TeSubdomainDelete teSubdomainDelete = new TeSubdomainDeleteBuilder()
+                .setTopologyId(input.getTopologyId())
+                .setDomainId(input.getDomainId())
+                .setSubDomainId(input.getSubDomainId())
+                .setNodeId(input.getNodeId())
+                .build();
+        NotificationProvider.getInstance().notify(teSubdomainDelete);
+        return RpcResultBuilder.success(builder.build()).buildFuture();
+    }
+
 
     public <T> String checkTeNode(T input, String topologyId, DomainId domainId,
                                   SubDomainId subDomainId, String nodeId) {

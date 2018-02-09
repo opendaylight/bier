@@ -32,6 +32,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTe
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeLabelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeNodeInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeNodeOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeSubdomainInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.ConfigureTeSubdomainOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeBpInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeBpOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeBslInputBuilder;
@@ -40,6 +42,10 @@ import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeLab
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeLabelOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSiInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSiOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSubdomainInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSubdomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkDestBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkSourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureDomainInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureDomainOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureSubdomainInputBuilder;
@@ -104,6 +110,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv4Builder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.subdomain.af.Ipv6Builder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.BitString;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Prefix;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -544,6 +551,36 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
     }
 
     @Test
+    public void configureTeSubDomainTest() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1, 1);
+        configureTeLabel(new MplsLabel(1L), new BierTeLabelRangeSize(5L), "1");
+        ConfigureTeSubdomainOutput output = configureTeSubDomain("3", 1, 1);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+
+        ConfigureTeSubdomainOutput output1 = configureTeSubDomain(null, 1, 1);
+        Assert.assertTrue(output1.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output1.getConfigureResult().getErrorCause()
+                .equals("input param is error!"));
+
+        ConfigureTeSubdomainOutput output2 = configureTeSubDomain("1", 1, 3);
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getConfigureResult().getErrorCause()
+                .equals("domain or subdomain is not exist!"));
+
+        ConfigureTeSubdomainOutput output3 = configureTeSubDomain("1", 1, 1);
+        Assert.assertTrue(output3.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        ConfigureTeSubdomainOutput output4 = configureTeSubDomain("1", 1, 1);
+        Assert.assertTrue(output4.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output4.getConfigureResult().getErrorCause()
+                .equals("te-SubDomain already configured !"));
+
+    }
+
+    @Test
     public void configureTeNodeTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -757,6 +794,70 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
     }
 
     @Test
+    public void deleteTeSubdomainTest() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureSubdomain(1,2);
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
+        configureTeSubDomain("1", 1, 1);
+        configureTeSubDomain("1", 1, 2);
+
+        DeleteTeSubdomainOutput output = deleteTeSubdomain(1,2,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        QueryNodeOutput queryOutput1 = queryNode();
+        Assert.assertTrue(queryOutput1.getNode().size() == 1);
+        Assert.assertTrue(queryOutput1.getNode().get(0).getBierTeNodeParams()
+                .getTeDomain().get(0).getTeSubDomain().get(0).getSubDomainId().getValue().intValue() == 1);
+
+        DeleteTeSubdomainOutput output1 = deleteTeSubdomain(1,1,"1");
+        Assert.assertTrue(output1.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        QueryNodeOutput queryOutput2 = queryNode();
+        Assert.assertTrue(queryOutput2.getNode().size() == 1);
+        Assert.assertTrue(queryOutput2.getNode().get(0).getBierTeNodeParams()
+                .getTeDomain().size() == 0);
+    }
+
+    @Test
+    public void deleteTeSubdomainTest1() throws Exception {
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
+        configureTeSubDomain("1", 1, 1);
+
+        DeleteTeSubdomainOutput output = deleteTeSubdomain(1,2,null);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getConfigureResult().getErrorCause()
+                .equals("input param is error!"));
+
+        DeleteTeSubdomainOutput output1 = deleteTeSubdomain(1,2,"5");
+        Assert.assertTrue(output1.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output1.getConfigureResult().getErrorCause()
+                .equals("node is not exist!"));
+
+        DeleteTeSubdomainOutput output2 = deleteTeSubdomain(1,6,"1");
+        Assert.assertTrue(output2.getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output2.getConfigureResult().getErrorCause()
+                .equals("node is not belong to domain or subdomain!"));
+
+    }
+
+    @Test
+    public void deleteTeSubdomainTest2() throws Exception {
+        configureDomain(1);
+        configureDomain(2);
+        configureSubdomain(1,1);
+        configureSubdomain(2,1);
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
+        configureTeNode(2,1,Bsl._64Bit,new Si(1),"192.168.54.14",4,"1");
+
+        DeleteTeSubdomainOutput output = deleteTeSubdomain(1,1,"1");
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+    }
+
+    @Test
     public void deleteTeBslTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -797,7 +898,7 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
         QueryNodeOutput queryOutput2 = queryNode();
         Assert.assertTrue(queryOutput2.getNode().size() == 1);
         Assert.assertTrue(queryOutput2.getNode().get(0).getBierTeNodeParams()
-                .getTeDomain().size() == 0);
+                .getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().size() == 0);
     }
 
     @Test
@@ -897,6 +998,22 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
     }
 
     @Test
+    public void deleteTeBslTest3() throws Exception {
+        configureDomain(1);
+        configureDomain(2);
+        configureSubdomain(1,1);
+        configureSubdomain(2,1);
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"2");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",64,"1");
+        configureTeNode(2,1,Bsl._64Bit,new Si(1),"192.168.54.15",4,"1");
+        configureTeNode(2,1,Bsl._64Bit,new Si(1),"192.168.54.16",6,"2");
+
+        DeleteTeBslOutput output = deleteTeBsl(1,1,"1",Bsl._64Bit);
+        Assert.assertTrue(output.getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+    }
+
+    @Test
     public void deleteTeSiTest() throws Exception {
         configureDomain(1);
         configureSubdomain(1,1);
@@ -937,7 +1054,7 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
         QueryNodeOutput queryOutput2 = queryNode();
         Assert.assertTrue(queryOutput2.getNode().size() == 1);
         Assert.assertTrue(queryOutput2.getNode().get(0).getBierTeNodeParams()
-                .getTeDomain().size() == 0);
+                .getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().size() == 0);
     }
 
     @Test
@@ -1083,7 +1200,7 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
         QueryNodeOutput queryOutput2 = queryNode();
         Assert.assertTrue(queryOutput2.getNode().size() == 1);
         Assert.assertTrue(queryOutput2.getNode().get(0).getBierTeNodeParams()
-                .getTeDomain().size() == 0);
+                .getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().size() == 0);
     }
 
     @Test
@@ -2021,6 +2138,18 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
         return output.getResult();
     }
 
+    private ConfigureTeSubdomainOutput configureTeSubDomain(
+            String nodeId, int domainId, int subDomainId) throws Exception {
+        ConfigureTeSubdomainInputBuilder  configureTeSubdomainInputBuilder = new ConfigureTeSubdomainInputBuilder();
+        configureTeSubdomainInputBuilder.setTopologyId("example-linkstate-topology");
+        configureTeSubdomainInputBuilder.setNodeId(nodeId);
+        configureTeSubdomainInputBuilder.setDomainId(new DomainId(domainId));
+        configureTeSubdomainInputBuilder.setSubDomainId(new SubDomainId(subDomainId));
+
+        RpcResult<ConfigureTeSubdomainOutput> output = bierTeConfigImpl.configureTeSubdomain(
+                configureTeSubdomainInputBuilder.build()).get();
+        return output.getResult();
+    }
 
     private ConfigureTeLabelOutput configureTeLabel(MplsLabel labelBase,BierTeLabelRangeSize labelRangeSize,
                                                     String nodeId) throws Exception {
@@ -2178,6 +2307,18 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
         inputBuilder.setIpv6(ipv6Builder.build());
 
         RpcResult<DeleteIpv6Output> output = bierConfigImpl.deleteIpv6(
+                inputBuilder.build()).get();
+        return output.getResult();
+    }
+
+    private DeleteTeSubdomainOutput deleteTeSubdomain(int domainId, int subDomainId, String nodeId) throws Exception {
+        DeleteTeSubdomainInputBuilder inputBuilder = new DeleteTeSubdomainInputBuilder();
+        inputBuilder.setTopologyId("example-linkstate-topology");
+        inputBuilder.setDomainId(new DomainId(domainId));
+        inputBuilder.setSubDomainId(new SubDomainId(subDomainId));
+        inputBuilder.setNodeId(nodeId);
+
+        RpcResult<DeleteTeSubdomainOutput> output = bierTeConfigImpl.deleteTeSubdomain(
                 inputBuilder.build()).get();
         return output.getResult();
     }

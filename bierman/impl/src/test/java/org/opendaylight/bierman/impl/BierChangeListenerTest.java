@@ -52,6 +52,7 @@ public class BierChangeListenerTest extends AbstractConcurrentDataBrokerTest {
     private BierNodeChangeListenerImpl bierNodeChangeListener;
     private BierLinkChangeListenerImpl bierLinkChangeLintener;
     private BierTpChangeListenerImpl bierTpChangeListener;
+    private final Object timerLock = new Object();
 
     @Before
     public void setUp() throws Exception {
@@ -69,88 +70,77 @@ public class BierChangeListenerTest extends AbstractConcurrentDataBrokerTest {
 
     }
 
+    private void lockTimerStart() throws InterruptedException {
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (timerLock) {
+                    timerLock.notify();
+                }
+            }
+        }, 1500);
+
+        synchronized (timerLock) {
+            timerLock.wait();
+        }
+    }
+
     @Test
     public void addedNodeTest() throws ExecutionException, InterruptedException {
         String nodeId = "bgpls://IsisLevel1:0/type=node&as=1&domain=0&router=3";
         addNodeToTopology(nodeId);
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                BierNode bierNode = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,"3");
-                Assert.assertTrue(bierNode.getNodeId().equals("3"));
-            }
-        },1500);
-
+        lockTimerStart();
+        BierNode bierNode = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,"3");
+        Assert.assertTrue(bierNode.getNodeId().equals("3"));
     }
 
     @Test
-    public void removedNodeTest() {
+    public void removedNodeTest() throws InterruptedException {
         removeNodeToTopology("bgpls://IsisLevel1:0/type=node&as=1&domain=0&router=1");
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                BierNode bierNode = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,"1");
-                Assert.assertTrue(bierNode.getNodeId().equals("1"));
-            }
-        },1500);
+        lockTimerStart();
+        BierNode bierNode = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,"1");
+        Assert.assertTrue(bierNode.getNodeId().equals("1"));
 
     }
 
     @Test
-    public void addedLinkTest() {
+    public void addedLinkTest() throws InterruptedException {
         addLinkToTopology("bgpls://IsisLevel1:0/type=link&local-as=1&local-domain=0&local-router=1"
                 + "&remote-as=1&remote-domain=0&remote-router=2&ipv4-iface=192.168.54.11&ipv4-neigh=192.168.54.13");
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                BierLink bierLink = topoManager.getLinkData(BierTopologyTestDataInit.TopologyId,
-                        "1,192.168.54.11-2,192.168.54.13");
-                Assert.assertTrue(bierLink.getLinkId().equals("1,192.168.54.11-2,192.168.54.13"));
-            }
-        },1500);
-
+        lockTimerStart();
+        BierLink bierLink = topoManager.getLinkData(BierTopologyTestDataInit.TopologyId,
+                "1,192.168.54.11-2,192.168.54.13");
+        Assert.assertTrue(bierLink.getLinkId().equals("1,192.168.54.11-2,192.168.54.13"));
     }
 
     @Test
-    public void removedLinkTest() {
+    public void removedLinkTest() throws InterruptedException {
         removeLinkToTopology("bgpls://IsisLevel1:0/type=link&local-as=1&local-domain=0&local-router=2"
                 + "&remote-as=1&remote-domain=0&remote-router=1&ipv4-iface=192.168.54.13&ipv4-neigh=192.168.54.11");
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                BierLink bierLink = topoManager.getLinkData(BierTopologyTestDataInit.TopologyId,
-                        "2,192.168.54.13-1,192.168.54.11");
-                Assert.assertTrue(bierLink == null);
-            }
-        },1500);
+        lockTimerStart();
+        BierLink bierLink = topoManager.getLinkData(BierTopologyTestDataInit.TopologyId,
+                "2,192.168.54.13-1,192.168.54.11");
+        Assert.assertTrue(bierLink == null);
     }
 
     @Test
-    public void addedTpTest() {
+    public void addedTpTest() throws InterruptedException {
         addTpToTopology("bgpls://IsisLevel1:0/type=node&as=1&domain=0&router=1",
                 "bgpls://IsisLevel1:0/type=tp&ipv4=192.168.54.12");
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                List<BierTerminationPoint> bierTp = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,
-                        "1").getBierTerminationPoint();
-                Assert.assertTrue(bierTp.get(1).getTpId().equals("192.168.54.12"));
-            }
-        },1500);
+        lockTimerStart();
+        List<BierTerminationPoint> bierTp = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId,
+                "1").getBierTerminationPoint();
+        Assert.assertTrue(bierTp.get(1).getTpId().equals("192.168.54.12"));
     }
 
     @Test
-    public void removedTpTest() {
+    public void removedTpTest() throws InterruptedException {
         removeTpToTopology("bgpls://IsisLevel1:0/type=node&as=1&domain=0&router=1",
                 "bgpls://IsisLevel1:0/type=tp&ipv4=192.168.54.11");
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                List<BierTerminationPoint> bierTp = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId, "1")
-                        .getBierTerminationPoint();
-                Assert.assertTrue(bierTp.size() == 0);
-            }
-        },1500);
+        lockTimerStart();
+        List<BierTerminationPoint> bierTp = topoManager.getNodeData(BierTopologyTestDataInit.TopologyId, "1")
+                .getBierTerminationPoint();
+        Assert.assertTrue(bierTp.size() == 0);
     }
 
     public void addNodeToTopology(String strNodeId) {
@@ -267,4 +257,5 @@ public class BierChangeListenerTest extends AbstractConcurrentDataBrokerTest {
             return;
         }
     }
+
 }

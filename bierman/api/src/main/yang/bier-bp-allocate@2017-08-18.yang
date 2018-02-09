@@ -1,0 +1,132 @@
+module bier-bp-allocate-params-config {
+	namespace "urn:bier:bp:allocate";
+	prefix "bier-bp-allocate";
+
+	import bier-common {
+	    prefix "common";
+	}
+
+	import ietf-bier {
+        prefix bier;
+    }
+
+	organization "zte";
+
+    revision 2017-08-18 {
+        description "Initial revision.";
+    }
+
+    container bier-bp-allocate-params {
+      description "Bp auto allocate global params.";
+      list topo-bp-allocate-params {
+          key "topology-id";
+          ordered-by user;
+          leaf topology-id {
+             type string;
+          }
+          uses subdomain-bsl-si-list;
+          container recommend-bsl {
+              leaf recommend-bsl {
+                  type bier:bsl;
+              }
+          }
+      }
+    }
+
+    rpc add-subdomain-bsl-si {
+        input {
+           uses subdomain-bsl-si-model;
+        }
+
+        output {
+            uses common:configure-result;
+        }
+    }
+
+    rpc delete-subdomain-bsl-si {
+        input {
+            uses subdomain-bsl-si-model;
+        }
+
+        output {
+            uses common:configure-result;
+        }
+    }
+
+    rpc query-subdomain-bsl-si {
+        input {
+            leaf topology-id {
+                type string;
+            }
+            leaf subdomain-value {
+                type bier:sub-domain-id;
+            }
+            leaf bsl-value {
+                type bier:bsl;
+            }
+
+            uses bp-allocate-model;
+        }
+
+        output {
+            list si-of-model {
+               key "si-value";
+               ordered-by user;
+               leaf si-value {
+                   type bier:si;
+               }
+            }
+
+        }
+    }
+
+    grouping subdomain-bsl-si-model {
+       leaf topology-id {
+          type string;
+       }
+       leaf subdomain-value {
+          type bier:sub-domain-id;
+       }
+       leaf bsl-value {
+          type bier:bsl;
+       }
+       leaf si-value {
+          type bier:si;
+       }
+       uses bp-allocate-model;
+    }
+
+   grouping subdomain-bsl-si-list {
+      list subdomain-bp-allocate {
+            key "subdomain-value";
+            ordered-by user;
+            leaf subdomain-value {
+               type bier:sub-domain-id;
+            }
+            list bsl-bp-allocate {
+                key "bsl-value";
+                ordered-by user;
+                leaf bsl-value {
+                    type bier:bsl;
+                }
+                list si-bp-allocate {
+                   key "si-value";
+                   ordered-by user;
+                   leaf si-value {
+                       type bier:si;
+                   }
+                   uses bp-allocate-model;
+                }
+            }
+      }
+   }
+
+  grouping bp-allocate-model {
+      leaf allocate-model {
+         type enumeration {
+            enum AUTO;
+            enum MANUAL;
+         }
+      }
+  }
+}

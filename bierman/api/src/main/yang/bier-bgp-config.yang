@@ -19,7 +19,7 @@ module bier-bgp-config {
 			type inet:as-number;
 		}
 	}
-	container config {
+	container config-bgp-info {
 		container local {
 			uses bgp-config;
 		}
