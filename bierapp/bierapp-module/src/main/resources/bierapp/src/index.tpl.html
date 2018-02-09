@@ -2,7 +2,35 @@
 	<div ng-show="appConfig.queryTopology == 'yes'" ng-hide="appConfig.queryTopology == 'no'">
         <div class="loading">Loading&#8230;</div>
     </div>
-    
+    <div ng-show="showTopStatsPopup" class="popUpDevInfo">
+		<button class="close" ng-click="hideTopStatsPopup()" >×</button>
+		<label>Contain Links</label>
+		<md-list>
+			<md-list-item class="md-3-line" ng-repeat="link in linkData">
+				<div class="md-list-item-text" >
+					<label>link:{{$index+1}}</label>
+					<div class="list-click channel-info" ng-class="{'selected':$index == frrSelectedRow}" ng-click="openTeFrr(link, $index)">
+						<span>sourceNode: {{link.sourceNode}}</span>
+						<span>targetNode: {{link.targetNode}}</span>
+					</div>
+				</div>
+				<md-divider ng-if="!$last"></md-divider>
+			</md-list-item>
+		</md-list>
+		<md-button class="md-raised md-warn" ng-click="clearTopology()">
+				Clear Path
+			</md-button>
+	</div>
+	<div ng-show="showProtectedLink">
+		<section class="legendBox">
+			<ul>
+				<li><span class="line green"></span>backup path</li>
+				<li><span class="line blue"></span>protected link</li>
+				<li><span class="circle red"></span>source node</li>
+				<li><span class="circle black"></span>target node</li>
+			</ul>
+		</section>
+	</div>
 	<div layout="row" class="h100" flex>
 		<section flex layout='column' class="h100">
 			<!--md-toolbar class="toolbar"-->
@@ -39,10 +67,15 @@
 			</md-toolbar>
 			<div class="h100">
 				<section layout="row" class="h100">
-					<bierman-topology id="bierman-topology" topo="topo" open-panel="openPanel" process-bier-tree-data="processBierTreeData" process-deploy-channel-data="processDeployChannelData" reset-topology="resetTopology" convert-uni-to-bi-links="convertUniToBiLinks" highlight-path="highlightPath">
-						<!--b>current topology：{{appConfig.currentTopologyId}}　　current domain：{{appConfig.currentDomain}}</b-->
+					<bierman-topology id="bierman-topology" topo="topo" open-panel="openPanel"
+						 process-bier-tree-data="processBierTreeData"
+						 process-deploy-channel-data="processDeployChannelData"
+						 reset-topology="resetTopology" convert-uni-to-bi-links="convertUniToBiLinks"
+						 convert-uni-to-bi-link="convertUniToBiLink" highlight-path="highlightPath"
+						 highlight-protect-link="highlightProtectLink" select-link="selectLinks"
+						 highlight-protect-link-source-target="highlightProtectLinkSourceTarget" >
 						<div class="inside-next">
-							<b>current topology： <span ng-bind="appConfig.currentTopologyId"></span> 　  current domain：<span ng-bind="appConfig.currentDomain"> </span></b>
+							<b>current topology: <span ng-bind="appConfig.currentTopologyId"></span> current domain: <span ng-bind="appConfig.currentDomain"> </span></b>
 						</div>
 					</bierman-topology>
 					<slideout-right layout="column"></slideout-right>

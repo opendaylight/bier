@@ -47,9 +47,14 @@ define([
 		{ "type" : "ISIS"}
 	];
 
-	$scope.channelmodel = [
+	$scope.bpStrategy = [
 		{ "type" : "manual"},
 		{ "type" : "automatic"}
+	];
+
+	$scope.channelType = [
+		{ "type" : "bier"},
+		{ "type" : "bier-te"}
 	];
 
     $scope.networkType = [
@@ -183,10 +188,19 @@ define([
 	$scope.queryTeSubdomainNum = 0;
 	$scope.returnTeSubdomainNum = 0;
 	$scope.mergeTeSubDomainNodeData = [];
+	$scope.querySubdomainNum = 0;
+	$scope.returnSubdomainNum = 0;
+	$scope.mergeSubDomainNodeData = [];
 
 	//Log for notifcation
 	$scope.log = [];
 	$scope.logCounter = 0;
+
+	//param for te-frr
+	$scope.showTopStatsPopup = false;
+	$scope.showProtectedLink = false;
+	$scope.prevSelectLink = null;
+	$scope.frrSelectedRow = null;
 
 	//error message
 	$scope.errMsg1 = "failed . You must specify each parameter.";
@@ -727,7 +741,7 @@ define([
 		if(biermanTools.hasOwnProperties($scope.appConfig, ['bgpRouter', 'bgpAs', 'bgpNeighborId', 'bgpPeerAs'])) {
 			BiermanRest.configBierBGP(
 				{
-					"config":
+					"config-bgp-info":
 					{
 						"local":
 						{
@@ -1098,8 +1112,10 @@ define([
 						var currentLink =  data['subdomain-link'][linkIndex];
 						var srcId = $scope.subdomaintopologyData.nodesDict.getItem(data['subdomain-link'][linkIndex]['link-source']['source-node']);
 						var srcTp = currentLink['link-source']['source-tp'];
+						var srcNodeId = currentLink['link-source']['source-node'];
 						var tarId = $scope.subdomaintopologyData.nodesDict.getItem(data['subdomain-link'][linkIndex]['link-dest']['dest-node']);
 						var tarTp = currentLink['link-dest']['dest-tp'];
+						var tarNodeId = currentLink['link-dest']['dest-node'];
 
 						var linkContainer = {};
 						var linkContainerIndex = null;
@@ -1147,9 +1163,14 @@ define([
 							// Target node ID
 							target: $scope.subdomaintopologyData.nodesDict.getItem(currentLink['link-dest']['dest-node']),
 							// Source TP name
-							sourceTP: currentLink['link-source']['source-tp'],
+							sourceTp: currentLink['link-source']['source-tp'],
 							// Target TP name
-							targetTP: currentLink['link-dest']['dest-tp']
+							targetTp: currentLink['link-dest']['dest-tp'],
+							sourceNode: srcNodeId,
+							targetNode: tarNodeId,
+							delay: currentLink.delay,
+							loss: currentLink.loss,
+							metric: currentLink.metric
 						};
 
 						linkContainer.links.push(linkInfo);
@@ -1314,6 +1335,8 @@ define([
 					for(var linkIndex = 0; linkIndex < data['te-subdomain-link'].length; linkIndex++) {
 						//console.log('process link', $scope.teTopology.teSubdomainLinkIndex);
 						var currentLink =  data['te-subdomain-link'][linkIndex];
+						var srcNodeId = currentLink['link-source']['source-node'];
+						var tarNodeId = currentLink['link-dest']['dest-node'];
 						var srcId = $scope.subdomaintopologyData.nodesDict.getItem(data['te-subdomain-link'][linkIndex]['link-source']['source-node']);
 						var srcTp = currentLink['link-source']['source-tp'];
 						var tarId = $scope.subdomaintopologyData.nodesDict.getItem(data['te-subdomain-link'][linkIndex]['link-dest']['dest-node']);
@@ -1364,9 +1387,14 @@ define([
 							// Target node ID
 							target: $scope.subdomaintopologyData.nodesDict.getItem(currentLink['link-dest']['dest-node']),
 							// Source TP name
-							sourceTP: currentLink['link-source']['source-tp'],
+							sourceTp: currentLink['link-source']['source-tp'],
 							// Target TP name
-							targetTP: currentLink['link-dest']['dest-tp']
+							targetTp: currentLink['link-dest']['dest-tp'],
+							sourceNode: srcNodeId,
+							targetNode: tarNodeId,
+							delay: currentLink.delay,
+							loss: currentLink.loss,
+							metric: currentLink.metric
 						};
 
 						linkContainer.links.push(linkInfo);
@@ -1415,6 +1443,21 @@ define([
 		}
 	};
 
+	$scope.LoadAllDomainNode = function (){
+		$scope.nodeForDeployChannel = [];
+		$scope.mergeSubDomainNodeData = [];
+		$scope.querySubdomainNum = 0;
+		$scope.returnSubdomainNum = 0;
+		for(var domainLoop = 0; domainLoop < $scope.domainData.length; domainLoop++){
+
+			for(var subdomainLoop = 0; subdomainLoop < $scope.domainData[domainLoop].subdomain.length; subdomainLoop++){
+				$scope.querySubdomainNum++;
+				$scope.LoadAllSubDomainNode($scope.domainData[domainLoop]['domain-id'],
+					$scope.domainData[domainLoop].subdomain[subdomainLoop]['sub-domain-id']);
+			}
+		}
+	};
+
 	$scope.LoadAllTeSubDomainNode = function(domain, subdomain){
 		BiermanRest.queryTeSubdomainNode(
 			{
@@ -1432,6 +1475,37 @@ define([
 				}
 				if($scope.returnTeSubdomainNum == $scope.queryTeSubdomainNum){
 					$scope.mergeTeSubDomainNode();
+				}
+			},
+			function(err){
+				console.error(err);
+				$scope.displayAlert({
+					title: "Te Subdomain nodes not loaded",
+					text: err.errMsg,
+					type: "error",
+					confirmButtonText: "Close"
+				});
+			}
+		);
+	};
+
+	$scope.LoadAllSubDomainNode = function(domain, subdomain){
+		BiermanRest.querySubdomainNode(
+			{
+				'topology-id': $scope.appConfig.currentTopologyId,
+				'domain-id': domain,
+				'sub-domain-id': subdomain
+			},
+			function(data){
+				$scope.returnSubdomainNum++;
+				console.log('$scope.returnSubdomainNum', $scope.returnSubdomainNum);
+				if(data.hasOwnProperty('subdomain-node')){
+					console.log('has subdomain node',data);
+					var subdomainData = $scope.processSubDomainNode(domain, subdomain, data['subdomain-node']);
+					$scope.mergeSubDomainNodeData.push(subdomainData);
+				}
+				if($scope.returnSubdomainNum == $scope.querySubdomainNum){
+					$scope.mergeSubDomainNode();
 				}
 			},
 			function(err){
@@ -1469,6 +1543,28 @@ define([
 		console.log('$scope.nodeForDeployChannel',$scope.nodeForDeployChannel);
 	};
 
+	$scope.mergeSubDomainNode = function(){
+		console.log("$scope.mergeSubDomainNodeData:" ,$scope.mergeSubDomainNodeData);
+		for(var domainLoop = 0; domainLoop < $scope.domainData.length; domainLoop++){
+			var subDomain = [];
+			for(var subdomainLoop = 0; subdomainLoop < $scope.domainData[domainLoop].subdomain.length; subdomainLoop++){
+				for(var i = 0; i < $scope.mergeSubDomainNodeData.length; i++){
+					if($scope.mergeSubDomainNodeData[i]['domain-id'] == $scope.domainData[domainLoop]['domain-id'] &&
+						$scope.mergeSubDomainNodeData[i]['sub-domain-id'] ==
+						$scope.domainData[domainLoop].subdomain[subdomainLoop]['sub-domain-id']){
+						subDomain.push($scope.mergeSubDomainNodeData[i]);
+						console.log('push   subDomain:',subDomain);
+					}
+				}
+			}
+			var nodeDomain = {};
+			nodeDomain['domain-id'] = $scope.domainData[domainLoop]['domain-id'];
+			nodeDomain['sub-domain'] = subDomain;
+			$scope.nodeForDeployChannel.push(nodeDomain);
+		}
+		console.log('$scope.nodeForDeployChannel: ',$scope.nodeForDeployChannel);
+	};
+
 	$scope.processTeSubDomainNode = function(domain, subdomain, biernode){
 		var node = [];
 		var nodeData = {};
@@ -1500,6 +1596,34 @@ define([
 				}
 				node.push(nodeData);
 				nodeData = {};
+				console.log('push node', node);
+			}
+			var subdomainData = {};
+			subdomainData['sub-domain-id'] = subdomain;
+			subdomainData.node = node;
+			subdomainData['domain-id'] = domain;
+		}
+		return subdomainData;
+	};
+
+	$scope.processSubDomainNode = function(domain, subdomain, biernode){
+		var node = [];
+		var nodeSize = biernode.length;
+		if(nodeSize > 0){
+			for(var nodeLoop = 0; nodeLoop < nodeSize; nodeLoop++){
+				var nodeData = {};
+				var bp = biernode[nodeLoop]['bier-termination-point'];
+				var bpSize = bp.length;
+				var tp = [];
+				for (var tpLoop = 0; tpLoop < bpSize; tpLoop++) {
+					var tpData = {};
+					tpData.tp = bp[tpLoop]['tp-id'];
+					tp.push(tpData);
+				}
+				nodeData['node-id'] = biernode[nodeLoop]['node-id'];
+				nodeData.tp = tp;
+
+				node.push(nodeData);
 				console.log('push node', node);
 			}
 			var subdomainData = {};
@@ -1838,21 +1962,21 @@ define([
 					linkId: currentLink['link-id'],
 					// Source node ID
 					source: $scope.topologyMergerData.nodesDict.getItem(currentLink['link-source']['source-node']),
-					sourceTP: currentLink['link-source']['source-tp'],
+					// Source TP name
+					sourceTp: currentLink['link-source']['source-tp'],
 					sourceNode: srcNodeId,
 					// Target node ID
 					target: $scope.topologyMergerData.nodesDict.getItem(currentLink['link-dest']['dest-node']),
-					// Source TP name
-
 					// Target TP name
-					targetTP: currentLink['link-dest']['dest-tp'],
+					targetTp: currentLink['link-dest']['dest-tp'],
 					targetNode: tarNodeId,
 					// BFR adjustment ID
 					//bfrAdjId: currentLink['topology-bier:bfr-adj-id'],
 					// Delay of a link
 					delay: currentLink.delay,
 					// Loss info
-					loss: currentLink.loss
+					loss: currentLink.loss,
+					metric: currentLink.metric
 				};
 				//console.log('linkInfo-------------', linkInfo);
 				linkContainer.links.push(linkInfo);
@@ -1873,7 +1997,38 @@ define([
 		//console.log('clear tree--------');
 		$scope.clearCurrentTree();
 		$scope.resetTopology();
+		$scope.showProtectedLink = false;
 		$scope.appConfig.mode = 'start';
+	};
+
+	$scope.selectLinks = function(links) {
+		$scope.linkData = [];
+		$scope.showTopStatsPopup = true;
+		//$scope.showProtectedLink = false;
+		//$scope.clearTopology();
+		$scope.frrSelectedRow = null;
+
+		if (links.hasOwnProperty('links')) {
+			links.links.forEach(function(currentLink) {
+				var link = {};
+				link.id = currentLink.linkId;
+				link.delay = currentLink.delay;
+				link.loss = currentLink.loss;
+				link.metric = currentLink.metric;
+				link.sourceNode = currentLink.sourceNode;
+				link.sourceTp = currentLink.sourceTp;
+				link.targetNode = currentLink.targetNode;
+				link.targetTp = currentLink.targetTp;
+				$scope.linkData.push(link);
+			});
+			console.log("$scope.linkData", $scope.linkData);
+		}
+		$scope.$apply();
+	};
+
+	$scope.hideTopStatsPopup = function(){
+		$scope.showTopStatsPopup = false;
+		$scope.frrSelectedRow = null;
 	};
 
 	$scope.initApp = function(){
@@ -1889,6 +2044,378 @@ define([
 	$scope.openRightPanel = function(panelCode){
 		$scope.appConfig.currentPanel = panelCode;
 		$mdSidenav('right').open();
+	};
+
+	//open TE-FRR Manager
+	$scope.openTeFrr = function(link,index) {
+		$scope.customFullscreen = $mdMedia('xs') || $mdMedia('sm');
+		var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
+		$mdDialog.show({
+			controller: function($scope, $mdDialog, dScope){
+				$scope.linkFrrDetail = {
+					name: '',
+					detail: true
+				};
+				$scope.linkFrrAdd = {
+					name: '',
+					adding: false
+				};
+
+				console.log("select link", link);
+				$scope.selectLink = {
+					'link-id': '',
+					'delay': '',
+					'loss': '',
+					'metric': '',
+					'link-source': {},
+					'link-dest': {}
+				};
+
+				dScope.frrSelectedRow = index;
+				$scope.selectLink['link-id'] = link.id;
+				$scope.selectLink.delay = link.delay;
+				$scope.selectLink.loss = link.loss;
+				$scope.selectLink.metric = link.metric;
+				$scope.selectLink['link-source']['source-node'] = link.sourceNode;
+				$scope.selectLink['link-source']['source-tp'] = link.sourceTp;
+				$scope.selectLink['link-dest']['dest-node'] = link.targetNode;
+				$scope.selectLink['link-dest']['dest-tp'] = link.targetTp;
+				console.log("$scope.selectLink", $scope.selectLink);
+				if(dScope.prevSelectLink !== link.id) {
+					dScope.showProtectedLink = false;
+					dScope.clearTopology();
+					dScope.prevSelectLink = link.id;
+				}
+				$scope.linkTeInfo = [];
+				$scope.linkFrrData = [];
+
+				$scope.teFrrSubDomain = [];
+				$scope.teFrrBSL = [];
+				$scope.teFrrSi = [];
+				$scope.teFrrBp = [];
+
+				$scope.currentPage = 0;
+				$scope.listsPerPage = 10;
+				$scope.dataNum =  dScope.netconfNode.length;
+				$scope.pages = Math.ceil($scope.dataNum/10);
+				$scope.pageNum = [];
+				for(var i = 0; i < $scope.pages; i++){
+					$scope.pageNum.push(i);
+				}
+
+				$scope.prevPage = function(){
+					if($scope.currentPage > 0){
+						$scope.currentPage--;
+					}
+				};
+				$scope.nextPage = function(){
+					if ($scope.currentPage < $scope.pages-1){
+						$scope.currentPage++;
+					}
+				};
+
+				$scope.addFrr = function(){
+					$scope.linkFrrAdd.adding = true;
+					$scope.linkFrrDetail.detail = false;
+					$scope.queryLinkTeInfo();
+				};
+
+				$scope.closeAddFrr = function(){
+					$scope.linkFrrAdd.adding = false;
+					$scope.linkFrrDetail.detail = true;
+				};
+
+				$scope.input = {
+					'addFrr': {},
+					'addFrrStatus': 'none'
+				};
+
+				$scope.changeDomain = function(domain) {
+					if (domain !== undefined && domain.hasOwnProperty('te-sub-domain'))
+						$scope.teFrrSubDomain = domain['te-sub-domain'];
+					else
+						$scope.teFrrSubDomain = [];
+					console.log("$scope.teFrrSubDomain", $scope.teFrrSubDomain);
+				};
+
+				$scope.changeSubDomain = function(subdomain) {
+					if (subdomain !== undefined && subdomain.hasOwnProperty('te-bsl'))
+						$scope.teFrrBSL = subdomain['te-bsl'];
+					else
+						$scope.teFrrBSL = [];
+					console.log("$scope.teFrrBSL", $scope.teFrrBSL);
+				};
+
+				$scope.changeBsl = function(bsl) {
+					if (bsl !== undefined && bsl.hasOwnProperty('te-si'))
+						$scope.teFrrSi = bsl['te-si'];
+					else
+						$scope.teFrrSi = [];
+					console.log("$scope.teFrrSi", $scope.teFrrSi);
+				};
+
+				$scope.changeSi = function(si) {
+					$scope.teFrrBp = [];
+					console.log("si value", si);
+					if(si !== undefined && si['te-frr'] === false) {
+						$scope.teFrrBp.push(si['te-bitposition']);
+					}
+					console.log("$scope.teFrrBp", $scope.teFrrBp);
+				};
+
+				$scope.checkAddFrr = function() {
+					if ($scope.input.addFrr.domain === undefined ||
+						$scope.input.addFrr.subdomain === undefined ||
+						$scope.input.addFrr.bsl === undefined ||
+						$scope.input.addFrr.si === undefined ||
+						$scope.input.addFrr.bp === undefined)
+						return false;
+					else
+						return true;
+				};
+
+				$scope.configureTeFrr = function(){
+					$scope.input.addFrrStatus = 'inprogress';
+					console.log("domain----",$scope.input.addFrr.domain);
+					if(biermanTools.hasOwnProperties($scope.input.addFrr, ['domain','subdomain','bsl','si','bp']) &&
+						$scope.checkAddFrr()){
+						BiermanRest.configureTeFrr(
+							{
+								'input':{
+									'topology-id': dScope.appConfig.currentTopologyId,
+									'link-id': $scope.selectLink['link-id'],
+									'link-source': $scope.selectLink['link-source'],
+									'link-dest': $scope.selectLink['link-dest'],
+									'domain': $scope.input.addFrr.domain['domain-id'],
+									'sub-domain': $scope.input.addFrr.subdomain['sub-domain-id'],
+									'bsl': $scope.input.addFrr.bsl.bitstringlength,
+									'si': $scope.input.addFrr.si.si,
+									'te-bitposition': $scope.input.addFrr.bp
+								}
+							},
+							// success
+							function(data){
+								$scope.input.addFrr = {};
+								$scope.input.addFrrStatus = 'success';
+								$scope.getLinkFrrData();
+								dScope.displayAlert({
+									title: "Link FRR Added",
+									text: "link frr has been added to the system",
+									type: "success",
+									timer: 1500,
+									confirmButtonText: "Okay"
+								});
+								$scope.closeAddFrr();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Link FRR Not Added",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
+							}
+						);
+					}
+					else{
+
+						dScope.displayAlert({
+							title: "Link FRR Not Added",
+							text: "add teFrr " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
+				};
+
+				$scope.removeTeFrr = function(domain, subdomain, bsl, si, bp){
+					BiermanRest.deleteTeFrr (
+						{
+							'input': {
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'link-id': $scope.selectLink['link-id'],
+								'link-source': $scope.selectLink['link-source'],
+								'link-dest': $scope.selectLink['link-dest'],
+								'domain': domain,
+								'sub-domain': subdomain,
+								'bsl': bsl,
+								'si': si,
+								'te-bitposition': bp
+							}
+						},
+						// success
+						function(data){
+							$scope.getLinkFrrData();
+							dScope.displayAlert({
+								title: "Link Frr BP Removed ",
+								text: "bp removed from link",
+								type: "success",
+								timer: 1500,
+								confirmButtonText: "Okay"
+							});
+						},
+						// error
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Link Frr BP Not Removed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.queryLinkTeInfo = function(){
+					$scope.linkTeInfo = [];
+					BiermanRest.queryLinkTeInfo(
+						{
+							'input':{
+								'topology-id': dScope.appConfig.currentTopologyId,
+								'link-id': $scope.selectLink['link-id'],
+								'link-source': $scope.selectLink['link-source'],
+								'link-dest': $scope.selectLink['link-dest']
+							}
+						},
+						function(data){
+							console.log('queryLinkTeInfo from ODL:', data);
+							$scope.linkTeInfo = data;
+							//if(data.hasOwnProperty('te-domain'))
+								//$scope.linkTeInfo = data['te-domain'];
+						},
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Query Link Te Info failed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.processLinkFrr = function(data) {
+					console.log('process linkFrrData----');
+					console.log('data',data);
+					$scope.linkFrrData = [];
+					if(data.hasOwnProperty('topology-te-frr')) {
+						for(var i = 0; i < data['topology-te-frr'].length; i++) {
+							if(data['topology-te-frr'][i]['topology-id'] === dScope.appConfig.currentTopologyId &&
+								data['topology-te-frr'][i].hasOwnProperty('link-te-frr')) {
+								var linkTeFrr = data['topology-te-frr'][i]['link-te-frr'];
+								for(var j = 0; j < linkTeFrr.length; j++) {
+									if(linkTeFrr[j]['link-id'] === $scope.selectLink['link-id']) {
+										$scope.linkFrrData = linkTeFrr[j]['te-frr-domain'];
+										console.log("break1");
+										break;
+									}
+								}
+								console.log("break2");
+								break;
+							}
+						}
+					}
+					console.log('after process linkFrrData----',$scope.linkFrrData);
+				};
+
+				$scope.getLinkFrrData = function(){
+					BiermanRest.getLinkFrrData(
+						function(data){
+							if (data != 'null') {
+								$scope.processLinkFrr(data);
+							}
+						},
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Get Link Frr Configure Failed",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				$scope.queryTeFrrPath = function(subdomain){
+					dScope.clearTopology();
+					console.log("subdomain", subdomain);
+					BiermanRest.queryTeFrrPath(
+						{
+							'input':{
+								'te-frr-key': {
+									'sub-domain-id': subdomain,
+									'protected-link': {
+										'link-id': $scope.selectLink['link-id'],
+										'link-source': $scope.selectLink['link-source'],
+										'link-dest': $scope.selectLink['link-dest'],
+										'delay': $scope.selectLink.delay,
+										'loss': $scope.selectLink.loss,
+										'metric': $scope.selectLink.metric
+									}
+								}
+							}
+						},
+						function(link){
+							dScope.showProtectedLink = true;
+							console.log("subdomain", subdomain);
+							var biLinkList = dScope.convertUniToBiLinks(link, true);
+							var biProtectLink = dScope.convertUniToBiLink($scope.selectLink);
+							dScope.highlightPath(biLinkList);
+							dScope.highlightProtectLink(biProtectLink);
+							dScope.highlightProtectLinkSourceTarget($scope.selectLink);
+						},
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Frr Path not loaded",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						}
+					);
+				};
+
+				// Hide dialog (close without discarding changes)
+				$scope.hide = function() {
+					$mdDialog.hide();
+				};
+				// Cancel (discard changes)
+				$scope.cancel = function() {
+					$mdDialog.cancel();
+				};
+
+				$scope.initFrr = function() {
+					$scope.getLinkFrrData();
+				};
+
+				$scope.initFrr();
+
+				$scope.dScope = dScope;
+			},
+			templateUrl: 'src/app/bierapp/src/templates/frr-manager.tpl.html',
+			parent: angular.element(document.body),
+			clickOutsideToClose: true,
+			fullscreen: useFullScreen,
+			locals: {
+				dScope: $scope
+			}
+		})
+			.then(function(answer) {
+				$scope.status = 'You said the information was "' + answer + '".';
+			}, function() {
+				$scope.status = 'You cancelled the dialog.';
+			});
+		$scope.$watch(function() {
+			return $mdMedia('xs') || $mdMedia('sm');
+		}, function(wantsFullScreen) {
+			$scope.customFullscreen = (wantsFullScreen === true);
+		});
 	};
 
     //open OAM Manager
@@ -2145,13 +2672,13 @@ define([
 					'editChannelStatus': 'none',
 					'deployChannel':{},
 					'deployChannelStatus': 'none',
-					'deployTeChannel':{},
-					'deployTeChannelStatus': 'none',
 					'deployChannelType': null,
 					'change':{}
 				};
 
-				$scope.egressNode = [];
+				$scope.egressNode = [];        //egress node for reDeployChannel
+				$scope.choseArr = [];          //choose tp-id array
+				$scope.nodeTpforAdd = null;    //after choose egress node, select the correspond tp
 
 				// Hide dialog (close without discarding changes)
 				$scope.hide = function() {
@@ -2178,10 +2705,26 @@ define([
 					$scope.change.changing = true;
 					$scope.edit.editing = false;
 					$scope.edit.name = channel.name;
-					console.log("channel", channel);
+					console.log("choose channel", channel);
+
 					for (var i = 0; i < channel['egress-node'].length; i++) {
-						$scope.egressNode.push(channel['egress-node'][i]['node-id']);
+						$scope.egressNode.push(channel['egress-node'][i]);
 					}
+					console.log("$scope.egressNode:",$scope.egressNode);
+				};
+
+				$scope.changeNodeTp = function(node) {
+					console.log("node:",node);
+					$scope.nodeTpforAdd = node.tp;
+				};
+
+				$scope.updateTp = function(tag,selectTp) {
+					if (selectTp == true) {
+						$scope.choseArr.push(tag);
+					} else {
+						$scope.choseArr.splice($scope.choseArr.indexOf(tag),1);
+					}
+					console.log("choseArr:",$scope.choseArr);
 				};
 
 				$scope.closeChange = function(val){
@@ -2191,13 +2734,28 @@ define([
 
 				$scope.change = {
 					add: function () {
-                    	$scope.egressNode.push($scope.input.change.node['node-id']);
+						var node = {};
+						node['node-id'] = $scope.input.change.node['node-id'];
+						node['rcv-tp'] = $scope.processTp($scope.choseArr);
+                    	$scope.egressNode.push(node);
                     	console.log('$scope.egressNode',$scope.egressNode);
 						$scope.input.change.node = null;
-                	},
+						$scope.choseArr = [];
+					},
                 	del: function (key) {
                 		$scope.egressNode.splice(key,1);
                 	}
+				};
+
+				$scope.processTp = function(arr) {
+					var tpArr = [];
+					for (var i = 0; i < arr.length; i++) {
+						var tp = {};
+						tp.tp = arr[i];
+						tpArr.push(tp);
+					}
+					console.log("tpArr:",tpArr);
+					return tpArr;
 				};
 
 				$scope.chooseNodeData = [];
@@ -2376,6 +2934,7 @@ define([
 							}
 						},
 						function(link){
+							$scope.clearTopology();
 							var biLinkList = dScope.convertUniToBiLinks(link, true);
 							dScope.highlightPath(biLinkList);
 						},
@@ -2391,112 +2950,22 @@ define([
 					);
 				};
 
-				//deploy BIER channel
-				$scope.deployChannel = function(){
-					$scope.input.deployChannelStatus = 'inprogress';
-					//console.log('deploy Channel---');
-					dScope.processDeployChannelData(
-						// success callback
-						function(input){
-							//console.log('input node', input);
-							var nodes = input.input["egress-node"];
-							var inode = input.input["ingress-node"];
-							nodes.push({'node-id':inode});
-							var num = 0;
-							for(var i = 0; i < nodes.length; i++){
-								for(var j = 0; j < dScope.netconfNode.length; j++){
-									if(nodes[i]['node-id'] === dScope.netconfNode[j]['node-id']){
-										if(dScope.netconfNode[j].ip !== null){
-											num++;
-											break;
-										}
-									}
-								}
-							}
-							if(num != nodes.length){
-								dScope.displayAlert({
-									title: "Netconf  Not Configure",
-									text: "You must add netconf for all " +  nodes.length + " nodes before deploy channel" ,
-									type: "error",
-									confirmButtonText: "Close"
-								});
-							}
-							else if(biermanTools.hasOwnProperties($scope.input.deployChannel, ['name'])){
-								input.input["egress-node"].pop();
-								var channelName = $scope.input.deployChannel.name.name;
-								input.input['channel-name']= channelName;
-								input.input['bier-forwarding-type'] = 'bier';
-								input.input['bp-assignment-strategy'] = $scope.input.deployChannel.model;
-								BiermanRest.deployChannel(input,
-									// success callback
-									function(response){
-										$scope.input.deployChannelStatus = 'success';
-										dScope.displayAlert({
-											title: "Channel Deployed",
-											text: "The channel " + channelName + " has been deployed to the system",
-											type: "success",
-											timer: 1500,
-											confirmButtonText: "Okay"
-										});
-										dScope.clearTopology();
-										dScope.getChannels();
-										//console.log(response);
-									},
-									// error callback
-									function(err){
-										console.error(err);
-										dScope.displayAlert({
-											title: "Channel Deploy Failed",
-											text: err.errMsg,
-											type: "error",
-											confirmButtonText: "Close"
-										});
-									}
-								);
-							}
-							else{
-								dScope.displayAlert({
-									title: "Channel Not Deployed",
-									text: "deploy a channel " + dScope.errMsg1,
-									type: "error",
-									confirmButtonText: "Close"
-								});
-							}
-						},
-						// error callback
-						function(errMsg){
-							console.error(errMsg);
-							dScope.displayAlert({
-								title: "Channel Deploy Failed",
-								text: errMsg,
-								type: "error",
-								confirmButtonText: "Close"
-							});
-						}
-					);
-				};
-
 				$scope.reDeployChannel = function(channel){
-					var nodeData = [];
-					for(var i = 0; i < $scope.egressNode.length; i++){
-						var data = {};
-						data['node-id'] = $scope.egressNode[i];
-						nodeData.push(data);
-					}
 					BiermanRest.deployChannel(
 						{
 							"input":{
 								"topology-id": dScope.appConfig.currentTopologyId,
 								"channel-name": channel.name,
 								"ingress-node": channel['ingress-node'],
-								"src-tp": channel['src-ip'],
-								"egress-node": nodeData,
+								"src-tp": channel['src-tp'],
+								"egress-node": $scope.egressNode,
 								"bier-forwarding-type":"bier"
 							}
 						},
 						// success callback
 						function(response){
 							$scope.input.deployChannelStatus = 'success';
+							$scope.egressNode = [];
 							dScope.displayAlert({
 								title: "Channel Deployed",
 								text: "The channel " + channel.name + " has been deployed to the system",
@@ -2569,8 +3038,8 @@ define([
 						$scope.items[key]['rcv-tp'].splice(idx,1) ;
 					}
 
-					console.log("BIER-TE updateSelection, egress nodes : ",$scope.selectedTp);
-					console.log("BIER-TE updateSelection,items : ",$scope.items);
+					console.log("BIER updateSelection, egress nodes : ",$scope.selectedTp);
+					console.log("BIER updateSelection,items : ",$scope.items);
 				};
 
 				$scope.checkEgressNodes = function(){
@@ -2602,7 +3071,7 @@ define([
 					//console.log('checkNetconf');
 					var nodes = $scope.items;
 					var node = {};
-					node['node-id'] = $scope.input.deployTeChannel.ingressNode;
+					node['node-id'] = $scope.input.deployChannel.ingressNode;
 					nodes.push(node);
 					var nodeSize = nodes.length;
 					var num = 0;
@@ -2623,32 +3092,33 @@ define([
 						return true;
 				};
 
-				//deploy BIER-TE channel
-				$scope.deployTeChannel = function(){
-					$scope.input.deployTeChannelStatus = 'inprogress';
-					if(biermanTools.hasOwnProperties($scope.input.deployTeChannel,
-							['name','ingressNode','ingressTpId']) && $scope.input.deployTeChannel.name !== null &&
-						$scope.input.deployTeChannel.ingressTpId !== null && $scope.checkEgressNodes())
+				//deploy channel
+				$scope.deployChannel = function(){
+					$scope.input.deployChannelStatus = 'inprogress';
+					if(biermanTools.hasOwnProperties($scope.input.deployChannel,
+							['name','ingressNode','ingressTpId']) && $scope.input.deployChannel.name !== null &&
+						$scope.input.deployChannel.ingressTpId !== null && $scope.checkEgressNodes())
 					{
 						if($scope.checkNetconf()){
 							BiermanRest.deployChannel(
 								{
 									"input":{
 										"topology-id": dScope.appConfig.currentTopologyId,
-										"channel-name": $scope.input.deployTeChannel.name.name,
-										"bp-assignment-strategy": $scope.input.deployTeChannel.model,
-										"ingress-node": $scope.input.deployTeChannel.ingressNode,
-										"src-tp": $scope.input.deployTeChannel.ingressTpId.tp,
+										"channel-name": $scope.input.deployChannel.name.name,
+										"bp-assignment-strategy": $scope.input.deployChannel.strategy,
+										"ingress-node": $scope.input.deployChannel.ingressNode,
+										"src-tp": $scope.input.deployChannel.ingressTpId.tp,
 										"egress-node": $scope.items,
-										"bier-forwarding-type":"bier-te"
+										"bier-forwarding-type": $scope.input.deployChannel.type
 									}
 								},
 								// success callback
 								function(response){
-									$scope.input.deployTeChannelStatus = 'success';
+									$scope.input.deployChannelStatus = 'success';
 									dScope.displayAlert({
-										title: "BIER-TE Channel Deployed",
-										text: "The channel " + $scope.input.deployTeChannel.name.name + " has been deployed to the system",
+										title: $scope.input.deployChannel.type + " Channel Deployed",
+										text: "The channel " + $scope.input.deployChannel.name.name +
+										" has been deployed to the system",
 										type: "success",
 										timer: 1500,
 										confirmButtonText: "Okay"
@@ -2687,6 +3157,7 @@ define([
 
 				$scope.channelChange = function(channel){
 					console.log('choose channel', channel);
+					$scope.items = [null];
 					//console.log('dScope.channelData', dScope.channelData);
 					for(var iLoop = 0; iLoop < dScope.channelData.length; iLoop++){
 						if(channel.name == dScope.channelData[iLoop].name){
@@ -2698,9 +3169,17 @@ define([
 					}
 				};
 
-				$scope.changemodel = function(){
-					$scope.input.deployTeChannel.ingressNode = undefined;
-					$scope.items = [null];
+				$scope.changeType = function(type) {
+					$scope.input.deployChannel.name = undefined;
+					if ('bier-te' === type) {
+						dScope.LoadAllTeDomainNode();
+						console.log("load BIER-TE Domian Node");
+					} else if ('bier' === type) {
+						dScope.LoadAllDomainNode();
+						console.log("load BIER Domian Node");
+					} else {
+						dScope.nodeForDeployChannel = [];
+					}
 				};
 
 				$scope.chooseNode = function(domainId, subDomainId){
@@ -2727,75 +3206,91 @@ define([
 				};
 
 				$scope.chooseTpId = function(nodeId,key) {
-					if ($scope.selectedTp[key] !== undefined) {
-						$scope.selectedTp[key].length = 0;
-					}
-					if (($scope.items[key] !== undefined) && ($scope.items[key]['rcv-tp'] !== undefined)){
-						$scope.items[key]['rcv-tp'].length = 0;
-					}
-					var flag =false;
-					if($scope.checkModel()){
-						console.log("topologyData", dScope.topologyData);
-						for(var i = 0;i < dScope.topologyData.nodes.length;i++){
-							if(nodeId == dScope.topologyData.nodes[i]['node-id']){
-								$scope.chooseTpIdData[key] = $scope.processTpData(dScope.topologyData.nodes[i]);
-								flag =true;
-
+					console.log("egress node-id:", nodeId);
+					if (undefined !== nodeId) {
+						var flag =false;
+						if($scope.checkModel()){
+							console.log("topologyData", dScope.topologyData);
+							for(var i = 0;i < dScope.topologyData.nodes.length;i++){
+								if(nodeId == dScope.topologyData.nodes[i]['node-id']){
+									$scope.chooseTpIdData[key] = $scope.processTpData(dScope.topologyData.nodes[i]);
+									flag =true;
+								}
+							}
+						} else {
+							for(var j = 0; j < $scope.chooseNodeData.length; j++){
+								if(nodeId == $scope.chooseNodeData[j]['node-id']){
+									$scope.chooseTpIdData[key] = $scope.chooseNodeData[j].tp;
+									flag =true;
+								}
 							}
 						}
-					} else {
-						for(var j = 0; j < $scope.chooseNodeData.length; j++){
-							if(nodeId == $scope.chooseNodeData[j]['node-id']){
-								$scope.chooseTpIdData[key] = $scope.chooseNodeData[j].tp;
-								flag =true;
-							}
+						if(!flag){
+							$scope.chooseTpIdData[key] = null;
 						}
-					}
-					if(!flag){
-						$scope.chooseTpIdData[key] = null;
-					}
-					console.log("$scope.chooseTpIdData[key]", $scope.chooseTpIdData[key]);
+						console.log("$scope.chooseTpIdData[key]", $scope.chooseTpIdData[key]);
+					} else
+						$scope.chooseIngressTpIdData = null;
 				};
 
 				$scope.chooseIngressTpId = function(nodeId) {
-					var flag =false;
-					if($scope.checkModel()){
-						console.log("topologyData", dScope.topologyData);
-						for(var i = 0;i < dScope.topologyData.nodes.length;i++){
-							if(nodeId == dScope.topologyData.nodes[i]['node-id']){
-								$scope.chooseIngressTpIdData = $scope.processTpData(dScope.topologyData.nodes[i]);
-								flag =true;
-								break;
+					console.log("input.deployChannel.ingressNode:", $scope.input.deployChannel.ingressNode);
+					if (undefined !== $scope.input.deployChannel.ingressNode) {
+						var flag =false;
+						if($scope.checkModel()){
+							console.log("topologyData", dScope.topologyData);
+							for(var i = 0;i < dScope.topologyData.nodes.length;i++){
+								if(nodeId == dScope.topologyData.nodes[i]['node-id']){
+									$scope.chooseIngressTpIdData = $scope.processTpData(dScope.topologyData.nodes[i]);
+									flag =true;
+									break;
+								}
+							}
+						} else {
+							for(var j = 0; j < $scope.chooseNodeData.length; j++){
+								if(nodeId == $scope.chooseNodeData[j]['node-id']){
+									$scope.chooseIngressTpIdData = $scope.chooseNodeData[j].tp;
+									flag =true;
+									break;
+								}
 							}
 						}
-					} else {
-						for(var j = 0; j < $scope.chooseNodeData.length; j++){
-							if(nodeId == $scope.chooseNodeData[j]['node-id']){
-								$scope.chooseIngressTpIdData = $scope.chooseNodeData[j].tp;
-								flag =true;
-								break;
-							}
+						if(!flag){
+							$scope.chooseIngressTpIdData = null;
 						}
-					}
-					if(!flag){
+						console.log("$scope.chooseIngressTpIdData", $scope.chooseIngressTpIdData);
+					} else
 						$scope.chooseIngressTpIdData = null;
-					}
-					console.log("$scope.chooseIngressTpIdData", $scope.chooseIngressTpIdData);
 				};
 
 				$scope.checkModel = function(){
-					if($scope.input.deployTeChannel.model == undefined){
+					if (undefined === $scope.input.deployChannel.type) {
 						dScope.displayAlert({
-							title: "Channel Name Not choose",
-							text: "choose channel name first",
+							title: "Channel Type Not choose",
+							text: "choose channel type first",
 							type: "warning",
 							confirmButtonText: "Close"
 						});
+					} else if ('bier'=== $scope.input.deployChannel.type) {
+						console.log("check result:bier type");
+						return false;
+					} else {
+						if(undefined === $scope.input.deployChannel.strategy){
+							dScope.displayAlert({
+								title: "BP strategy Not choose",
+								text: "choose bp strategy first",
+								type: "warning",
+								confirmButtonText: "Close"
+							});
 
-					} else if ($scope.input.deployTeChannel.model == 'automatic'){
-						return true;
-					} else
-					return false;
+						} else if ('automatic' === $scope.input.deployChannel.strategy){
+							console.log("check result:bier-te type,automatic");
+							return true;
+						} else {
+							console.log("check result:bier-te type，manual");
+							return false;
+						}
+					}
 				};
 
 				$scope.processTpData = function(data){
@@ -3477,10 +3972,12 @@ define([
 				$scope.removeNodeFromSubdomain = function(node, domain, subdomain){
 					BiermanRest.removeNodeFromSubdomain (
 						{
-							'topology-id': dScope.appConfig.currentTopologyId,
-							'node-id': node,
-							'domain-id': domain,
-							'sub-domain-id': subdomain
+						    'input': {
+							    'topology-id': dScope.appConfig.currentTopologyId,
+							    'node-id': node,
+							    'domain-id': domain,
+							    'sub-domain-id': subdomain
+							}
 						},
 						// success
 						function(data){

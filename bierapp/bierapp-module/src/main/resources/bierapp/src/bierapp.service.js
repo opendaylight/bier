@@ -1133,7 +1133,7 @@ define(['app/bierapp/src/bierapp.module'], function(bierapp) {
 
     s.configBierBGP = function(input, successCbk, errorCbk) {
       console.log('configBierBGP input', input);
-      var restObj = BierRestangular.one('restconf').one('config').one('bier-bgp-config:config');
+      var restObj = BierRestangular.one('restconf').one('config').one('bier-bgp-config:config-bgp-info');
       var reqData = input;
       restObj.customPUT(reqData).then(
         function(data) {     
@@ -1155,11 +1155,11 @@ define(['app/bierapp/src/bierapp.module'], function(bierapp) {
 
     s.getBierBGPConfig = function(successCbk, errorCbk) {
       console.log('getBierBGPConfig');
-      var restObj = BierRestangular.one('restconf').one('config').one('bier-bgp-config:config');
+      var restObj = BierRestangular.one('restconf').one('config').one('bier-bgp-config:config-bgp-info');
       restObj.get().then(
         function(data) {     
           console.log('getBierBGPConfig data', data);
-          successCbk(data.config);
+          successCbk(data['config-bgp-info']);
         },function(res) {
           if (res.data.hasOwnProperty('errors')) {
             var errDetails = '';
@@ -1273,6 +1273,144 @@ define(['app/bierapp/src/bierapp.module'], function(bierapp) {
         });
     };
 
+    s.configureTeFrr = function(input, successCbk, errorCbk) {
+      console.log('configureTeFrr input:', input);
+      var restObj = BierRestangular.one('restconf').one('operations').one('bier-te-frr-config-api:configure-te-frr');
+      var reqData = input;
+      restObj.customPOST(reqData).then(
+        function(data) {
+          console.log('configureTeFrr data:', data);
+            if (data.output['configure-result'].result === 'FAILURE') {
+              errorCbk({'errMsg': data.output['configure-result'].errorCause});
+            }
+            else {
+              successCbk(data.output['configure-result'].result);
+            }
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+            for(var i = 0; i < res.data.errors.error.length; i++){
+              errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+            }
+            errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
+
+    s.deleteTeFrr = function(input, successCbk, errorCbk) {
+      console.log('deleteTeFrr input:', input);
+      var restObj = BierRestangular.one('restconf').one('operations').one('bier-te-frr-config-api:delete-te-frr');
+      var reqData = input;
+      restObj.customPOST(reqData).then(
+        function(data) {
+          console.log('deleteTeFrr data', data);
+          if (data.output['configure-result'].result === 'FAILURE') {
+            errorCbk({'errMsg': data.output['configure-result'].errorCause});
+          }
+          else {
+            successCbk(data.output['configure-result'].result);
+          }
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+            for(var i = 0; i < res.data.errors.error.length; i++){
+              errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+            }
+            errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
+
+    s.queryLinkTeInfo = function(input, successCbk, errorCbk) {
+      console.log('queryLinkTeInfo input:', input);
+      var restObj = BierRestangular.one('restconf').one('operations').one('bier-te-frr-config-api:query-link-te-info');
+      var reqData = input;
+      restObj.customPOST(reqData).then(
+        function(data) {
+          console.log('queryLinkTeInfo data:', data);
+          if (data.output.hasOwnProperty('te-domain')) {
+            successCbk(data.output['te-domain']);
+          }
+          else {
+            successCbk([]);
+          }
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+            for(var i = 0; i < res.data.errors.error.length; i++){
+              errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+            }
+            errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
+
+    s.getLinkFrrData = function(successCbk, errorCbk) {
+      console.log('getLinkFrrData');
+      var restObj = BierRestangular.one('restconf').one('config').one('bier-frr:te-frr-configure');
+      restObj.get().then(
+        function(data) {
+          console.log('getLinkFrrData data', data);
+          successCbk(data['te-frr-configure']);
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+            var flag = false;
+            for (var i = 0; i < res.data.errors.error.length; i++){
+              if (res.data.errors.error[i]['error-message'] == "Request could not be completed because the relevant data model content does not exist ") {
+                flag = true;
+                break;
+              }
+              errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+            }
+            if (flag) {
+              successCbk('null');
+            }
+            else {
+              errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+            }
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
+
+    s.queryTeFrrPath = function(input, successCbk, errorCbk) {
+      console.log('queryTeFrrPath input:', input);
+      var restObj = BierRestangular.one('restconf').one('operations').one('bier-pce:query-te-frr-path');
+      var reqData = input;
+      restObj.customPOST(reqData).then(
+        function(data) {
+          console.log('queryTeFrrPath data:', data);
+          if (data.output.hasOwnProperty('link')) {
+            successCbk(data.output.link);
+          }
+          else {
+            errorCbk({'errMsg': 'No calculated Path'});
+          }
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+            for(var i = 0; i < res.data.errors.error.length; i++){
+              errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+            }
+            errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
 
     return s;
   });
