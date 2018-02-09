@@ -10,6 +10,7 @@ package org.opendaylight.bier.driver.common.reporter;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.yang.gen.v1.urn.bier.driver.reporter.rev170213.DriverFailure;
 import org.opendaylight.yang.gen.v1.urn.bier.driver.reporter.rev170213.DriverFailureBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.driver.reporter.rev170213.DriverNotifyBierEchoReply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,15 @@ public class DriverNotificationProvider {
         if (null != notificationService) {
             LOG.info("notification publish : {}",failureMessage);
             notificationService.offerNotification(driverFailure);
+        }
+    }
+
+    public static void notifyEchoReply(DriverNotifyBierEchoReply echoReply) {
+        LOG.info("notify echo relply : {}",echoReply);
+
+        if (null != notificationService) {
+            LOG.info("notification publish : {}",echoReply);
+            notificationService.offerNotification(echoReply);
         }
     }
 }

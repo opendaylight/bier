@@ -3,6 +3,11 @@ module driver-reporter {
     namespace "urn:bier:driver:reporter";
     prefix "driver-reporter";
 
+    import ietf-bier-notification {
+    	prefix biernotification;
+    	revision-date 2017-08-21;
+    }
+
     revision "2017-02-13" {
         description "Initial revision of driver reporter";
     }
@@ -11,5 +16,9 @@ module driver-reporter {
         leaf failure-message {
             type string;
         }
+    }
+
+    notification driver-notify-bier-echo-reply {
+        uses biernotification:bier-echo-reply;
     }
 }
