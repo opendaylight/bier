@@ -1,4 +1,4 @@
-<md-dialog aria-label="Channel Manager" flex="50">
+<md-dialog aria-label="Channel Manager" flex="60">
 	<md-dialog-content>
 		<md-toolbar>
 			<div class="md-toolbar-tools">
@@ -57,7 +57,7 @@
 						</md-input-container>
 					</div>
 				</div>
-				<md-button ng-click="addChannel()" class="md-raised md-primary">
+				<md-button ng-click="addChannel()" class="md-raised" style="background: dodgerblue;">
 					Add
 				</md-button>
 			</form>
@@ -83,7 +83,7 @@
 						<md-list-item class="md-3-line" ng-repeat="channel in dScope.channelData | orderBy:'name' ">
 							<div class="md-list-item-text" layout="row">
 								<!-- edit mode -->
-								<div ng-show="edit.editing && edit.name == channel.name">
+								<div ng-show="edit.editing && !change.changing && edit.name == channel.name">
 									<div layout="row">
 										<div class="channel-info">
 											<md-input-container>
@@ -125,8 +125,65 @@
 										</div>
 									</div>
 								</div>
+								<!-- change mode -->
+								<div ng-show="change.changing && !edit.editing && edit.name == channel.name" class="w100 clear">
+									<div class="channel-info align-left w70">
+										<div class="row padding-left">
+											<md-input-container>
+												 add egress node
+												<select ng-model="input.change.node"  ng-change="changeNodeTp(input.change.node)" ng-options="node['node-id'] for node in dScope.topologyData.nodes"  required>
+													<option value="">-select-</option>
+												</select>
+											</md-input-container>
+											<div>
+												tp-id:
+												<span ng-repeat="tp in nodeTpforAdd">
+													<input type="checkbox" id="tp['tp-id']" ng-model="selectTp" ng-click="updateTp(tp['tp-id'],selectTp)">{{tp['tp-id']}}
+												</span>
+											</div>
+											
+											<md-button ng-click="change.add()" class="md-raised" style="background: dodgerblue;">
+												Add
+											</md-button>
+										</div>
+										<div class="row padding-left">
+											<h3 style="margin-top: 10px;">egress-node:</h3>
+											<md-list>
+												<md-list-item class="md-3-line" ng-repeat="egress in egressNode track by $index">
+													<div class="md-list-item-text" layout="row">
+														<div class="channel-info align-left padding-left">
+															node-id:{{egress['node-id']}}
+															<md-list>
+																<md-list-item class="md-3-line" ng-repeat="rcvtp in egress['rcv-tp']">
+																	<div class="md-list-item-text padding-left" layout="row">
+																		tp-id:{{rcvtp.tp}}
+																	</div>
+																</md-list-item>
+																<md-divider ng-if="!$last"></md-divider>
+															</md-list>
+														</div>
+														<div class="channel-actions align-right">
+															<md-button ng-click="change.del($index)" class="md-warn" id="delete-button">
+																Delete
+															</md-button>
+														</div>
+													</div>
+												</md-list-item>
+												<md-divider ng-if="!$last"></md-divider>
+											</md-list>
+										</div>
+									</div>
+									<div class="channel-actions align-right">
+										<md-button ng-click="reDeployChannel(channel)" class="md-primary">
+											Save
+										</md-button>
+										<md-button ng-click="closeChange(channel.name)" class="md-primary">
+											Cancel
+										</md-button>
+									</div>
+								</div>
 								<!-- display mode -->
-								<div ng-show="!edit.editing || edit.name != channel.name" class="w100 clear">
+								<div ng-show="!edit.editing && !change.changing || edit.name !== channel.name" class="w100 clear">
 									<div class="channel-info align-left">
 										<h3>{{channel.name}}</h3>
 										<p><i class="fa fa-arrow-right"></i>source ip: {{channel['src-ip']}}</p>
@@ -143,9 +200,12 @@
 										</div>
 									</div>
 									<div class="channel-actions align-right">
-										<md-button ng-click="editChannel(channel.name)" class="md-primary">
+										<md-button ng-click="editChannel(channel.name)" ng-disabled="channel['bier-forwarding-type']" class="md-primary" title="modify channel configurations">
 											Edit
-										</md-button>
+										</md-button></br>
+										<md-button ng-click="changeChannel(channel)" class="md-primary" ng-disabled="channel['bier-forwarding-type'] !== 'bier'"  title="modify egress nodes, add or reduce">
+											E-node
+										</md-button></br>
 										<md-button ng-click="removeChannel(channel.name)" class="md-warn">
 											Remove
 										</md-button><br>
@@ -157,6 +217,7 @@
 										
 									</div>
 								</div>
+								
 							</div>
 							<md-divider ng-if="!$last"></md-divider>
 						</md-list-item>
@@ -177,100 +238,80 @@
 			</div>
 		</md-toolbar>
 		<md-content flex>
-			<div>
-				<md-tabs md-dynamic-height md-border-bottom>
-					<md-tab label="BIER Channel" class="md-accent white" >
-						<md-content class="md-dialog-content">
-							<form>
-								<div  class="md-inline-form layout-column">
-									<div>
-										<md-input-container>
-											Channel name
-											<select ng-model="input.deployChannel.name" ng-options="channel['name'] for channel in dScope.channelData" required>
-												<option value="">-select-</option>
-											</select>
-										</md-input-container>
-									</div>
-								</div>
-								<md-button ng-click="deployChannel()" class="md-raised md-primary">
-									<i class="fa fa-check"></i> Deploy channel
-								</md-button>
-								<md-button ng-click="deployChannel()" class="md-raised md-primary">
-									<i class="fa fa-check"></i> Redeploy channel
-								</md-button>
-								<md-button class="md-raised md-warn " ng-click="clearTopology()">
-									<i class="fa fa-times"></i> Clear tree
-								</md-button>
-							</form>
-						</md-content>
-					</md-tab>
-					<md-tab label="BIER-Te Channel" class="md-accent white" ng-click="dScope.LoadAllTeDomainNode()">
-						<md-content class="md-dialog-content">
-							<md-list>
-								<div  class="channel-info  md-inline-form">
-									<div>
-										<md-input-container>
-											Channel name
-											<select ng-model="input.deployTeChannel.name" ng-options="channel['name'] for channel in dScope.channelData" ng-change="channelChange(input.deployTeChannel.name)" required>
-												<option value="">-select-</option>
-											</select>
-										</md-input-container>
-									</div>
-								</div>
-								<div  class="channel-info md-inline-form">
-									ingress-node:
-									<select ng-model="input.deployTeChannel.ingressNode" ng-options="node['node-id'] as node['node-id'] for node in chooseNodeData" ng-change="chooseIngressTpId(input.deployTeChannel.ingressNode)" required>
-										<option value="">-select-</option>
-									</select>&nbsp&nbsp&nbsp&nbsp
-									tp-id:
-									<select ng-model="input.deployTeChannel.ingressTpId" ng-options="tp.tp for tp in chooseIngressTpIdData" required>
-										<option value="">-select-</option>
-									</select>
-								</div>
-								<div  class="channel-info md-inline-form">
-									<div>egress-node:</div>
-									<md-list-item class="md-3-line" ng-repeat="(key,item) in items track by $index">
-										<div class="md-list-item-text" layout="row">
-											<div class="align-left">
-												&nbsp&nbsp node-id:{{key}}
-												<select ng-model="items[key]['node-id']" ng-options="node['node-id'] as node['node-id'] for node in chooseNodeData" ng-change="chooseTpId(items[key]['node-id'], key)" required>
-													<option value="">-select-</option>
-												</select>&nbsp&nbsp&nbsp&nbsp
-												tp-id:
-												<label ng-repeat="tp in chooseTpIdData[key]">
-													<input type="checkbox" data-checklist-model="items[key]['rcv-tp']" data-checklist-value="tp">{{tp.tp}}　</br>
-												</label>
-											</div>
-											<div class="align-right">
-												<md-button ng-click="Channel.del(key)" class="md-warn" id="delete-button">
-													Delete
-												</md-button>
-											</div>
-										</div>
-									</md-list-item>
-									<md-button ng-click="Channel.add()" class="md-primary">
-										<i class="fa fa-plus"></i>  Add Egress Node Number
-									</md-button>
-									<md-divider ng-if="!$last"></md-divider>
-								</div>
-								<md-button ng-click="deployTeChannel()" class="md-raised md-primary">
-									deployChannel
-								</md-button>
-								<md-button class="md-raised md-warn " ng-click="clearTopology()">
-									<i class="fa fa-times"></i> Clear tree
-								</md-button>
-							</md-list>
-						</md-content>
-					</md-tab>
-				</md-tabs>
+			<div  class="channel-info  md-inline-form padding-left">
+				<md-input-container>
+					channel type
+					<select ng-model="input.deployChannel.type" ng-options="channel.type as channel.type for channel in dScope.channelType" ng-change="changeType(input.deployChannel.type)" required>
+						<option value="">-select-</option>
+					</select>
+				</md-input-container>
+				<md-input-container>
+					channel name
+					<select ng-model="input.deployChannel.name" ng-options="channel['name'] for channel in dScope.channelData" ng-change="channelChange(input.deployChannel.name)" required>
+						<option value="">-select-</option>
+					</select>
+				</md-input-container>
+				<span ng-show="input.deployChannel.type === 'bier-te'">
+						<md-input-container>
+							bp strategy
+							<!--select ng-model="input.deployChannel.strategy" ng-options="strategy.type as strategy.type for strategy in dScope.bpStrategy" ng-change="changeStrategy()" required>
+								<option value="">-select-</option>
+							</select-->
+							<select ng-model="input.deployChannel.strategy" ng-options="strategy.type as strategy.type for strategy in dScope.bpStrategy" required>
+								<option value="">-select-</option>
+							</select>
+						</md-input-container>
+					</span>
 			</div>
+			<div  class="channel-info md-inline-form padding-left">
+				ingress-node:
+				<select ng-model="input.deployChannel.ingressNode" ng-options="node['node-id'] as node['node-id'] for node in chooseNodeData" ng-change="chooseIngressTpId(input.deployChannel.ingressNode)" required>
+					<option value="">-select-</option>
+				</select>&nbsp&nbsp&nbsp&nbsp
+				tp-id:
+				<select ng-model="input.deployChannel.ingressTpId" ng-options="tp.tp for tp in chooseIngressTpIdData" required>
+					<option value="">-select-</option>
+				</select>
+			</div>
+			<div  class="channel-info md-inline-form padding-left">
+				<div>egress-node:</div>
+				<md-list-item class="md-3-line" ng-repeat="(key,item) in items track by $index">
+					<div class="md-list-item-text" layout="row">
+						<div class="align-left">
+							&nbsp&nbsp node-id:{{key}}
+							<select ng-model="items[key]['node-id']" ng-options="node['node-id'] as node['node-id'] for node in chooseNodeData" ng-change="chooseTpId(items[key]['node-id'], key)" required>
+								<option value="">-select-</option>
+							</select>&nbsp&nbsp&nbsp&nbsp
+							tp-id:
+							<label ng-repeat="tp in chooseTpIdData[key]">
+								<input type="checkbox" ng-checked="isChecked(key,tp.tp)" ng-click="updateSelection($event,key,tp)">{{tp.tp}}　</br>
+							</label>
+						</div>
+						<div class="align-right">
+							<md-button ng-click="Channel.del(key)" class="md-warn" id="delete-button" >
+								Delete
+							</md-button>
+						</div>
+					</div>
+				</md-list-item>
+				<md-button ng-click="Channel.add()" class="md-primary">
+					<i class="fa fa-plus"></i>  Add Egress Node Number
+				</md-button>
+				<md-divider ng-if="!$last"></md-divider>
+			</div>
+			<md-button ng-click="deployChannel()" class="md-raised" style="background: dodgerblue;">
+				deployChannel
+			</md-button>
+			<md-button class="md-raised" ng-click="clearTopology()" style="background: orangered;">
+				Clear tree
+			</md-button>
 		</md-content>
 	</md-dialog-content>
 	<md-dialog-actions layout="row">
-			<span flex></span>
-			<md-button ng-click="cancel()" class="md-primary">
-				Close
-			</md-button>
-		</md-dialog-actions>
+		<span flex></span>
+		<md-button ng-click="cancel()" class="md-primary">
+			Close
+		</md-button>
+	</md-dialog-actions>
 	</form>
 </md-dialog>

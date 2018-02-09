@@ -1174,6 +1174,105 @@ define(['app/bierapp/src/bierapp.module'], function(bierapp) {
         });
     };
 
+    s.configRecBSL = function(input, successCbk, errorCbk) {
+      console.log('configureRecommendBSL input', input);
+      var restObj = BierRestangular.one('restconf').one('config')
+      .one('bier-bp-allocate-params-config:bier-bp-allocate-params').one('topo-bp-allocate-params')
+      .one(input.topologyId).one('recommend-bsl');
+      var reqData = input.data;
+      restObj.customPUT(reqData).then(
+        function(data) {     
+          console.log('configureRecommendBSL data', data);
+          successCbk();
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+              for(var i = 0; i < res.data.errors.error.length; i++){
+                errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+              }
+              errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
+
+    s.getBpAllocateParams = function(successCbk, errorCbk) {
+      console.log('getBpAllocateParams');
+      var restObj = BierRestangular.one('restconf').one('config').one('bier-bp-allocate-params-config:bier-bp-allocate-params');
+      restObj.get().then(
+        function(data) {     
+          console.log('getBpAllocateParams data', data);
+          successCbk(data['bier-bp-allocate-params']);
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+              for(var i = 0; i < res.data.errors.error.length; i++){
+                errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+              }
+              errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
+
+    s.autoConfigTeNode = function(input, successCbk, errorCbk) {
+      console.log('autoConfigTeNode input', input);
+      var restObj = BierRestangular.one('restconf').one('operations').one('bier-te-config-api:configure-te-subdomain');
+      var reqData = input;
+      restObj.customPOST(reqData).then(
+        function(data) {     
+          console.log('autoConfigTeNode data', data);
+          if (data.output['configure-result'].result == 'FAILURE') {
+            errorCbk({'errMsg': data.output['configure-result'].errorCause});
+          }
+          else {
+            successCbk(data.output['configure-result'].result);
+          }
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+              for(var i = 0; i < res.data.errors.error.length; i++){
+                errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+              }
+              errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
+
+    s.removeSD = function(input, successCbk, errorCbk) {
+      console.log('removeSD input', input);
+      var restObj = BierRestangular.one('restconf').one('operations').one('bier-te-config-api:delete-te-subdomain');
+      var reqData = input;
+      restObj.customPOST(reqData).then(
+        function(data) {     
+          console.log('removeSD data', data);
+          if (data.output['configure-result'].result == 'FAILURE') {
+            errorCbk({'errMsg': data.output['configure-result'].errorCause});
+          }
+          else {
+            successCbk(data.output['configure-result'].result);
+          }
+        },function(res) {
+          if (res.data.hasOwnProperty('errors')) {
+            var errDetails = '';
+              for(var i = 0; i < res.data.errors.error.length; i++){
+                errDetails = errDetails + '[' + i + '] ' + res.data.errors.error[i]['error-message'];
+              }
+              errorCbk({'errMsg': 'Controller found out errors: ' + errDetails});
+          }
+          else {
+            errorCbk(res);
+          }
+        });
+    };
+
 
     return s;
   });
