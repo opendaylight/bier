@@ -11,7 +11,7 @@ define([
   bierapp.controller('biermanCtrl', ['$scope', '$rootScope', 'BiermanRest', '$mdSidenav', '$mdDialog', '$mdMedia',
 		function($scope, $rootScope, BiermanRest, $mdSidenav, $mdDialog, $mdMedia) {
    
-	$rootScope['section_logo'] = 'src/app/bierapp/assets/images/bier.jpg';
+	$rootScope.section_logo = 'src/app/bierapp/assets/images/bier.jpg';
 	
 	$scope.appConfig = {
 		// DO NOT MODIFY CONFIGURATION BELOW
@@ -495,11 +495,13 @@ define([
 
                     }
                     arrayResps.sort(function(a,b){
-                        return a.index-b.index});
+                        return a.index-b.index;
+                    	}
+                    );
 
                     var routeInfo = $scope.echoReplyData.ingressNodeId;
                     for (var nodeIdx =0;nodeIdx<arrayResps.length;nodeIdx++) {
-                        routeInfo = routeInfo + "-->" + arrayResps[nodeIdx]['nodeId'];
+                        routeInfo = routeInfo + "-->" + arrayResps[nodeIdx].nodeId;
                     }
                     traceInfo.routeInfo = routeInfo;
                     if ($scope.echoReplyData.traceResultNode.indexOf(traceInfo.targetNode)==-1){
@@ -1884,7 +1886,7 @@ define([
         $scope.customFullscreen = $mdMedia('xs') || $mdMedia('sm');
         $scope.clearEchoRequestData = function() {
             $scope.echoRequestData.hasStarted = null;
-        }
+        };
         $scope.clearEchoReplyData = function() {
             $scope.echoReplyData.egressNodeIds.length = 0;
             $scope.echoReplyData.hasPingResult = null;
@@ -1893,7 +1895,7 @@ define([
             $scope.echoReplyData.hasTraceResult = null;
             $scope.echoReplyData.traceResult.length = 0;
             $scope.echoReplyData.traceResultNode.length = 0;
-        }
+        };
         var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
         $mdDialog.show({
             controller: function($scope, $mdDialog, dScope){
@@ -1947,7 +1949,7 @@ define([
                 $scope.input.startEchoReq.maxTTL = 255;
 
                 $scope.setEchoRequestDataByChannel = function(channel) {
-                    dScope.echoRequestData.channelName = channel['name'];
+                    dScope.echoRequestData.channelName = channel.name;
                     dScope.echoRequestData.ingressNodeId = channel['ingress-node'];
                     var egressNodes = channel["egress-node"];
                     console.log("setEchoRequestDataByChannel egressNodes",egressNodes);
@@ -1968,7 +1970,7 @@ define([
 
                     }
 
-                }
+                };
 
                 $scope.setEchoRequestDataForTargetNodes = function() {
                     var echoReqTargetNodes =  [] ;
@@ -2020,8 +2022,8 @@ define([
                 $scope.startEchoReq = function(){
                     $scope.input.startEchoReqStatus = 'inprogress';
                     console.log("$scope.selectedTargetNodeIndex", $scope.selectedTargetNodeIndex);
-                    if(biermanTools.hasOwnProperties($scope.input.startEchoReq, ['channelName', 'modeType', 'replyModeType','maxTTL'])
-                        && $scope.selectedTargetNodeIndex.length != 0){
+                    if(biermanTools.hasOwnProperties($scope.input.startEchoReq, ['channelName', 'modeType', 'replyModeType','maxTTL']) && 
+                    	$scope.selectedTargetNodeIndex.length != 0){
                         console.log("$scope.input.startEchoReq.maxTTL",$scope.input.startEchoReq.maxTTL);
                         if(!$scope.isTtlValid($scope.input.startEchoReq.maxTTL)) {
                             dScope.displayAlert({
@@ -4326,11 +4328,42 @@ define([
 
 				};
 
+				$scope.processNetconfNodeConfig = function(configData){
+					console.log('$scope.netconfNodeConfig configData',configData[0]);
+					$scope.input.editNetconf.ip = configData[0]["netconf-node-topology:host"];
+					$scope.input.editNetconf.port = configData[0]["netconf-node-topology:port"];
+					$scope.input.editNetconf.username = configData[0]["netconf-node-topology:username"];
+					$scope.input.editNetconf.password = configData[0]["netconf-node-topology:password"];
+				};
+
+				$scope.getNetconfConfigByNodeId = function(nodeId) {
+
+					console.log('$scope.getNetconfConfigByNodeId node id : ',nodeId);
+					BiermanRest.getNetconfConfig(
+						function(data){
+							console.log('get netconf config data',data);
+							$scope.processNetconfNodeConfig(data);
+						},
+						function(err){
+							console.error(err);
+							dScope.displayAlert({
+								title: "Please use button ADD to config the node.",
+								text: err.errMsg,
+								type: "error",
+								confirmButtonText: "Close"
+							});
+						},
+						nodeId
+					);
+
+				};
+
 				$scope.editNetconf = function(val){
 					$scope.netconfedit.editing = true;
 					$scope.netconfdetail.detail = false;
 					$scope.netconfadd.adding = false;
 					$scope.netconfdetail.name = val;
+					$scope.getNetconfConfigByNodeId(val);
 				};
 
 				$scope.closeEdit = function(){
@@ -4344,7 +4377,7 @@ define([
 				// add node netconf
 				$scope.addNodeNetconf = function(node){
 					$scope.input.addNetconfStatus = 'inprogress';
-					if(biermanTools.hasOwnProperties($scope.input.addNetconf, ['ip', 'port'])){
+					if(biermanTools.hasOwnProperties($scope.input.addNetconf, ['ip', 'port','username','password'])){
 						BiermanRest.addNodeNetconf(
 							{
                                 "node":
@@ -4354,9 +4387,9 @@ define([
                                     "netconf-node-topology:host": $scope.input.addNetconf.ip,
                                     "netconf-node-topology:keepalive-delay": 0,
                                     "netconf-node-topology:port": $scope.input.addNetconf.port,
-                                    "netconf-node-topology:username": "zte",
+                                    "netconf-node-topology:username": $scope.input.addNetconf.username,
                                    // "netconf-node-topology:username": "admin",
-                                    "netconf-node-topology:password": "zte"
+                                    "netconf-node-topology:password": $scope.input.addNetconf.password
                                     //"netconf-node-topology:password": "admin"
                                 }
                             },
@@ -4398,61 +4431,56 @@ define([
 
 				// add node netconf
 				$scope.editNodeNetconf = function(node){
-					var port = null;
-					var ip = null;
-					if($scope.input.editNetconf.port === undefined){
-						port = node.port;
-					}
-					else{
-						port = $scope.input.editNetconf.port;
-					}
-					if($scope.input.editNetconf.ip === undefined){
-						ip = node.ip;
-					}
-					else{
-						ip = $scope.input.editNetconf.ip;
-					}
 					$scope.input.editNetconfStatus = 'inprogress';
-					BiermanRest.editNodeNetconf(
-						{
-							"node":
+					if(biermanTools.hasOwnProperties($scope.input.editNetconf, ['ip', 'port','username','password'])){
+						BiermanRest.editNodeNetconf(
 							{
-								"node-id": node['node-id'],
-								"netconf-node-topology:tcp-only": false,
-								"netconf-node-topology:host": ip,
-								"netconf-node-topology:keepalive-delay": 0,
-								"netconf-node-topology:port": port,
-								"netconf-node-topology:username": "zte",
-								"netconf-node-topology:password": "zte"
+								"node":
+								{
+									"node-id": node['node-id'],
+									"netconf-node-topology:tcp-only": false,
+									"netconf-node-topology:host": $scope.input.editNetconf.ip,
+									"netconf-node-topology:keepalive-delay": 0,
+									"netconf-node-topology:port": $scope.input.editNetconf.port,
+									"netconf-node-topology:username": $scope.input.editNetconf.username,
+									"netconf-node-topology:password": $scope.input.editNetconf.password
+								}
+							},
+							// success
+							function(data){
+								$scope.input.editNetconf = {};
+								$scope.input.editNetconfStatus = 'success';
+								dScope.displayAlert({
+									title: "Netconf Edited",
+									text: "The netconf has been edited to the system",
+									type: "success",
+									timer: 2000,
+									confirmButtonText: "Okay"
+								});
+								setTimeout(function(){
+									dScope.getNetconf();
+								}, 2000);
+								$scope.closeEdit();
+							},
+							// error
+							function(err){
+								console.error(err);
+								dScope.displayAlert({
+									title: "Netconf Not edited",
+									text: err.errMsg,
+									type: "error",
+									confirmButtonText: "Close"
+								});
 							}
-						},
-						// success
-						function(data){
-							$scope.input.editNetconf = {};
-							$scope.input.editNetconfStatus = 'success';
-							dScope.displayAlert({
-								title: "Netconf Edited",
-								text: "The netconf has been edited to the system",
-								type: "success",
-								timer: 2000,
-								confirmButtonText: "Okay"
-							});
-							setTimeout(function(){
-								dScope.getNetconf();
-							}, 2000);
-							$scope.closeEdit();
-						},
-						// error
-						function(err){
-							console.error(err);
-							dScope.displayAlert({
-								title: "Netconf Not edited",
-								text: err.errMsg,
-								type: "error",
-								confirmButtonText: "Close"
-							});
-						}
-					);
+						);
+					} else {
+						dScope.displayAlert({
+							title: "Netconf Not edited",
+							text: "edit a netconf " + dScope.errMsg1,
+							type: "error",
+							confirmButtonText: "Close"
+						});
+					}
 				};
 
 				// remove netconf

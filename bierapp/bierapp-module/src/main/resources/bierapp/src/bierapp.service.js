@@ -580,6 +580,24 @@ define(['app/bierapp/src/bierapp.module'], function(bierapp) {
         });
     };
 
+    s.getNetconfConfig = function(successCbk, errorCbk,nodeId){
+        var restObj = BierRestangular.one('restconf').one('config').one('network-topology:network-topology').one('topology').one('topology-netconf').one('node').one(nodeId);
+        restObj.get().then(
+      // loaded
+          function (res){
+            console.log("get netconf config restObj------", res);
+            if(res.hasOwnProperty('node')){
+              successCbk(res.node);
+            } else {
+              errorCbk({'errMsg': 'Node info is null'});
+            }
+          },
+          // failed
+          function(e){
+            errorCbk({'errObj': e, 'errId': 0, 'errMsg': 'get netconf config failed'});
+          });
+    };
+
     s.addNodeNetconf = function(input, successCbk, errorCbk) {
       console.log('addNodeNetconf input', input);
       var restObj = BierRestangular.one('restconf').one('config').one('network-topology:network-topology').one('topology').one('topology-netconf').one('node').one(input.node['node-id']);
@@ -1141,7 +1159,7 @@ define(['app/bierapp/src/bierapp.module'], function(bierapp) {
       restObj.get().then(
         function(data) {     
           console.log('getBierBGPConfig data', data);
-          successCbk(data['config']);
+          successCbk(data.config);
         },function(res) {
           if (res.data.hasOwnProperty('errors')) {
             var errDetails = '';
