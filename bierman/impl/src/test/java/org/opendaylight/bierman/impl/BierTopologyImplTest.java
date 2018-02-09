@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.bierman.impl.bierconfig.BierConfigServiceImpl;
 import org.opendaylight.bierman.impl.teconfig.BierTeConfigServiceImpl;
+import org.opendaylight.bierman.impl.teconfig.BierTeFrrConfigServiceImpl;
 import org.opendaylight.bierman.impl.topo.BierTopologyServiceImpl;
 import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
@@ -44,6 +45,13 @@ import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSiI
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSiOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSubdomainInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.DeleteTeSubdomainOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.frr.config.api.rev171128.ConfigureTeFrrOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.frr.config.api.rev171128.ConfigureTeFrrInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.frr.config.api.rev171128.DeleteTeFrrOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.frr.config.api.rev171128.DeleteTeFrrInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.te.frr.config.api.rev171128.QueryLinkTeInfoOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.frr.config.api.rev171128.QueryLinkTeInfoInput;
+import org.opendaylight.yang.gen.v1.urn.bier.te.frr.config.api.rev171128.QueryLinkTeInfoInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkDestBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkSourceBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.ConfigureDomainInputBuilder;
@@ -120,6 +128,7 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
     private BierTopologyServiceImpl topoImpl;
     private BierConfigServiceImpl bierConfigImpl;
     private BierTeConfigServiceImpl bierTeConfigImpl;
+    private BierTeFrrConfigServiceImpl bierTeFrrConfigImpl;
 
     @Before
     public void setUp() throws Exception {
@@ -128,6 +137,7 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
         topoImpl = new BierTopologyServiceImpl(topoManager);
         bierConfigImpl = new BierConfigServiceImpl(topoManager);
         bierTeConfigImpl = new BierTeConfigServiceImpl(topoManager);
+        bierTeFrrConfigImpl = new BierTeFrrConfigServiceImpl(getDataBroker(),topoManager);
         topoManager.start();
     }
 
@@ -1820,6 +1830,80 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
 
     }
 
+    @Test
+    public void BierTeFrrTest() throws Exception {
+
+        configureDomain(1);
+        configureSubdomain(1,1);
+        configureTeSubDomain("1",1,1);
+        configureTeSubDomain("2",1,1);
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"1");
+        configureTeLabel(new MplsLabel(1L),new BierTeLabelRangeSize(5L),"2");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.11",1,"1");
+        configureTeNode(1,1,Bsl._64Bit,new Si(1),"192.168.54.13",2,"2");
+
+        RpcResult<ConfigureTeFrrOutput> output = bierTeFrrConfigImpl.configureTeFrr(null).get();
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input is null!"));
+
+        output = configureTeFrr("",1, 1,Bsl._64Bit, new Si(1), "1",
+                "192.168.54.11","2","192.168.54.13",1);
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("input param is error!"));
+
+        output = configureTeFrr("link-error",1, 1,Bsl._64Bit, new Si(1),
+                "1","192.168.54.11","2","192.168.54.13",1);
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("Link is not exist!"));
+
+        output = configureTeFrr("2,192.168.54.13-1,192.168.54.11",1, 1,Bsl._64Bit, new Si(1),
+                "3","192.168.54.11","2","192.168.54.13",1);
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("Link info is error!"));
+
+        output = configureTeFrr("2,192.168.54.13-1,192.168.54.11",2, 1,Bsl._64Bit, new Si(1),
+                "1","192.168.54.11","2","192.168.54.13",1);
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output.getResult().getConfigureResult().getErrorCause().equals("Domain is not exist!"));
+
+        output = configureTeFrr("2,192.168.54.13-1,192.168.54.11",1, 1,Bsl._64Bit, new Si(1),
+                "1","192.168.54.11","2","192.168.54.13",1);
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+        RpcResult<QueryLinkTeInfoOutput> output2 = queryLinkTeInfo("","1",
+                "192.168.54.11","2","192.168.54.13");
+        Assert.assertNull(output2);
+
+        output2 = queryLinkTeInfo("2,192.168.54.13-1,192.168.54.11","3",
+                "192.168.54.11","2","192.168.54.13");
+        Assert.assertNull(output2);
+
+        output2 = queryLinkTeInfo("2,192.168.54.13-1,192.168.54.11","1",
+                "192.168.54.11","2","192.168.54.13");
+        Assert.assertNotNull(output2);
+        Assert.assertNotNull(output2.getResult().getTeDomain());
+        Assert.assertTrue(output2.getResult().getTeDomain().size() == 1);
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getDomainId().getValue() == 1);
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getTeSubDomain().size() == 1);
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getTeSubDomain().get(0).getSubDomainId().getValue() == 1);
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().size() == 1);
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0).getBitstringlength().equals(Bsl._64Bit));
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0).getTeSi().size() == 1);
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0).getTeSi().get(0).getSi().getValue() == 1);
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0).getTeSi().get(0).getTeBitposition().equals(new BitString(1)));
+        Assert.assertTrue(output2.getResult().getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0).getTeSi().get(0).isTeFrr().booleanValue() == true);
+
+
+        RpcResult<DeleteTeFrrOutput> output3 = bierTeFrrConfigImpl.deleteTeFrr(null).get();
+        Assert.assertTrue(output3.getResult().getConfigureResult().getResult() == ConfigureResult.Result.FAILURE);
+        Assert.assertTrue(output3.getResult().getConfigureResult().getErrorCause().equals("input is null!"));
+
+        output3 = deleteTeFrr("2,192.168.54.13-1,192.168.54.11",1, 1,Bsl._64Bit, new Si(1),
+                "1","192.168.54.11","2","192.168.54.13",1);
+        Assert.assertTrue(output.getResult().getConfigureResult().getResult() == ConfigureResult.Result.SUCCESS);
+
+    }
+
     private QueryNodeOutput queryNode() throws Exception {
         QueryNodeInputBuilder inputBuilder = new QueryNodeInputBuilder();
         inputBuilder.setTopologyId("example-linkstate-topology");
@@ -2367,4 +2451,80 @@ public class BierTopologyImplTest extends AbstractConcurrentDataBrokerTest {
                 inputBuilder.build()).get();
         return output.getResult();
     }
+
+    private RpcResult<ConfigureTeFrrOutput> configureTeFrr(String linkId,int domainId, int subDomainId,
+                                            Bsl bitStringLength, Si si, String dstNodeId,String dstTpId,
+                                                String srcNodeId,String srcTpId,int bitString) throws Exception {
+        ConfigureTeFrrInputBuilder inputBuilder = new ConfigureTeFrrInputBuilder();
+        inputBuilder.setTopologyId("example-linkstate-topology");
+        inputBuilder.setLinkId(linkId);
+        inputBuilder.setDomain(new DomainId(domainId));
+        inputBuilder.setSubDomain(new SubDomainId(subDomainId));
+        inputBuilder.setBsl(bitStringLength);
+        inputBuilder.setSi(si);
+        LinkDestBuilder linkDestBuilder = new LinkDestBuilder();
+        linkDestBuilder.setDestNode(dstNodeId);
+        linkDestBuilder.setDestTp(dstTpId);
+        inputBuilder.setLinkDest(linkDestBuilder.build());
+        LinkSourceBuilder linkSourceBuilder = new LinkSourceBuilder();
+        linkSourceBuilder.setSourceNode(srcNodeId);
+        linkSourceBuilder.setSourceTp(srcTpId);
+        inputBuilder.setLinkSource(linkSourceBuilder.build());
+        inputBuilder.setTeBitposition(new BitString(bitString));
+
+        return bierTeFrrConfigImpl.configureTeFrr(inputBuilder.build()).get();
+    }
+
+    private RpcResult<DeleteTeFrrOutput> deleteTeFrr(String linkId,int domainId, int subDomainId,
+                                          Bsl bitStringLength, Si si, String dstNodeId,String dstTpId,
+                                          String srcNodeId,String srcTpId,int bitString) throws Exception {
+        DeleteTeFrrInputBuilder inputBuilder = new DeleteTeFrrInputBuilder();
+        inputBuilder.setTopologyId("example-linkstate-topology");
+        inputBuilder.setLinkId(linkId);
+        inputBuilder.setDomain(new DomainId(domainId));
+        inputBuilder.setSubDomain(new SubDomainId(subDomainId));
+        inputBuilder.setBsl(bitStringLength);
+        inputBuilder.setSi(si);
+        LinkDestBuilder linkDestBuilder = new LinkDestBuilder();
+        linkDestBuilder.setDestNode(dstNodeId);
+        linkDestBuilder.setDestTp(dstTpId);
+        inputBuilder.setLinkDest(linkDestBuilder.build());
+        LinkSourceBuilder linkSourceBuilder = new LinkSourceBuilder();
+        linkSourceBuilder.setSourceNode(srcNodeId);
+        linkSourceBuilder.setSourceTp(srcTpId);
+        inputBuilder.setLinkSource(linkSourceBuilder.build());
+        inputBuilder.setTeBitposition(new BitString(bitString));
+
+        return bierTeFrrConfigImpl.deleteTeFrr(inputBuilder.build()).get();
+    }
+
+    private RpcResult<QueryLinkTeInfoOutput> queryLinkTeInfo(String linkId, String dstNodeId,String dstTpId,
+                                                  String srcNodeId,String srcTpId) throws Exception {
+        QueryLinkTeInfoInputBuilder inputBuilder = new QueryLinkTeInfoInputBuilder();
+        inputBuilder.setTopologyId("example-linkstate-topology");
+        inputBuilder.setLinkId(linkId);
+        LinkDestBuilder linkDestBuilder = new LinkDestBuilder();
+        linkDestBuilder.setDestNode(dstNodeId);
+        linkDestBuilder.setDestTp(dstTpId);
+        inputBuilder.setLinkDest(linkDestBuilder.build());
+        LinkSourceBuilder linkSourceBuilder = new LinkSourceBuilder();
+        linkSourceBuilder.setSourceNode(srcNodeId);
+        linkSourceBuilder.setSourceTp(srcTpId);
+        inputBuilder.setLinkSource(linkSourceBuilder.build());
+
+        QueryLinkTeInfoInput input = inputBuilder.build();
+
+        if (null == bierTeFrrConfigImpl.queryLinkTeInfo(input) ) {
+            return null;
+        }
+
+        return bierTeFrrConfigImpl.queryLinkTeInfo(input).get();
+    }
+
+
+
+
+
+
+
 }

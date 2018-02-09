@@ -1,0 +1,131 @@
+module bier-te-frr-config-api {
+  namespace "urn:bier:te:frr:config:api";
+  prefix "bier-te-frr-config-api";
+
+  import ietf-inet-types {
+       prefix "inet";
+  }
+
+  import ietf-bier {
+       prefix "bier";
+       revision-date 2016-07-23;
+  }
+
+  import ietf-bier-te {
+       prefix "bier-te";
+       revision-date 2016-10-13;
+  }
+
+  import bier-common {
+       prefix bier-common;
+  }
+
+  import bier-topology {
+       prefix bier-topology;
+  }
+
+  organization "zte";
+  revision 2017-11-28 {
+  description "Initial revision.";
+  }
+
+  rpc configure-te-frr {
+     input {
+        leaf topology-id {
+          type string;
+        }
+        uses bier-topology:bier-link;
+        leaf domain {
+          type bier-common:domain-id;
+        }
+        leaf sub-domain {
+          type bier:sub-domain-id;
+        }
+        leaf bsl {
+          type bier:bsl;
+        }
+        leaf si {
+          type bier:si;
+        }
+        leaf te-bitposition {
+          type bier-te:bit-string;
+        }
+    }
+    output {
+        uses bier-common:configure-result;
+    }
+  }
+
+  rpc delete-te-frr {
+    input {
+      leaf topology-id {
+        type string;
+      }
+      uses bier-topology:bier-link;
+      leaf domain {
+        type bier-common:domain-id;
+      }
+      leaf sub-domain {
+        type bier:sub-domain-id;
+      }
+      leaf bsl {
+        type bier:bsl;
+      }
+      leaf si {
+        type bier:si;
+      }
+      leaf te-bitposition {
+        type bier-te:bit-string;
+      }
+    }
+    output {
+      uses bier-common:configure-result;
+    }
+  }
+
+  rpc query-link-te-info {
+    input {
+      leaf topology-id {
+        type string;
+      }
+      uses bier-topology:bier-link;
+    }
+    output {
+      uses link-te-info;
+    }
+  }
+
+  grouping link-te-info {
+        list te-domain {
+          key "domain-id";
+          leaf domain-id {
+            type bier-common:domain-id;
+          }
+          list te-sub-domain{
+            key "sub-domain-id";
+            leaf sub-domain-id{
+              type bier:sub-domain-id;
+            }
+            list te-bsl{
+              key "bitstringlength";
+              leaf bitstringlength {
+                type bier:bsl;
+              }
+              list te-si {
+                key "si";
+                leaf si{
+                  type bier:si;
+                }
+                leaf te-bitposition {
+                  type bier-te:bit-string;
+                }
+                leaf te-frr {
+                  type boolean;
+                }
+              }
+            }
+          }
+        }
+  }
+
+}
