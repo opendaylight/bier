@@ -14,8 +14,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.mina.util.ConcurrentHashSet;
 import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
 import org.opendaylight.bier.pce.impl.provider.PcePathImpl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
@@ -73,8 +71,8 @@ public class PathsRecordPerSubDomain {
     }
 
     private class SubDomainRecord {
-        private SubDomainId subDomainId;
-        private Set<BierPathUnifyKey> pathSet = new ConcurrentHashSet<>();
+        private final SubDomainId subDomainId;
+        private final Set<BierPathUnifyKey> pathSet = ConcurrentHashMap.newKeySet();
 
         SubDomainRecord(SubDomainId subDomainId) {
             this.subDomainId = subDomainId;

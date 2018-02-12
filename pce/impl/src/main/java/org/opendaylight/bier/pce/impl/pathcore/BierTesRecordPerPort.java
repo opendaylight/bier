@@ -14,15 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.mina.util.ConcurrentHashSet;
 import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 
 
 public class BierTesRecordPerPort {
     private static BierTesRecordPerPort instance = new BierTesRecordPerPort();
-    private Map<PortKey, PortRecord> portRecords = new ConcurrentHashMap<>();
+    private final Map<PortKey, PortRecord> portRecords = new ConcurrentHashMap<>();
 
     private BierTesRecordPerPort() {
     }
@@ -47,7 +45,7 @@ public class BierTesRecordPerPort {
 
     public Set<BierPathUnifyKey> getPathsRecord(PortKey portKey) {
         PortRecord portRecord = portRecords.get(portKey);
-        return (portRecord == null) ? null : portRecord.getPathsRecord();
+        return portRecord == null ? null : portRecord.getPathsRecord();
     }
 
 
@@ -114,8 +112,8 @@ public class BierTesRecordPerPort {
 
     private class PortRecord {
         @SuppressWarnings("unused")
-        private PortKey portKey;
-        private Set<BierPathUnifyKey> bierPathSet = new ConcurrentHashSet<>();
+        private final PortKey portKey;
+        private final Set<BierPathUnifyKey> bierPathSet = ConcurrentHashMap.newKeySet();
 
         PortRecord(BierLink link) {
             this.portKey = new PortKey(link.getLinkSource().getSourceNode(),
