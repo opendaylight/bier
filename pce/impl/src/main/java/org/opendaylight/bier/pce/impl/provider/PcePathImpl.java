@@ -9,15 +9,13 @@
 package org.opendaylight.bier.pce.impl.provider;
 
 import com.google.common.util.concurrent.Futures;
-
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-
-import org.apache.mina.util.ConcurrentHashSet;
 import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
 import org.opendaylight.bier.pce.impl.biertepath.BierTeInstance;
 import org.opendaylight.bier.pce.impl.biertepath.SingleBierPath;
@@ -63,9 +61,9 @@ import org.slf4j.LoggerFactory;
 
 public class PcePathImpl implements BierPceService {
     private static final Logger LOG = LoggerFactory.getLogger(PcePathImpl.class);
-    private ConcurrentHashMap<String, BierTeInstance> bierTeInstances = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<TeFrrKey,TeFrrInstance> teFrrInstances = new ConcurrentHashMap<>();
-    private PcePathDb pcePathDb = PcePathDb.getInstance();
+    private final ConcurrentHashMap<String, BierTeInstance> bierTeInstances = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<TeFrrKey,TeFrrInstance> teFrrInstances = new ConcurrentHashMap<>();
+    private final PcePathDb pcePathDb = PcePathDb.getInstance();
     private static PcePathImpl instance = new PcePathImpl();
 
     private PcePathImpl() {
@@ -155,7 +153,7 @@ public class PcePathImpl implements BierPceService {
         }
         Set<BierPathUnifyKey> paths = BierTesRecordPerPort.getInstance()
                 .getPathsRecord(new PortKey(input.getNodeId(),input.getTpId()));
-        Set<RelatedChannel> channelSet = new ConcurrentHashSet<>();
+        Set<RelatedChannel> channelSet = new HashSet<>();
         if (paths != null) {
             for (BierPathUnifyKey path : paths) {
                 channelSet.add(new RelatedChannelBuilder()
@@ -165,7 +163,7 @@ public class PcePathImpl implements BierPceService {
             }
         }
         QueryChannelThroughPortOutput output = new QueryChannelThroughPortOutputBuilder()
-                .setRelatedChannel(new ArrayList<RelatedChannel>(channelSet)).build();
+                .setRelatedChannel(new ArrayList<>(channelSet)).build();
 
         return Futures.immediateFuture(RpcResultBuilder.success(output).build());
     }
