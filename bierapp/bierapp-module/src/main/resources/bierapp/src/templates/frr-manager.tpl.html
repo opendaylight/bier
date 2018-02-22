@@ -1,0 +1,149 @@
+<md-dialog aria-label="TE-FRR Manager" flex="60">
+    <md-dialog-content>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Bier-Te FRR Manager</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                    <i class="fa fa-close fa-2x" aria-label="Close dialog"></i>
+                </md-button>
+            </div>
+        </md-toolbar>
+        
+        <!-- Link Configure Block -->
+        <md-toolbar class="md-accent white">
+            <div class="md-toolbar-tools">
+                <h3>Link</h3>
+            </div>
+        </md-toolbar>
+    
+        <!--link display mode-->
+        <div ng-show="!linkFrrAdd.adding && linkFrrDetail.detail" class="w100 clear">
+            <div ng-show="linkFrrData.length == 0">
+                <div>This Link has no frr configuration...</div>
+                <md-button ng-click="addFrr()" class="md-primary">
+                    Add
+                </md-button>
+            </div>
+            <div ng-show="linkFrrData.length  > 0" >
+                <md-button ng-click="addFrr()" class="md-primary">
+                    Add
+                </md-button>
+                <md-content>
+                    <md-list>
+                        <md-list-item class="md-3-line" ng-repeat="domain in linkFrrData | paging:currentPage*listsPerPage | limitTo:listsPerPage">
+                            <div class="md-list-item-text">
+                                <p>domain:{{domain['domain-id']}}</p>
+                                <md-list>
+                                    <md-list-item class="md-3-line" ng-repeat="subdomain in domain['te-frr-sub-domain']">
+                                        <div class="md-list-item-text" layout="row">
+                                            <div class="w100 clear">
+                                                <div class="channel-info align-left">
+                                                    <p>subdomain:{{subdomain['sub-domain-id']}}</p>
+                                                    <md-list>
+                                                        <md-list-item class="md-3-line" ng-repeat="bsl in subdomain['te-frr-bsl']">
+                                                            <div class="md-list-item-text">
+                                                                <p>bitstringlength:{{bsl.bitstringlength}}</p>
+                                                                <md-list>
+                                                                    <md-list-item class="md-3-line" ng-repeat="si in bsl['te-frr-si']">
+                                                                        <div class="md-list-item-text" layout="row">
+                                                                            <div class="w100 clear">
+                                                                                <div class="channel-info align-left">
+                                                                                    <p>si:{{si.si}}</p>
+                                                                                    <p>bp:{{si['te-frr-bp']}}</p>
+                                                                                    <p>assignment-strategy:{{si['assignment-strategy']}}</p>
+                                                                                </div>
+                                                                                <div class="channel-actions align-right">
+                                                                                    <md-button ng-click="removeTeFrr(domain['domain-id'],subdomain['sub-domain-id'],bsl.bitstringlength,si.si,si['te-frr-bp'])" class="md-warn min-width" >
+                                                                                        Remove
+                                                                                    </md-button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <md-divider ng-if="!$last"></md-divider>
+                                                                    </md-list-item>
+                                                                </md-list>
+                                                            </div>
+                                                            <md-divider ng-if="!$last"></md-divider>
+                                                        </md-list-item>
+                                                    </md-list>
+                                                </div>
+                                                <div class="channel-actions align-right">
+                                                    <md-button ng-click="queryTeFrrPath(subdomain['sub-domain-id'])" class="md-primary" >
+                                                        show path
+                                                    </md-button>
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
+                                        <md-divider ng-if="!$last"></md-divider>
+                                    </md-list-item>
+                                </md-list>
+                            </div>
+                            <md-divider ng-if="!$last"></md-divider>
+                        </md-list-item>
+                    </md-list>
+                </md-content>
+                <div>
+                    <a class="step prevLink" ng-click="prevPage()">Previous</a>
+                    <a ng-class="{true:'currentStep',false:'step'}[num == currentPage]" ng-repeat="num in pageNum" ng-click="setPage(num)">{{num+1}}</a>
+                    <a class="step nextLink" ng-click="nextPage()">Next</a>
+                </div>
+            </div>
+        </div>
+        <div ng-show="linkFrrAdd.adding && !linkFrrDetail.detail">
+            <div layout="row">
+                <div class="w100 clear">
+                    <div class="channel-info align-left">
+                        <md-input-container>
+                            domain
+                            <select ng-model="input.addFrr.domain" ng-options="domain['domain-id'] for domain in linkTeInfo" ng-change="changeDomain(input.addFrr.domain)" required>
+                                <option value="">-select-</option>
+                            </select>
+                        </md-input-container>
+                        <md-input-container>
+                            subdomain
+                            <select ng-model="input.addFrr.subdomain" ng-options="subdomain['sub-domain-id'] for subdomain in teFrrSubDomain" ng-change="changeSubDomain(input.addFrr.subdomain)" required>
+                                <option value="">-select-</option>
+                            </select>
+                        </md-input-container>
+                        <md-input-container>
+                            bsl
+                            <select ng-model="input.addFrr.bsl" ng-options="bsl.bitstringlength for bsl in teFrrBSL" ng-change="changeBsl(input.addFrr.bsl)" required>
+                                <option value="">-select-</option>
+                            </select>
+                        </md-input-container><br>
+                        <md-input-container>
+                            si
+                            <select ng-model="input.addFrr.si" ng-options="si.si for si in teFrrSi" ng-change="changeSi(input.addFrr.si)" required>
+                                <option value="">-select-</option>
+                            </select>
+                        </md-input-container>
+                        <md-input-container>
+                            bp
+                            <select ng-model="input.addFrr.bp" ng-options="bp for bp in teFrrBp" required>
+                                <option value="">-select-</option>
+                            </select>
+                        </md-input-container>
+                    </div>
+                    <div class="channel-actions align-right">
+                        <md-button ng-click="configureTeFrr()" class="md-primary">
+                            Save
+                        </md-button>
+                        <md-button ng-click="closeAddFrr()" class="md-primary">
+                            Cancel
+                        </md-button><br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </md-dialog-content>
+    
+    <md-dialog-actions layout="row">
+        <span flex></span>
+        <md-button ng-click="cancel()" class="md-primary">
+            Close
+        </md-button>
+    </md-dialog-actions>
+    </form>
+</md-dialog>

@@ -19,7 +19,11 @@ define(['app/bierapp/src/bierapp.module','next'], function(bierapp) {
             'processBierTreeData': '=',
             'processDeployChannelData': '=',
             'resetTopology': '=',
+            'selectLink': '=',
             'highlightPath': '=',
+            'highlightProtectLink': '=',
+            'highlightProtectLinkSourceTarget': '=',
+            'convertUniToBiLink': '=',
             'convertUniToBiLinks': '='
         },
         'link': function($scope, iElm, iAttrs, controller){
@@ -28,46 +32,6 @@ define(['app/bierapp/src/bierapp.module','next'], function(bierapp) {
                 console.log('init nextUI ');
 
                 $scope.dumpData = null;
-
-                $scope.processDeployChannelData = function (successCbk, errorCbk) {
-                    console.log('nextUI processDeployChannelData');
-                    var tree = $scope.$parent.currentTree;
-                    var ingress = $scope.topo.getNode(tree.ingress);
-                    var input;
-                    var errMsg;
-
-                    // if a tree's ready
-                    if ($scope.$parent.appConfig.currentTopologyId && ingress !== undefined && ingress !== null) {
-                        console.log('egress Length=', tree.egress.length);
-
-                        if (tree.egress.length !== 0) {
-                            input = {
-                                'input': {
-                                    'topology-id': $scope.$parent.appConfig.currentTopologyId,
-                                    'ingress-node': ingress.model()._data['node-id'],
-                                    'egress-node': []
-                                }
-                            };
-
-                            input.input['egress-node'] = tree.egress.map(function (egressId) {
-                                var egress = $scope.topo.getNode(egressId);
-                                return {
-                                    'node-id': egress.model()._data['node-id']
-                                };
-
-                            });
-                            successCbk(input);
-                        }
-                        else {
-                            errMsg = 'You must specify the egress nodes for channel';
-                            errorCbk(errMsg);
-                        }
-                    }
-                    else {
-                        errMsg = 'ingress node was not set properly. Try again.';
-                        errorCbk(errMsg);
-                    }
-                };
 
                 $scope.convertUniToBiLinks = function (uniLinks, clearLinks) {
                     console.log('nextUI convertUniToBiLinks');
@@ -88,6 +52,25 @@ define(['app/bierapp/src/bierapp.module','next'], function(bierapp) {
                             link.color($scope.colorTable.linkTypes.none);
                     });
                     return biLinks;
+                };
+
+                $scope.convertUniToBiLink = function (protectLink) {
+                    console.log("link", protectLink);
+                    var biLink = [];
+                    var linksLayer = $scope.topo.getLayer('links');
+                    linksLayer.eachLink(function (link) {
+                        var linkContainer = link.model()._data.links;
+                        console.log('linkContainer:', linkContainer);
+                        for (var j = 0; j < linkContainer.length; j++) {
+                            if (protectLink['link-id'] == linkContainer[j].linkId) {
+
+                                //biLink = link.id();
+                                biLink.push(link.id());
+                                console.log('biLink',biLink);
+                            }
+                        }
+                    });
+                    return biLink;
                 };
 
                 $scope.openPanel = function (panelCode, auxParam) {
@@ -144,6 +127,44 @@ define(['app/bierapp/src/bierapp.module','next'], function(bierapp) {
                         link.color($scope.colorTable.linkTypes.path);
 
                     });
+                };
+
+                $scope.highlightProtectLink = function (linkId) {
+                    for(var i = 0; i < linkId.length; i++) {
+                        $scope.topo.getLink(linkId[i]).color($scope.colorTable.linkTypes.protect);
+                    }
+                    //var link = $scope.topo.getLink(linkId);
+                    //link.color($scope.colorTable.linkTypes.protect);
+                };
+
+                $scope.highlightProtectLinkSourceTarget = function (link) {
+                    var nodeLayer = $scope.topo.getLayer('nodes');
+                    var sourceNode = link['link-source']['source-node'];
+                    var targetNode = link['link-dest']['dest-node'];
+                    //var sourceNodeId = '';
+                    var sourceNodeId = [];
+                    //var targetNodeId = '';
+                    var targetNodeId = [];
+                    nodeLayer.eachNode(function(node) {
+                        var nodeContainer = node.model()._data;
+                        console.log("nodeContainer",nodeContainer);
+                        if(nodeContainer['node-id'] == sourceNode) {
+                            //sourceNodeId = nodeContainer.id;
+                            sourceNodeId.push(nodeContainer.id);
+                        }
+                        if(nodeContainer['node-id'] == targetNode) {
+                            //targetNodeId = nodeContainer.id;
+                            targetNodeId.push(nodeContainer.id);
+                        }
+                    });
+                    for(var i = 0; i < sourceNodeId.length; i++) {
+                        //console.log('sourceNodeId[i]:',sourceNodeId[i]);
+                        $scope.topo.getNode(sourceNodeId[i]).color($scope.colorTable.nodeTypes.source);
+                    }
+                    for(var j = 0; j < targetNodeId.length; j++) {
+                        //console.log('targetNodeId[j]:',targetNodeId[j]);
+                        $scope.topo.getNode(targetNodeId[j]).color($scope.colorTable.nodeTypes.target);
+                    }
                 };
 
                 $scope.resetTopology = function () {
@@ -221,66 +242,20 @@ define(['app/bierapp/src/bierapp.module','next'], function(bierapp) {
                     });
                 };
 
-                $scope.pickNode = function (id) {
-                    // select source
-                    console.log('pick node');
-                    if ($scope.$parent.appConfig.mode == 'start') {
-                        $scope.$parent.currentTree.ingress = id;
-                        console.log('ingress=' + $scope.$parent.currentTree.ingress);
-                        $scope.$parent.appConfig.mode = 'draw';
-                    }
-                    // select receivers
-                    else if ($scope.$parent.appConfig.mode == 'draw') {
-                        var nodeIndex = $scope.$parent.currentTree.egress.indexOf(id);
-                        // if node is not used
-                        if (nodeIndex == -1 && id != $scope.$parent.currentTree.ingress){
-                            $scope.$parent.currentTree.egress.push(id);
-                            console.log('egress=' + $scope.$parent.currentTree.egress);
-                        }
-                        // if node is ingress
-                        else if (id == $scope.$parent.currentTree.ingress) {
-                            $scope.$parent.currentTree.ingress = null;
-                            $scope.$parent.appConfig.mode = 'start';
-                            $scope.$parent.currentTree.egress.length = 0;
-                        }
-                        // if the node is egress
-                        else if (nodeIndex > -1) {
-                            $scope.$parent.currentTree.egress.splice(nodeIndex, 1);//splice()
-                            //console.log()
-                        }
-                    }
-                    $scope.$parent.currentTree.validStatus = 'none';
-                    $scope.$apply();
-                    $scope.applyChanges();
-                };
-
-                $scope.pickLink = function (id) {
-                    console.log('pick link');
-                    if ($scope.$parent.appConfig.mode == 'draw') {
-                        var indexOfLink = $scope.$parent.currentTree.links.indexOf(id);
-                        if ($scope.$parent.currentTree.links.indexOf(id) == -1) {
-                            $scope.$parent.currentTree.links.push(id);
-                        }
-                        else {
-                            $scope.$parent.currentTree.links.splice(indexOfLink, 1);
-                        }
-                        $scope.$parent.currentTree.validStatus = 'none';
-                        $scope.$apply();
-                        $scope.applyChanges();
-                    }
-                };
-
             };
             console.log('next UI init');
             $scope.colorTable = {
                 'nodeTypes': {
                     'ingress': '#009933',      //green
                     'egress': '#0033cc',       //blue
+                    'source': '#FF3366',       //red
+                    'target': '#000000',       //black
                     'none': '#0591D9'
 
                 },
                 'linkTypes': {
                     'path': '#009933',   //green
+                    'protect': '#0033cc',  //blue
                     'none': '#67C9E4'
                 }
             };
@@ -288,10 +263,12 @@ define(['app/bierapp/src/bierapp.module','next'], function(bierapp) {
             nx.define('CustomScene', nx.graphic.Topology.DefaultScene, {
                 'methods': {
                     clickNode: function (topology, node) {
-                        $scope.pickNode(node.id());
+                        //$scope.pickNode(node.id());
                     },
                     clickLink: function (topology, link) {
-                        $scope.pickLink(link.id());
+                        //$scope.pickLink(link.id());
+                        console.log("click link");
+                        $scope.selectLink(link._model._data);
                     }
                 }
             });
@@ -377,7 +354,7 @@ define(['app/bierapp/src/bierapp.module','next'], function(bierapp) {
                 sender.activateScene('ce');   //Activate a scene, topology only has one active scene.
                 // enable tooltips for both nodes and links
                 $scope.topo.tooltipManager().showNodeTooltip(true);
-                $scope.topo.tooltipManager().showLinkTooltip(true);
+                $scope.topo.tooltipManager().showLinkTooltip(false);
                 $scope.topo.adaptToContainer();
             });
 
