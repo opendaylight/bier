@@ -10,7 +10,7 @@
   
     <groupId>org.opendaylight.bier</groupId>
     <artifactId>bierapp</artifactId>
-    <version>0.2.2-SNAPSHOT</version>
+    <version>0.2.3-SNAPSHOT</version>
     <name>ODL :: bier :: ${project.artifactId}</name>
     <packaging>pom</packaging>
 
@@ -19,7 +19,7 @@
     </prerequisites>
 
     <properties>
-        <dlux.loader.version>0.6.2-SNAPSHOT</dlux.loader.version>
+        <dlux.loader.version>0.6.3-SNAPSHOT</dlux.loader.version>
     </properties>
 
     <modules>

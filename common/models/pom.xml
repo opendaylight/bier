@@ -11,13 +11,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 <parent>
     <groupId>org.opendaylight.mdsal</groupId>
     <artifactId>binding-parent</artifactId>
-    <version>0.11.2-SNAPSHOT</version>
+    <version>0.11.3-SNAPSHOT</version>
     <relativePath/>
 </parent>
 <modelVersion>4.0.0</modelVersion>
 <groupId>org.opendaylight.bier</groupId>
 <artifactId>bier-models</artifactId>
-<version>0.2.2-SNAPSHOT</version>
+<version>0.2.3-SNAPSHOT</version>
 <!-- <name> formatting is used by autorelease to parse and notify projects on
      build failure. Please do not modify this unless you have a good reason. -->
 <name>ODL :: bier :: ${project.artifactId}</name>
