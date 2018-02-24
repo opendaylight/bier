@@ -32,6 +32,7 @@ public class ChannelConfigReaderImpl implements ChannelConfigReader {
     public List<BfrId> readChannel(Channel channel) {
         InstanceIdentifier<PureMulticast> pureMulticastIid = IidBuilder.buildPureMulticastIId(channel);
         PureMulticast pureMulticast = netconfDataOperator.read(channel.getIngressNode(),pureMulticastIid);
+        LOG.info("pureMulticast info -- {}",pureMulticast);
         if (pureMulticast != null) {
             if ((pureMulticast.getMulticastOverlay() != null)
                     && (pureMulticast.getMulticastOverlay().getBierInformation() != null)) {

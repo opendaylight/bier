@@ -39,8 +39,6 @@ public class BierNotificationListener implements IetfBierListener {
 
     @Override
     public void onBfrIdCollision(BfrIdCollision notification) {
-
-
         LOG.info(BFR_ID_COLLISION + notification.getBfrId().toString());
         DriverNotificationProvider.notifyFailure(BFR_ID_COLLISION + notification.getBfrId().toString());
     }

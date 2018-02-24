@@ -54,6 +54,7 @@ public class BierTeBiftWriterImplTest extends AbstractConcurrentDataBrokerTest {
     private BierTeBiftWriterImpl bierTeBiftWriter ;
     private NetconfDataOperator netconfDataOperator;
     private BierTeConfig bierTeConfig;
+    private BierTeConfig bierTeConfigFrr;
     private ConfigurationResult result =
             new ConfigurationResult(ConfigurationResult.Result.FAILED);
 
@@ -67,6 +68,7 @@ public class BierTeBiftWriterImplTest extends AbstractConcurrentDataBrokerTest {
     private static final Long OUT_LABEL = 51L;
     private static final Long OUT_LABEL_NEW = 50L;
     private static final TeAdjType ADJ_TYPE = new ConnectedBuilder().build();
+    private static final Integer FRR_INDEX = 100;
 
     @Before
     public void before() throws Exception {
@@ -97,25 +99,40 @@ public class BierTeBiftWriterImplTest extends AbstractConcurrentDataBrokerTest {
 
     }
 
-    private void buildBift(Long outLabel) {
-        bierTeConfig = new BierTeConfigBuilder()
+    private TeFIndexBuilder buildTeFIndex(Long outLabel) {
+        return new TeFIndexBuilder()
+                .setTeFIndex(new BitString(BIT_POSITION))
+                .setTeAdjType(ADJ_TYPE)
+                .setOutLabel(new MplsLabel(outLabel));
+
+    }
+
+    private BierTeConfigBuilder buildTeConfig(TeFIndex teFIndex) {
+        return new BierTeConfigBuilder()
                 .setTeSubdomain(Collections.singletonList(new TeSubdomainBuilder()
                         .setSubdomainId(new SubDomainId(SUBDOMAIN_ID))
                         .setTeBsl(Collections.singletonList(new TeBslBuilder()
                                 .setFwdBsl(BSL)
                                 .setTeSi(Collections.singletonList(new TeSiBuilder()
                                         .setFtLabel(new MplsLabel(IN_LABEL))
-                                                .setSi(new Si(SI))
-                                                .setTeFIndex(Collections.singletonList(new TeFIndexBuilder()
-                                                        .setTeFIndex(new BitString(BIT_POSITION))
-                                                        .setTeAdjType(ADJ_TYPE)
-                                                        .setOutLabel(new MplsLabel(outLabel))
-                                                        .build()))
-                                                .build()))
-
+                                        .setSi(new Si(SI))
+                                        .setTeFIndex(Collections.singletonList(teFIndex))
                                         .build()))
+
                                 .build()))
-                        .build();
+                        .build()));
+    }
+
+    private void buildFrrInfo(Long outLabel) {
+        bierTeConfigFrr = buildTeConfig(buildTeFIndex(outLabel)
+                .setFrr(true)
+                .setFrrIndex(FRR_INDEX)
+                .build()).build();
+    }
+
+
+    private void buildBift(Long outLabel) {
+        bierTeConfig = buildTeConfig(buildTeFIndex(outLabel).build()).build();
     }
 
     private TeFIndex getBiftEntry(BierTeConfig bierTeCfg) {
@@ -173,6 +190,25 @@ public class BierTeBiftWriterImplTest extends AbstractConcurrentDataBrokerTest {
         TeFIndex teFIndexActual = netconfDataOperator.read(dataBroker,
                 bierTeBiftWriter.getTeFIndexIId(bierTeConfig));
         assertNull(teFIndexActual);
+    }
+
+    @Test
+    public void testWriteFrrInfo() throws Exception {
+        buildMock();
+        buildInstance();
+        buildBift(OUT_LABEL);
+        buildFrrInfo(OUT_LABEL);
+        bierTeBiftWriter.writeTeBift(ConfigurationType.ADD, NODE_ID,
+                bierTeConfig,result).checkedGet();
+        assertTrue(result.isSuccessful());
+        bierTeBiftWriter.writeTeBift(ConfigurationType.MODIFY, NODE_ID,
+                bierTeConfigFrr,result).checkedGet();
+        assertTrue(result.isSuccessful());
+        TeFIndex teFIndexActual = netconfDataOperator.read(dataBroker,
+                bierTeBiftWriter.getTeFIndexIId(bierTeConfigFrr));
+        TeFIndex teFIndexExpected = getBiftEntry(bierTeConfigFrr);
+        assertTrue(teFIndexExpected.isFrr());
+        assertEquals(teFIndexExpected.getFrrIndex(), teFIndexActual.getFrrIndex());
     }
 
     @Test
