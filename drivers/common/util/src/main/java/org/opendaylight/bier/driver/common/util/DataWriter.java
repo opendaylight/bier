@@ -11,9 +11,7 @@ import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
-
 import org.opendaylight.bier.driver.common.reporter.DriverNotificationProvider;
-
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -46,7 +44,8 @@ public class DataWriter {
 
 
     public static <T extends DataObject> void operateFail(final Throwable throwable,OperateType type,
-                            DataBroker dataBroker,InstanceIdentifier<T> path, T data,final int tries) {
+                            DataBroker dataBroker,InstanceIdentifier<T> path, T data,final int tries,
+                            LogicalDatastoreType datastoreType) {
         String detailedInfo = OPERATE_TYPE + type.toString() ;
         detailedInfo = detailedInfo + DATA_INFO;
         if (data != null) {
@@ -56,7 +55,7 @@ public class DataWriter {
         if (throwable instanceof OptimisticLockFailedException) {
             if ((tries - 1) > 0) {
                 LOG.info(LOCK_FAILED_RETRY);
-                operate(type, dataBroker, tries - 1, path, data);
+                operate(type, dataBroker, tries - 1, path, data,datastoreType);
             } else {
                 LOG.warn(ConfigurationResult.NETCONF_LOCK_FAILUE +  detailedInfo);
                 //report NETCONF_LOCK_FAILUE
@@ -78,22 +77,31 @@ public class DataWriter {
 
     }
 
+    public static <T extends DataObject> void operateFail(final Throwable throwable,OperateType type,
+                                                          DataBroker dataBroker,InstanceIdentifier<T> path,
+                                                          T data,final int tries) {
+        operateFail(throwable,type,dataBroker,path,data,tries,LogicalDatastoreType.CONFIGURATION);
+    }
+
+
     public static <T extends DataObject> CheckedFuture<Void, TransactionCommitFailedException> operate(OperateType type,
                                                               DataBroker dataBroker,
                                                               final int tries,
-                                                              InstanceIdentifier<T> path, T data) {
+                                                              InstanceIdentifier<T> path,
+                                                              T data,
+                                                              LogicalDatastoreType datastoreType) {
 
         final WriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
         switch (type) {
             case CREATE:
             case REPLACE:
-                writeTransaction.put(LogicalDatastoreType.CONFIGURATION,path,data,true);
+                writeTransaction.put(datastoreType,path,data,true);
                 break;
             case MERGE:
-                writeTransaction.merge(LogicalDatastoreType.CONFIGURATION,path,data,true);
+                writeTransaction.merge(datastoreType,path,data,true);
                 break;
             case DELETE:
-                writeTransaction.delete(LogicalDatastoreType.CONFIGURATION, path);
+                writeTransaction.delete(datastoreType, path);
                 break;
             default:
                 break;
@@ -115,6 +123,24 @@ public class DataWriter {
 
         return submitResult;
 
+    }
+
+
+    public static <T extends DataObject> CheckedFuture<Void, TransactionCommitFailedException> operate(OperateType type,
+                                                                                         DataBroker dataBroker,
+                                                                                         final int tries,
+                                                                                         InstanceIdentifier<T> path,
+                                                                                         T data) {
+        return operate(type,dataBroker,tries,path,data,LogicalDatastoreType.CONFIGURATION);
+    }
+
+
+    public static <T extends DataObject> void
+        opOperational(OperateType type,DataBroker dataBroker,final int tries,InstanceIdentifier<T> path,T data) {
+
+        operate(type,dataBroker,tries,path,data,LogicalDatastoreType.OPERATIONAL);
+
+        return ;
     }
 
 
