@@ -32,6 +32,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <bean id="channelConfigWriter"
         class="org.opendaylight.bier.driver.configuration.channel.ChannelConfigWriterImpl">
     <argument ref="netconfDataOperator"/>
+    <argument ref="dataBroker"/>
   </bean>
 
   <service ref="channelConfigWriter" interface="org.opendaylight.bier.adapter.api.ChannelConfigWriter"/>
@@ -91,6 +92,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </bean>
 
     <service ref="bierTeChannelWriter" interface="org.opendaylight.bier.adapter.api.BierTeChannelWriter"/>
+
+    <bean id="bierTeBtaftWriter"
+          class="org.opendaylight.bier.driver.configuration.te.btaft.BierTeBtaftWriterImpl">
+        <argument ref="netconfDataOperator"/>
+    </bean>
+
+    <service ref="bierTeBtaftWriter" interface="org.opendaylight.bier.adapter.api.BierTeBtaftWriter"/>
+
+    <bean id="bierOamStartEchoRequestCheck"
+          class="org.opendaylight.bier.driver.rpcs.oam.BierOamStartEchoRequestCheckImpl">
+        <argument ref="netconfDataOperator"/>
+    </bean>
+
+    <service ref="bierOamStartEchoRequestCheck" interface="org.opendaylight.bier.adapter.api.BierOamStartEchoRequestCheck"/>
 
 
 </blueprint>

@@ -28,6 +28,7 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.netconf.notification._1._0.rev080714.CreateSubscriptionInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.netconf.notification._1._0.rev080714.NotificationsService;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.notification.rev170821.IetfBierNotificationListener;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.IetfBierListener;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainIdCollision;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
@@ -47,12 +48,9 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetconfNodesListener.class);
     private ListenerRegistration<NetconfNodesListener> listenerRegistration;
-
-    public Map<NodeId, ListenerRegistration<IetfBierListener>> getMapNodeListenerReg() {
-        return mapNodeListenerReg;
-    }
-
     private Map<NodeId, ListenerRegistration<IetfBierListener>> mapNodeListenerReg = Maps.newHashMap();
+    private Map<NodeId, ListenerRegistration<IetfBierNotificationListener>> mapEchoReplyListenerReg =
+            Maps.newHashMap();
     private final DataBroker dataBroker;
     private final NetconfDataOperator netconfDataOperator ;
 
@@ -68,6 +66,16 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
                         IidConstants.NETCONF_TOPO_IID.child(Node.class)),this);
         LOG.info("Begin to listen to the changes of netconf nodes!");
     }
+
+    public Map<NodeId, ListenerRegistration<IetfBierListener>> getMapNodeListenerReg() {
+        return mapNodeListenerReg;
+    }
+
+    public Map<NodeId, ListenerRegistration<IetfBierNotificationListener>> getMapEchoReplyListenerReg() {
+        return mapEchoReplyListenerReg;
+    }
+
+
 
     public void close() {
         unregisterListener();
@@ -85,6 +93,15 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
 
             Map.Entry<NodeId, ListenerRegistration<IetfBierListener>> entry = entries.next();
             unRegisterNotificationListener(entry.getKey());
+        }
+
+        Iterator<Map.Entry<NodeId, ListenerRegistration<IetfBierNotificationListener>>> echoEntries =
+                mapEchoReplyListenerReg.entrySet().iterator();
+
+        while (echoEntries.hasNext()) {
+
+            Map.Entry<NodeId, ListenerRegistration<IetfBierNotificationListener>> echoEntry = echoEntries.next();
+            unRegisterNotificationListener(echoEntry.getKey());
         }
 
     }
@@ -113,12 +130,20 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
         if (null == mountPoint) {
             return;
         }
+
+        final Optional<NotificationService> notificationService = mountPoint.getService(NotificationService.class);
+
         final IetfBierListener listener;
         listener = new BierNotificationListener();
-        final Optional<NotificationService> notificationService = mountPoint.getService(NotificationService.class);
         final ListenerRegistration<IetfBierListener> listenerRegistration =
                 notificationService.get().registerNotificationListener(listener);
         mapNodeListenerReg.put(nodeId,listenerRegistration);
+
+        final IetfBierNotificationListener echoListener;
+        echoListener = new BierEchoReplyListener();
+        final ListenerRegistration<IetfBierNotificationListener> echoListenerRegistration =
+                notificationService.get().registerNotificationListener(echoListener);
+        mapEchoReplyListenerReg.put(nodeId,echoListenerRegistration);
 
         final Optional<RpcConsumerRegistry> service = mountPoint.getService(RpcConsumerRegistry.class);
         final NotificationsService rpcService = service.get().getRpcService(NotificationsService.class);
@@ -132,6 +157,13 @@ public class NetconfNodesListener implements DataTreeChangeListener<Node> {
             listenerRegistration.close();
         }
         mapNodeListenerReg.remove(nodeId);
+
+        final ListenerRegistration<IetfBierNotificationListener> echoListenerRegistration =
+                mapEchoReplyListenerReg.get(nodeId);
+        if (echoListenerRegistration != null) {
+            echoListenerRegistration.close();
+        }
+        mapEchoReplyListenerReg.remove(nodeId);
         LOG.info("unregisterListener {}",nodeId);
     }
 

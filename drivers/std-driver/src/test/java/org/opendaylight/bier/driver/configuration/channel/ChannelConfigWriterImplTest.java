@@ -25,17 +25,14 @@ import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.driver.NetconfDataOperator;
 import org.opendaylight.bier.driver.configuration.channel.ChannelConfigWriterImpl;
+import org.opendaylight.bier.driver.configuration.channel.ChannelTestDataBuilder;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.bier.node.EgressNodes;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.bier.node.EgressNodesKey;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.multicast.information.rev161028.multicast.information.pure.multicast.PureMulticast;
@@ -61,12 +58,6 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
             new ConfigurationResult(ConfigurationResult.Result.FAILED);
 
 
-    //data
-    private static final String NODE_ID = "nodeId";
-    private static final IpAddress SRC_IP = new IpAddress(new Ipv4Address("10.41.42.60"));
-    private static final short SRC_WILDCARD = 8;
-    private static final IpAddress DEST_GROUP = new IpAddress(new Ipv4Address("224.0.0.5"));
-    private static final short DEST_WILDCARD = 4;
 
     @Before
     public void before() throws Exception {
@@ -96,42 +87,43 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
 
     private void buildInstance() {
         netconfDataOperator = new NetconfDataOperator(mountPointService);
-        channelConfigWriter = new ChannelConfigWriterImpl(netconfDataOperator);
+        channelConfigWriter = new ChannelConfigWriterImpl(netconfDataOperator,dataBroker);
 
     }
 
+
+    private Channel buildChannelData(Integer ingressBfrId,Integer egressBfrId1,Integer egressBfrId2) {
+        //interface to datastore
+        ChannelTestDataBuilder.writeInterfaceInfo(ChannelTestDataBuilder.RETRY_WRITE_MAX,dataBroker);
+
+
+        return ChannelTestDataBuilder.buildChannelData(new BfrId(ingressBfrId),
+                new BfrId(egressBfrId1), new BfrId(egressBfrId2));
+    }
 
     private Channel buildChannelAddData() {
-        ArrayList<EgressNode> egressNodeArrayList = new ArrayList<EgressNode>();
-        egressNodeArrayList.add(new EgressNodeBuilder().setEgressBfrId(new BfrId(5)).build());
-        egressNodeArrayList.add(new EgressNodeBuilder().setEgressBfrId(new BfrId(10)).build());
-        return new ChannelBuilder()
-                .setIngressNode(NODE_ID)
-                .setSrcIp(SRC_IP)
-                .setSourceWildcard(SRC_WILDCARD)
-                .setDstGroup(DEST_GROUP)
-                .setGroupWildcard(DEST_WILDCARD)
-                .setIngressBfrId(new BfrId(100))
-                .setEgressNode(egressNodeArrayList)
-                .build();
-
+        return buildChannelData(100,5,10);
     }
+
 
     private Channel buildChannelModifyData() {
-        ArrayList<EgressNode> egressNodeArrayList = new ArrayList<EgressNode>();
-        egressNodeArrayList.add(new EgressNodeBuilder().setEgressBfrId(new BfrId(15)).build());
-        egressNodeArrayList.add(new EgressNodeBuilder().setEgressBfrId(new BfrId(110)).build());
-        return new ChannelBuilder().setIngressNode(NODE_ID)
-                .setSrcIp(SRC_IP)
-                .setSourceWildcard(SRC_WILDCARD)
-                .setDstGroup(DEST_GROUP)
-                .setGroupWildcard(DEST_WILDCARD)
-                .setIngressBfrId(new BfrId(50))
-                .setEgressNode(egressNodeArrayList)
-                .build();
+        return buildChannelData(50,15,110);
 
     }
 
+    private Channel buildChannelEgressData(Integer egressBfrId) {
+        //interface to datastore
+        ChannelTestDataBuilder.writeInterfaceInfo(ChannelTestDataBuilder.RETRY_WRITE_MAX,dataBroker);
+        return ChannelTestDataBuilder.buildChannelEgressNodeData(new BfrId(egressBfrId));
+    }
+
+    private Channel buildChannelAddEgressNode() {
+        return buildChannelEgressData(100);
+    }
+
+    private Channel buildChannelModEgressNode() {
+        return buildChannelEgressData(101);
+    }
 
     private boolean compareEgressNodesEqual(List<EgressNode> egressNodeList,List<EgressNodes> egressNodesList) {
         if (egressNodesList.isEmpty()) {
@@ -214,7 +206,7 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
     public void testWriteChannelEgressNodeAdd() throws Exception {
         buildMock();
         buildInstance();
-        Channel channel = buildChannelAddData();
+        Channel channel = buildChannelAddEgressNode();
         channelConfigWriter.writeChannelEgressNode(ConfigurationType.ADD,channel,result).checkedGet();
         assertTrue(result.isSuccessful());
 
@@ -239,10 +231,10 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
     public void testWriteChannelEgressNodeModify() throws Exception {
         buildMock();
         buildInstance();
-        Channel channel = buildChannelAddData();
+        Channel channel = buildChannelAddEgressNode();
         channelConfigWriter.writeChannelEgressNode(ConfigurationType.ADD,channel,result).checkedGet();
         assertTrue(result.isSuccessful());
-        Channel modifiedChannel = buildChannelModifyData();
+        Channel modifiedChannel = buildChannelModEgressNode();
         channelConfigWriter.writeChannelEgressNode(ConfigurationType.MODIFY,modifiedChannel,result).checkedGet();
         assertTrue(result.isSuccessful());
 
@@ -272,7 +264,7 @@ public class ChannelConfigWriterImplTest  extends AbstractConcurrentDataBrokerTe
     public void testWriteChannelEgressNodeDelete() throws Exception {
         buildMock();
         buildInstance();
-        Channel channel = buildChannelAddData();
+        Channel channel = buildChannelAddEgressNode();
         channelConfigWriter.writeChannel(ConfigurationType.ADD, channel,result).checkedGet();
         assertTrue(result.isSuccessful());
 

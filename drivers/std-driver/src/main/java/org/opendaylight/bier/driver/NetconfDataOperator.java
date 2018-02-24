@@ -42,7 +42,7 @@ public class NetconfDataOperator  {
     public static final InstanceIdentifier<BierGlobal> BIER_GLOBAL_IID =
             ROUTING_IID.augmentation(BierConfiguration.class)
                     .child(Bier.class).child(BierGlobal.class);
-    public static final int RETRY_WRITE_MAX = 3;
+    public static final int RETRY_WRITE_MAX = 100;
 
 
     public NetconfDataOperator(MountPointService mountService) {

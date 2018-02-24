@@ -57,14 +57,19 @@ public class BierTeBiftWriterImpl implements BierTeBiftWriter {
 
     }
 
-
+    public TeFIndex build(TeInfo teInfo) {
+        TeSubdomain teSubdomain = teInfo.getTeSubdomain().get(0);
+        TeBsl teBsl = teSubdomain.getTeBsl().get(0);
+        TeSi teSi = teBsl.getTeSi().get(0);
+        return teSi.getTeFIndex().get(0);
+    }
 
 
     public CheckedFuture<Void, TransactionCommitFailedException> writeTeBift(ConfigurationType type,
                                                                              String nodeId,
                                                                              TeInfo teInfo,
                                                                              ConfigurationResult result) {
-
+        LOG.info("Config Te BIFT to node: {}  -- mod type {} , {}!", nodeId, type,teInfo);
 
         BierTeConfig bierTeConfig = new BierTeConfigBuilder().setTeSubdomain(teInfo.getTeSubdomain()).build();
 
@@ -79,22 +84,15 @@ public class BierTeBiftWriterImpl implements BierTeBiftWriter {
                         result
                 );
 
-            case MODIFY: {
-                netconfDataOperator.write(DataWriter.OperateType.DELETE,
-                        nodeId,
-                        getTeFIndexIId(teInfo),
-                        null,
-                        result
-                );
-
+            case MODIFY:
                 return netconfDataOperator.write(DataWriter.OperateType.MERGE,
                         nodeId,
-                        BIER_TE_CFG_IID,
-                        bierTeConfig,
+                        getTeFIndexIId(teInfo),
+                        build(teInfo),
                         result
                 );
 
-            }
+
             case ADD:
                 return netconfDataOperator.write(DataWriter.OperateType.MERGE,
                         nodeId,
