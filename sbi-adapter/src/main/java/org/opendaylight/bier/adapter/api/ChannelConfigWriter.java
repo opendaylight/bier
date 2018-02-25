@@ -7,7 +7,6 @@
  */
 package org.opendaylight.bier.adapter.api;
 
-
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 
 
@@ -17,4 +16,6 @@ public interface ChannelConfigWriter {
     ConfigurationResult writeChannel(ConfigurationType type, Channel channel);
 
     ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel);
+
+    ConfigurationResult writeChannelEgressNodeTp(ConfigurationType type, Channel channel);
 }

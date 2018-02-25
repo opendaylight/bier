@@ -7,7 +7,6 @@
  */
 package org.opendaylight.bier.service.impl.bierconfig;
 
-import com.google.common.base.Optional;
 import java.util.ArrayList;
 import java.util.List;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
@@ -15,24 +14,10 @@ import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.service.impl.NotificationProvider;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNodeBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
-import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.params.Domain;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.BfrId;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.bier.global.cfg.bier.global.SubDomain;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.egress.node.RcvTp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +35,8 @@ public class BierChannelConfigProcess {
     }
 
     public void processAddedChannel(Channel channel) {
-        Channel channelBfr = addBfrIdToChannel(channel,channel.getEgressNode());
         ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
-                ConfigurationType.ADD, channelBfr);
+                ConfigurationType.MODIFY, channel);
         if (!writedChannelResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
             return;
@@ -60,157 +44,139 @@ public class BierChannelConfigProcess {
     }
 
     public void processDeletedChannel(Channel channel) {
-        Channel channelBfr = addBfrIdToChannel(channel,channel.getEgressNode());
         ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
-                ConfigurationType.DELETE, channelBfr);
+                ConfigurationType.DELETE, channel);
         if (!writedChannelResult.isSuccessful()) {
             notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
             return;
         }
+    }
+
+    public List<EgressNode> getTpChangedEgressNodes(List<EgressNode> beforeList,List<EgressNode> afterList) {
+        ArrayList<EgressNode> egressNodes = new ArrayList<>();
+        for (EgressNode beforeNode : beforeList) {
+            for (EgressNode afterNode : afterList) {
+                if (beforeNode.getNodeId().equals(afterNode.getNodeId())) {
+                    List<RcvTp> rcvTpsBefore = beforeNode.getRcvTp();
+                    List<RcvTp> rcvTpsAfter = afterNode.getRcvTp();
+                    if ((rcvTpsAfter == null) || (rcvTpsAfter.isEmpty())) {
+                        LOG.info("Egress node  {} with tps null",afterNode);
+                        continue;
+                    }
+                    if ((rcvTpsAfter.containsAll(rcvTpsBefore))
+                            && (rcvTpsBefore.containsAll(rcvTpsAfter))) {
+                        continue;
+                    }
+                    egressNodes.add(afterNode);
+
+                }
+            }
+        }
+        return egressNodes;
+
     }
 
     public void processModifiedChannel(Channel before, Channel after) {
-        LOG.info("Deploy Channel!");
-        Channel channel = addBfrIdToChannel(after,after.getEgressNode());
-        ConfigurationResult writedChannelResult = bierConfigWriter.writeChannel(
-                ConfigurationType.MODIFY, channel);
-        if (!writedChannelResult.isSuccessful()) {
-            notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
-            return;
-        }
 
-        if (checkEgressNodeDeleted(before.getEgressNode(),after.getEgressNode())) {
-            LOG.info("Del Egress node!");
+        if (null == before.getIngressNode()) {
+            LOG.info("First time deploy channel:" + after.getName());
+            processAddedChannel(after);
+        } else if (!before.getIngressNode().equals(after.getIngressNode())
+                || ((before.getIngressNode().equals(after.getIngressNode()))
+                        && (before.getSrcTp() != null || after.getSrcTp() != null)
+                        && !(before.getSrcTp().equals(after.getSrcTp())))) {
+            LOG.info("Ingress node change of channel:" + after.getName());
+            processDeletedChannel(before);
+            processAddedChannel(after);
+        } else {
+            LOG.info("Egress node list change of channel:" + after.getName());
+            List<EgressNode> egressNodeAdded = getEgressNodeListAddOrDelete(after.getEgressNode(),
+                    before.getEgressNode());
+            if (!egressNodeAdded.isEmpty()) {
+                processEgressNodeAdded(after,egressNodeAdded);
+            }
+
             List<EgressNode> egressNodeDeleted =
-                 getEgressNodeListDeleted(before.getEgressNode(),after.getEgressNode());
-            processDeletedEgressNode(before,egressNodeDeleted);
+                    getEgressNodeListAddOrDelete(before.getEgressNode(),after.getEgressNode());
+            if (!egressNodeDeleted.isEmpty()) {
+                processEgressNodeDeleted(before,egressNodeDeleted);
+            }
+
+            List<EgressNode> egressNodeTpChange =
+                    getTpChangedEgressNodes(before.getEgressNode(),after.getEgressNode());
+            if (!egressNodeTpChange.isEmpty()) {
+                processTpChangedEgressNodes(after,egressNodeTpChange);
+            }
         }
     }
 
-    private void processDeletedEgressNode(Channel channel,  List<EgressNode> egressNodeList) {
+    private void processTpChangedEgressNodes(Channel channel,List<EgressNode> changedEgressNodes) {
+        if (null == channel || null == changedEgressNodes || changedEgressNodes.isEmpty()) {
+            return;
+        }
+        ChannelBuilder builder = new ChannelBuilder(channel);
+        builder.setEgressNode(changedEgressNodes);
+        LOG.info("TPs of egress nodes changes, channel info -- {} ; changed egress nodes -- {}",
+                channel,changedEgressNodes);
+        ConfigurationResult modifyEgressNodeResult = bierConfigWriter.writeChannelEgressNode(
+                ConfigurationType.MODIFY, builder.build());
+        if (!modifyEgressNodeResult.isSuccessful()) {
+            notificationProvider.notifyFailureReason(modifyEgressNodeResult.getFailureReason());
+            return;
+        }
+    }
+
+    private void processEgressNodeAdded(Channel channel, List<EgressNode> egressNodeList) {
         if (null == channel || null == egressNodeList || egressNodeList.isEmpty()) {
             return;
         }
-        Channel channelBfr = addBfrIdToChannel(channel,egressNodeList);
-        ConfigurationResult writedChannelResult = bierConfigWriter.writeChannelEgressNode(
-               ConfigurationType.DELETE, channelBfr);
-        if (!writedChannelResult.isSuccessful()) {
-            notificationProvider.notifyFailureReason(writedChannelResult.getFailureReason());
+        ChannelBuilder builder = new ChannelBuilder(channel);
+        builder.setEgressNode(egressNodeList);
+        ConfigurationResult addEgressNodeResult = bierConfigWriter.writeChannelEgressNode(
+                ConfigurationType.ADD, builder.build());
+        if (!addEgressNodeResult.isSuccessful()) {
+            notificationProvider.notifyFailureReason(addEgressNodeResult.getFailureReason());
             return;
         }
     }
 
-    private List<EgressNode>  getEgressNodeListDeleted(List<EgressNode> nodeBefore,List<EgressNode> nodeAfter) {
-        List<EgressNode> nodeDeleted = new ArrayList<>();
-        if (null == nodeBefore &&  null == nodeAfter) {
-            return nodeDeleted;
-        }
-        if (null == nodeAfter && null != nodeBefore) {
-            return nodeBefore;
-        }
-        if (nodeBefore.size() > nodeAfter.size()) {
-            for (EgressNode egressNode : nodeBefore) {
-                if (null == getNodeById(egressNode.getNodeId(),nodeAfter)) {
-                    nodeDeleted.add(egressNode);
-                }
-            }
-        }
-        return nodeDeleted;
-    }
-
-    private EgressNode getNodeById(String nodeId, List<EgressNode> nodeAfter) {
-        if (null == nodeId || null == nodeAfter || nodeAfter.isEmpty()) {
-            return null;
-        }
-        for (EgressNode node  : nodeAfter) {
-            if (node.getNodeId().equals(nodeId)) {
-                return node;
-            }
-        }
-        return null;
-    }
-
-
-    private boolean checkEgressNodeDeleted(List<EgressNode> nodeBefore,List<EgressNode> nodeAfter) {
-        if (null != nodeBefore && null == nodeAfter) {
-            return true;
-        }
-        if (null != nodeBefore && null != nodeAfter
-            && nodeBefore.size() > nodeAfter.size()) {
-            return true;
-        }
-        return false;
-    }
-
-    private BfrId getBfrIdByBierInfo(String nodeId,DomainId domainId, SubDomainId subDomainId) {
-        if (null == nodeId || null == domainId || null == subDomainId) {
-            return null;
-        }
-        final InstanceIdentifier<BierNode> path = InstanceIdentifier.create(BierNetworkTopology.class)
-                                                  .child(BierTopology.class, new BierTopologyKey(
-                                                          "example-linkstate-topology"))
-                                                  .child(BierNode.class,new BierNodeKey(nodeId));
-        final ReadTransaction tx = dataProvider.newReadOnlyTransaction();
-        Optional<BierNode> bierNode = null;
-        BierNode node = null;
-        try {
-            bierNode = tx.read(LogicalDatastoreType.CONFIGURATION, path).checkedGet();
-            if (bierNode.isPresent()) {
-                node = bierNode.get();
-            }
-        } catch (ReadFailedException e) {
-            LOG.error("Get node from bier topology is null:" + e.getStackTrace());
-        }
-        if (null == node) {
-            return null;
-        }
-        List<Domain> domainList = node.getBierNodeParams().getDomain();
-        if (null == domainList || domainList.isEmpty()) {
-            return null;
-        }
-        for (Domain domain : domainList) {
-            if (domain.getDomainId().equals(domainId)) {
-                List<SubDomain> subDomainList = domain.getBierGlobal().getSubDomain();
-                for (SubDomain subDomain : subDomainList) {
-                    if (subDomain.getSubDomainId().equals(subDomainId)) {
-                        return subDomain.getBfrId();
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    private Channel addBfrIdToChannel(Channel channel,List<EgressNode> egressNodeList) {
-        if (null == channel) {
-            return null;
+    private void processEgressNodeDeleted(Channel channel,  List<EgressNode> egressNodeList) {
+        if (null == channel || null == egressNodeList || egressNodeList.isEmpty()) {
+            return;
         }
         ChannelBuilder builder = new ChannelBuilder(channel);
-        BfrId ingressBfrId = getBfrIdByBierInfo(channel.getIngressNode(),channel.getDomainId(),
-                    channel.getSubDomainId());
-        if (null != ingressBfrId) {
-            builder.setIngressBfrId(ingressBfrId);
+        builder.setEgressNode(egressNodeList);
+        ConfigurationResult deleteEgressNodeResult = bierConfigWriter.writeChannelEgressNode(
+               ConfigurationType.DELETE, builder.build());
+        if (!deleteEgressNodeResult.isSuccessful()) {
+            notificationProvider.notifyFailureReason(deleteEgressNodeResult.getFailureReason());
+            return;
         }
-        if (null != egressNodeList && !egressNodeList.isEmpty()) {
-            List<EgressNode> egressNodeBfrList = new ArrayList<>();
-            for (EgressNode egressNode: egressNodeList) {
-                EgressNode egressNodeBfr = addBfrToEgressNode(channel,egressNode);
-                egressNodeBfrList.add(egressNodeBfr);
-            }
-            builder.setEgressNode(egressNodeBfrList);
-        }
-        return builder.build();
     }
 
-    private EgressNode addBfrToEgressNode(Channel channel,EgressNode egressNode) {
-        if (null == channel || null == egressNode) {
-            return null;
+    private List<EgressNode>  getEgressNodeListAddOrDelete(List<EgressNode> egressNodeList1,List<EgressNode>
+            egressNodeList2) {
+        List<EgressNode> nodeList = new ArrayList<>();
+        if (null == egressNodeList1) {
+            return nodeList;
         }
-        BfrId egressBfrId = getBfrIdByBierInfo(egressNode.getNodeId(),channel.getDomainId(),
-                  channel.getSubDomainId());
-        EgressNodeBuilder builderNode = new EgressNodeBuilder(egressNode);
-        builderNode.setEgressBfrId(egressBfrId);
-        return builderNode.build();
+        if (null == egressNodeList2) {
+            return egressNodeList1;
+        }
+        for (EgressNode egressNode:egressNodeList1) {
+            boolean nodeNotExist = true;
+            for (EgressNode node:egressNodeList2) {
+                if (node.getNodeId().equals(egressNode.getNodeId())) {
+                    nodeNotExist = false;
+                    break;
+                }
+            }
+            if (nodeNotExist) {
+                nodeList.add(egressNode);
+            }
+        }
+
+        return nodeList;
     }
 
 }

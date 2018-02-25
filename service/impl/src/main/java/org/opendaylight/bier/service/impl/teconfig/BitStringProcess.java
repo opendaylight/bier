@@ -8,7 +8,10 @@
 package org.opendaylight.bier.service.impl.teconfig;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -17,8 +20,11 @@ import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.service.impl.NotificationProvider;
+import org.opendaylight.bier.service.impl.allocatebp.BPAllocateStrategy;
+import org.opendaylight.bier.service.impl.allocatebp.TopoBasedBpAllocateStrategy;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BpAssignmentStrategy;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.egress.node.RcvTp;
@@ -28,7 +34,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateBierPathInputBu
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateBierPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.input.Bfer;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.input.BferBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.links.PathLink;
 import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.TePath;
@@ -44,21 +50,23 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.BitString;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.TeInfo;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.fwd.item.TeSi;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.info.TeSubdomain;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.info.te.subdomain.TeBsl;
 import org.opendaylight.yangtools.yang.common.RpcResult;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class BitStringProcess {
 
     private static final Logger LOG = LoggerFactory.getLogger(BitStringProcess.class);
-    private final DataBroker dataBroker;
     private final RpcConsumerRegistry rpcConsumerRegistry;
     private NotificationProvider notificationProvider;
     private BiftInfoProcess biftInfoProcess;
     private BierTeBitstringWriter bierTeBitstringWriter;
     private BitStringDB bitStringDB;
+    private BPAllocateStrategy bpAllocateStrategy;
+
     private long pathIdLocked = 0;
 
     public static final int PATH_ADD = 1;
@@ -68,13 +76,13 @@ public class BitStringProcess {
     public BitStringProcess(final DataBroker dataBroker, RpcConsumerRegistry rpcConsumerRegistry,
                             BierTeBitstringWriter bierTeBitstringWriter,
                             BierTeBiftWriter bierTeBiftWriter) {
-        this.dataBroker = dataBroker;
         this.notificationProvider = new NotificationProvider();
         this.rpcConsumerRegistry = rpcConsumerRegistry;
         this.bierTeBitstringWriter = bierTeBitstringWriter;
-        this.biftInfoProcess = new BiftInfoProcess(dataBroker,rpcConsumerRegistry,
-                bierTeBiftWriter, bierTeBitstringWriter);
+        this.biftInfoProcess = new BiftInfoProcess(dataBroker, bierTeBiftWriter);
         this.bitStringDB = new BitStringDB(dataBroker);
+        this.bpAllocateStrategy = TopoBasedBpAllocateStrategy.getInstance();
+//        this.bpAllocateStrategy = PathMonopolyBPAllocateStrategy.getInstance();
     }
 
     public boolean bierTeBitStringProcess(Channel channel,Channel channelCurrent,int pathComputeType) {
@@ -88,20 +96,60 @@ public class BitStringProcess {
             if (null != output && null == output.getBfer()) {
                 List<TePath> tePathList = bitStringDB.getTePathFromChannel(channel.getName());
                 if (tePathList != null && !tePathList.isEmpty()) {
-                    if (setBitStringConfigToSouthbound(channel.getIngressNode(), ConfigurationType.DELETE,
-                            tePathList.get(0))) {
-                        return bitStringDB.delBitStringToDataStore(channel.getName());
+                    LOG.info("Recycle all bps of the channel");
+                    List<Bfer> bferList = bpAllocateStrategy.getBferListOfChannel(channel.getName());
+
+                    if (channel.getBpAssignmentStrategy().equals(BpAssignmentStrategy.Automatic)) {
+                        if (!bpAllocateStrategy.recycleBPs(channel,bferList)) {
+                            webSocketToApp("Recycle bp failed!");
+                            return false;
+                        }
+                        bpAllocateStrategy.removeBferListToChannel(channel.getName());
                     }
+
+                    for (TePath tePath:tePathList) {
+                        setBitStringConfigToSouthbound(channel.getIngressNode(), ConfigurationType.DELETE, tePath);
+                    }
+
+                    return bitStringDB.delBitStringToDataStore(channel.getName());
                 }
             } else {
                 LOG.error("Remove the channel computation failed!");
             }
         }
-        LOG.info("Process create bier te path!");
-        List<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer>  bferList = computePathByPce(
-                channel,pathComputeType);
-        LOG.info("Process bit string!" + bferList);
+        LOG.info("Process calculate bier te path!");
+        List<Bfer> bferList = computePathByPce(channel,pathComputeType);
+
+        if (channel.getBpAssignmentStrategy().equals(BpAssignmentStrategy.Automatic)) {
+            List<Bfer> oldBferList = bpAllocateStrategy.getBferListOfChannel(channel.getName());
+            if (!processChannelPathChange(channel, channelCurrent, bferList, oldBferList)) {
+                return false;
+            }
+        }
+
         return processBierTePath(channelCurrent,bferList);
+    }
+
+    private List<Bfer> deepCopy(List<Bfer> sourceList) {
+        List<Bfer> bfers = new ArrayList<>();
+        for (Bfer bfer:sourceList) {
+            org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.BferBuilder bferBuilder =
+                    new org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.BferBuilder(bfer);
+            bfers.add(bferBuilder.build());
+        }
+        return bfers;
+    }
+
+    public List<Bfer> notChangeBferList(List<Bfer> bferList,List<Bfer> oldBferList) {
+        List<Bfer> bfers = new ArrayList<>();
+        if (null != oldBferList) {
+            for (Bfer bfer:bferList) {
+                if (oldBferList.contains(bfer)) {
+                    bfers.add(bfer);
+                }
+            }
+        }
+        return bfers;
     }
 
     public boolean updateBitStringList(Channel channel, BierPathUpdate bierPath) {
@@ -113,8 +161,39 @@ public class BitStringProcess {
             return false;
         }
 
-        List<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer> bferList = bierPath.getBfer();
+        List<Bfer> bferList = bierPath.getBfer();
+
+        if (channel.getBpAssignmentStrategy().equals(BpAssignmentStrategy.Automatic)) {
+            List<Bfer> oldBferList = bpAllocateStrategy.getBferListOfChannel(channel.getName());
+            if (!processChannelPathChange(channel, channel, bferList, oldBferList)) {
+                return false;
+            }
+        }
+
         return processBierTePath(channel,bferList);
+    }
+
+    private boolean processChannelPathChange(Channel channel, Channel currentChannel, List<Bfer> bferList,
+                                             List<Bfer> oldBferList) {
+        List<Bfer> tmpBferList = deepCopy(bferList);
+        List<Bfer> notChangeBferList = notChangeBferList(tmpBferList,oldBferList);
+        if (null != oldBferList) {
+            LOG.info("Process remove odl bfer list of channel");
+            oldBferList.removeAll(notChangeBferList);
+            if (!bpAllocateStrategy.recycleBPs(channel,oldBferList)) {
+                webSocketToApp("Recycle bp failed!");
+                return false;
+            }
+        }
+        tmpBferList.removeAll(notChangeBferList);
+        LOG.info("Process add new bfer list of channel");
+        if (!bpAllocateStrategy.allocateBPs(currentChannel,tmpBferList)) {
+            webSocketToApp("Allocate bp failed!");
+            return false;
+        }
+        LOG.info("Process bit string!" + bferList);
+        bpAllocateStrategy.setBferListToChannel(channel.getName(), bferList);
+        return true;
     }
 
     private boolean processBierTePath(Channel channelCurrent,List<
@@ -128,21 +207,27 @@ public class BitStringProcess {
             LOG.info("Get TeInfo from BiftInfoProcess failed!");
             return false;
         }
-        TePath tePath = getTePathFromTeInfo(teInfoList);
-        LOG.info("tePath: " + tePath);
+
+        List<TePath> tePathList = getTePathFromTeInfo(teInfoList);
+        LOG.info("tePath: " + tePathList);
         boolean result = false;
         LOG.info("channel: " + channelCurrent.getName());
         if (bitStringDB.checkChannelPathExisted(channelCurrent.getName())) {
             LOG.info("Modify!");
-            result = setBitStringConfigToSouthbound(channelCurrent.getIngressNode(),ConfigurationType.MODIFY,tePath);
+            for (TePath tePath : tePathList) {
+                result = setBitStringConfigToSouthbound(channelCurrent.getIngressNode(),
+                        ConfigurationType.MODIFY,tePath);
+            }
         } else {
             LOG.info("Add!");
-            LOG.info("tePath: " + tePath);
-            result = setBitStringConfigToSouthbound(channelCurrent.getIngressNode(),ConfigurationType.ADD,tePath);
+            for (TePath tePath : tePathList) {
+                result = setBitStringConfigToSouthbound(channelCurrent.getIngressNode(),
+                        ConfigurationType.ADD,tePath);
+            }
         }
         if (true == result) {
             LOG.info("Set bitString to data store");
-            return bitStringDB.setBitStringToDataStore(channelCurrent,tePath);
+            return bitStringDB.setBitStringToDataStore(channelCurrent,tePathList);
         }
         return false;
     }
@@ -171,24 +256,77 @@ public class BitStringProcess {
         return null;
     }
 
-    private TePath getTePathFromTeInfo(List<TeInfo> teInfoList) {
+    private List<TePath> getTePathFromTeInfo(List<TeInfo> teInfoList) {
         if (null == teInfoList || teInfoList.isEmpty()) {
             return null;
         }
-        List<BitString> bitStringList = new ArrayList<>();
+        Map<TeSubdomainBslSiKey,List<BitString>> tePathBitstringMap = new HashMap<>();
         for (TeInfo teInfo : teInfoList) {
-            BitString bitString = teInfo.getTeSubdomain().get(0).getTeBsl().get(0).getTeSi().get(0).getTeFIndex()
-                    .get(0).getTeFIndex();
-            bitStringList.add(bitString);
-        }
-        if (null != bitStringList && !bitStringList.isEmpty()) {
-            TeBsl teBsl = teInfoList.get(0).getTeSubdomain().get(0).getTeBsl().get(0);
+            TeSubdomain teSubdomain = teInfo.getTeSubdomain().get(0);
+            TeBsl teBsl = teSubdomain.getTeBsl().get(0);
             TeSi teSi = teBsl.getTeSi().get(0);
-            LOG.info("fwd bsl is: " + teBsl.getFwdBsl());
-            return constructTePath(teInfoList.get(0).getTeSubdomain().get(0).getSubdomainId(),
-                    teBsl.getFwdBsl(),teSi.getSi(),bitStringList);
+            BitString bitstring = teSi.getTeFIndex().get(0).getTeFIndex();
+            TeSubdomainBslSiKey teSubdomainBslSiKey = new TeSubdomainBslSiKey(teSubdomain,teBsl,teSi);
+
+            List<BitString> bitStringList = tePathBitstringMap.get(teSubdomainBslSiKey);
+            if (null == bitStringList) {
+                bitStringList = new ArrayList<>();
+                tePathBitstringMap.put(teSubdomainBslSiKey,bitStringList);
+            }
+            bitStringList.add(bitstring);
+
         }
-        return null;
+
+        List<TePath> tePathList = new ArrayList<>();
+        if (!tePathBitstringMap.isEmpty()) {
+            Set<TeSubdomainBslSiKey> teSubdomainBslSiKeySet = tePathBitstringMap.keySet();
+            for (TeSubdomainBslSiKey teSubdomainBslSiKey : teSubdomainBslSiKeySet) {
+                List<BitString> bitStringList = tePathBitstringMap.get(teSubdomainBslSiKey);
+                TePath tePath = constructTePath(teSubdomainBslSiKey.getTeSubDomain().getSubdomainId(),
+                        teSubdomainBslSiKey.getTeBsl().getFwdBsl(),teSubdomainBslSiKey.getTeSi().getSi(),bitStringList);
+                tePathList.add(tePath);
+            }
+        }
+
+        return tePathList;
+    }
+
+    private class TeSubdomainBslSiKey {
+        private TeSubdomain teSubDomain;
+        private TeBsl teBsl;
+        private TeSi teSi;
+
+        TeSubdomainBslSiKey(TeSubdomain teSubDomain, TeBsl teBsl, TeSi teSi) {
+            this.teSubDomain = teSubDomain;
+            this.teBsl = teBsl;
+            this.teSi = teSi;
+        }
+
+        public TeSubdomain getTeSubDomain() {
+            return teSubDomain;
+        }
+
+        public TeBsl getTeBsl() {
+            return teBsl;
+        }
+
+        public TeSi getTeSi() {
+            return teSi;
+        }
+
+        @Override
+        public int hashCode() {
+            return 1;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            TeSubdomainBslSiKey other = (TeSubdomainBslSiKey)obj;
+            boolean subdomainEquals = this.getTeSubDomain().getKey().equals(other.getTeSubDomain().getKey());
+            boolean bslEquals = this.getTeBsl().getKey().equals(other.getTeBsl().getKey());
+            boolean siEquals = this.getTeSi().getKey().equals(other.getTeSi().getKey());
+            return subdomainEquals && bslEquals && siEquals;
+        }
     }
 
     private TePath constructTePath(SubDomainId subDomainId, Integer bslLen, Si si, List<BitString> bitStringList) {
@@ -249,15 +387,17 @@ public class BitStringProcess {
         return true;
     }
 
-    private CreateBierPathOutput createBierPathRpc(Channel channel) {
+    public CreateBierPathOutput createBierPathRpc(Channel channel) {
 
         CreateBierPathInputBuilder createBierPathInputBuilder = new CreateBierPathInputBuilder();
         createBierPathInputBuilder.setBfirNodeId(channel.getIngressNode());
-        List<Bfer> bferList = getBferListFromEgressNode(channel.getEgressNode());
+        List<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.input.Bfer> bferList
+                = getBferListFromEgressNode(channel.getEgressNode());
         if (null != bferList && !bferList.isEmpty()) {
             createBierPathInputBuilder.setBfer(bferList);
         }
         createBierPathInputBuilder.setChannelName(channel.getName());
+        createBierPathInputBuilder.setSubDomainId(channel.getSubDomainId());
 
         LOG.info("Rpc create bier path");
         Future<RpcResult<CreateBierPathOutput>> future = rpcConsumerRegistry.getRpcService(BierPceService.class)
@@ -282,6 +422,7 @@ public class BitStringProcess {
 
         RemoveBierPathInputBuilder removeBierPathInputBuilder = new RemoveBierPathInputBuilder();
         removeBierPathInputBuilder.setChannelName(channel.getName());
+        removeBierPathInputBuilder.setSubDomainId(channel.getSubDomainId());
         removeBierPathInputBuilder.setBfirNodeId(channel.getIngressNode());
         if (PATH_REMOVE == type) {
             List<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.remove.bier.path.input.Bfer> bferList =
@@ -322,9 +463,11 @@ public class BitStringProcess {
         return bferList;
     }
 
-    private List<Bfer> getBferListFromEgressNode(List<EgressNode> egressNodeList) {
+    private List<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.input.Bfer>
+        getBferListFromEgressNode(List<EgressNode> egressNodeList) {
 
-        List<Bfer> bferList = new ArrayList<>();
+        List<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.input.Bfer> bferList =
+                new ArrayList<>();
         for (EgressNode egressNode : egressNodeList) {
             BferBuilder bferBuilder = new BferBuilder();
             bferBuilder.setBferNodeId(egressNode.getNodeId());
@@ -333,11 +476,10 @@ public class BitStringProcess {
         return bferList;
     }
 
-    private List<TeInfo> getTeInfoFrombferList(Channel channelCurrent,
-                         List<org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer> bferList) {
+    public List<TeInfo> getTeInfoFrombferList(Channel channelCurrent, List<Bfer> bferList) {
         List<String> tpList = new ArrayList<>();
         List<String> nodeList = new ArrayList<>();
-        for (org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer bfer : bferList) {
+        for (Bfer bfer : bferList) {
             List<PathLink> pathLinkList = bfer.getBierPath().getPathLink();
             for (PathLink pathLink : pathLinkList) {
                 if (checkNodeTpExisted(tpList,nodeList,pathLink.getLinkDest().getDestNode(),pathLink.getLinkDest()
@@ -349,9 +491,11 @@ public class BitStringProcess {
             }
         }
         for (EgressNode egressNode :channelCurrent.getEgressNode()) {
-            for (RcvTp rcvTp : egressNode.getRcvTp()) {
-                nodeList.add(egressNode.getNodeId());
-                tpList.add(rcvTp.getTp());
+            if (null != egressNode.getRcvTp()) {
+                for (RcvTp rcvTp : egressNode.getRcvTp()) {
+                    nodeList.add(egressNode.getNodeId());
+                    tpList.add(rcvTp.getTp());
+                }
             }
         }
         return getTeInfoFromNodeTp(channelCurrent,nodeList,tpList);
@@ -366,8 +510,8 @@ public class BitStringProcess {
         List<TeInfo> teInfoList = new ArrayList<>();
         for (int i = 0;i < tpList.size(); i++) {
             BierNode node = biftInfoProcess.getBierNodeById(nodeIdList.get(i));
-            List<TeInfo> teInfo = biftInfoProcess.getBiftTeInfoFromInput(channel.getDomainId(),channel.getSubDomainId(),
-                    node,tpList.get(i));
+            List<TeInfo> teInfo = biftInfoProcess.getBiftTeInfoFromInput(bpAllocateStrategy, channel,
+                    node, tpList.get(i));
             if (null != teInfo && !teInfo.isEmpty()) {
                 for (TeInfo teinfo : teInfo) {
                     teInfoList.add(teinfo);

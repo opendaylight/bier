@@ -19,7 +19,7 @@ import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierTeLabelRangeSize;
@@ -37,7 +37,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 
-public class BierTeLabelRangeChangeListenerTest extends AbstractConcurrentDataBrokerTest {
+public class BierTeLabelRangeChangeListenerTest extends AbstractDataBrokerTest {
 
     private BierTeLabelRangeConfigWriterMock bierTeLabelRangeConfigWriterMock;
     private BierTeLabelRangeChangeListener bierTeLabelRangeChangeListener;

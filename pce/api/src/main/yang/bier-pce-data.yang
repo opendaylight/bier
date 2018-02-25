@@ -4,6 +4,8 @@ module bier-pce-data {
     prefix "bier-pce-data";
 
     import bier-pce {prefix bier-pce; revision-date 2017-03-28;}
+    import ietf-bier {prefix bier;}
+    import bier-topology {prefix topo; revision-date 2016-11-02;}
 
     revision "2017-03-28" {
         description "Initial revision of bier pce data model";
@@ -20,8 +22,26 @@ module bier-pce-data {
                   leaf topology-id {
                       type string;
                   }
+                  leaf sub-domain-id {
+                      type bier:sub-domain-id;
+                  }
                   uses bier-pce:BierPath;
           }
+    }
+
+    container bier-te-frr-data {
+        description "bier te-frr data ";
+        list bier-te-frr-sub-domain {
+            key "sub-domain-id";
+            leaf sub-domain-id {
+              type bier:sub-domain-id;
+            }
+            list bier-te-frr-link {
+                key "link-id";
+                uses topo:bier-link;
+                uses bier-pce:te-frr-path;
+            }
+        }
     }
 
 }

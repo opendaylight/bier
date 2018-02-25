@@ -85,6 +85,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </dependency>
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
+      <artifactId>bier-frr-model</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.bier</groupId>
       <artifactId>bier-adapter</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -96,6 +101,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
       <groupId>org.opendaylight.bier</groupId>
       <artifactId>channel-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.bier</groupId>
+      <artifactId>bierman-impl</artifactId>
       <version>${project.version}</version>
     </dependency>
 

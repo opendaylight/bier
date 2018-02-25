@@ -13,16 +13,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import org.opendaylight.bier.pce.impl.provider.DbProvider;
 import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkDest;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkDestBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkSource;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.link.LinkSourceBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLinkBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeNodeParams;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomainKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomainBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomainKey;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
+import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 
 public class TopoMockUtils extends AbstractConcurrentDataBrokerTest {
+    public static final String DEFAULT_TOPO = "example-linkstate-topology";
+
     public static BierLink buildLink(String srcNode, String srcPort, String destPort, String destNode, long metric) {
         return new BierLinkBuilder()
                 .setLinkSource(buildSrc(srcNode, srcPort))
@@ -145,4 +163,55 @@ public class TopoMockUtils extends AbstractConcurrentDataBrokerTest {
         return links;
     }
 
+    public static void buildBierTeNodeInOneSubDomain(boolean isNode2InSubdomain1) {
+        List<String> nodeIdList = new ArrayList<>();
+        nodeIdList.add("1.1.1.1");
+        if (isNode2InSubdomain1) {
+            nodeIdList.add("2.2.2.2");
+        }
+        nodeIdList.add("3.3.3.3");
+        nodeIdList.add("4.4.4.4");
+        nodeIdList.add("5.5.5.5");
+        nodeIdList.add("6.6.6.6");
+        for (String node : nodeIdList) {
+            TeSubDomain bierTeNode = buildBierTeNodeInfo(1);
+            DbProvider.getInstance().mergeData(LogicalDatastoreType.CONFIGURATION,
+                    buildBierTeSubDomainPath(node,1,1), bierTeNode);
+        }
+    }
+
+    public static void buildBierTeNodeInTwoSubDomain(boolean isNode2InSuddomain2) {
+        buildBierTeNodeInOneSubDomain(true);
+        List<String> nodeIdList = new ArrayList<>();
+        nodeIdList.add("1.1.1.1");
+        if (isNode2InSuddomain2) {
+            nodeIdList.add("2.2.2.2");
+        }
+        nodeIdList.add("3.3.3.3");
+        nodeIdList.add("4.4.4.4");
+        nodeIdList.add("5.5.5.5");
+        nodeIdList.add("6.6.6.6");
+        for (String node : nodeIdList) {
+            TeSubDomain bierNode = buildBierTeNodeInfo(2);
+            DbProvider.getInstance().mergeData(LogicalDatastoreType.CONFIGURATION,
+                    buildBierTeSubDomainPath(node,1,2), bierNode);
+        }
+    }
+
+
+
+    private static TeSubDomain buildBierTeNodeInfo(int subDomainId) {
+        return new TeSubDomainBuilder()
+                .setSubDomainId(new SubDomainId(subDomainId))
+                .build();
+    }
+
+    private static InstanceIdentifier<TeSubDomain> buildBierTeSubDomainPath(String node,int domainId, int subDomainId) {
+        return InstanceIdentifier.create(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(DEFAULT_TOPO))
+                .child(BierNode.class,new BierNodeKey(node))
+                .child(BierTeNodeParams.class)
+                .child(TeDomain.class, new TeDomainKey(new DomainId(domainId)))
+                .child(TeSubDomain.class, new TeSubDomainKey(new SubDomainId(subDomainId)));
+    }
 }

@@ -10,12 +10,10 @@ package org.opendaylight.bier.service.impl.teconfig;
 import java.util.Collection;
 
 import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
-import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
-import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
@@ -42,10 +40,8 @@ public class BierNodeTeBpChangeListener implements DataTreeChangeListener<TeBp> 
     private static final int TE_BP_ADD = 1;
     private static final int TE_BP_DELETE = 2;
 
-    public BierNodeTeBpChangeListener(final DataBroker dataBroker, final RpcConsumerRegistry rpcConsumerRegistry,
-                                      final BierTeBiftWriter bierTeBiftWriter,
-                                      final BierTeBitstringWriter bierTeBitstringWriter) {
-        biftInfoProcess = new BiftInfoProcess(dataBroker, rpcConsumerRegistry, bierTeBiftWriter, bierTeBitstringWriter);
+    public BierNodeTeBpChangeListener(final DataBroker dataBroker, final BierTeBiftWriter bierTeBiftWriter) {
+        biftInfoProcess = new BiftInfoProcess(dataBroker, bierTeBiftWriter);
     }
 
     private static final InstanceIdentifier<TeBp> TE_BP_IID = InstanceIdentifier.create(BierNetworkTopology.class)
@@ -67,11 +63,7 @@ public class BierNodeTeBpChangeListener implements DataTreeChangeListener<TeBp> 
                     processFwdInfo(change.getRootPath().getRootIdentifier(), rootNode.getDataAfter(), TE_BP_ADD);
                     break;
                 case SUBTREE_MODIFIED:
-                    LOG.info("onDataTreeChanged - TeBp config with path {} was modified: "
-                            + "old TeBp: {}, new TeBp: {}", change.getRootPath().getRootIdentifier(),
-                            rootNode.getDataBefore(), rootNode.getDataAfter());
-                    biftInfoProcess.processModifiedFwdInfo(change.getRootPath().getRootIdentifier(),
-                            rootNode.getDataAfter());
+
                     break;
                 case DELETE:
                     LOG.info("onDataTreeChanged - TeBp config with path {} was deleted: old TeBp: {}",

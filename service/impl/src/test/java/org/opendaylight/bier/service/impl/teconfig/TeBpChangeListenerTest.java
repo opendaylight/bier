@@ -21,7 +21,7 @@ import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
@@ -66,7 +66,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 
-public class TeBpChangeListenerTest extends AbstractConcurrentDataBrokerTest {
+public class TeBpChangeListenerTest extends AbstractDataBrokerTest {
 
     private BierTeBiftWriterMock bierTeBiftWriterMock;
     private BierNodeTeBpChangeListener bierNodeTeBpChangeListener;
@@ -77,8 +77,7 @@ public class TeBpChangeListenerTest extends AbstractConcurrentDataBrokerTest {
 
     public void setUp() {
         bierTeBiftWriterMock = new BierTeBiftWriterMock();
-        bierNodeTeBpChangeListener = new BierNodeTeBpChangeListener(getDataBroker(), rpcConsumerRegistry,
-                bierTeBiftWriterMock, bierTeBitstringWriter);
+        bierNodeTeBpChangeListener = new BierNodeTeBpChangeListener(getDataBroker(), bierTeBiftWriterMock);
         getDataBroker().registerDataTreeChangeListener(new DataTreeIdentifier<TeBp>(
                 LogicalDatastoreType.CONFIGURATION, bierNodeTeBpChangeListener.getTeBpIid()),
                 bierNodeTeBpChangeListener);

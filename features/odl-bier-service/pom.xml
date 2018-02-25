@@ -41,6 +41,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
+       <dependency>
+            <groupId>org.opendaylight.bier</groupId>
+            <artifactId>odl-bier-bierman</artifactId>
+            <version>${project.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>pce-impl</artifactId>

@@ -28,6 +28,4 @@ public interface ISourceData<V, E> {
 
     LinkedList<V> getDistanceOrderList();
 
-    void setDestNodeDescendFlag(List<E> incomingEdges);
-
 }

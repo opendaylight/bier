@@ -11,38 +11,20 @@ import com.google.common.base.Optional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
-import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
 import org.opendaylight.bier.adapter.api.ConfigurationResult;
 import org.opendaylight.bier.adapter.api.ConfigurationType;
 import org.opendaylight.bier.service.impl.NotificationProvider;
+import org.opendaylight.bier.service.impl.allocatebp.BPAllocateStrategy;
+import org.opendaylight.bier.service.impl.allocatebp.SubdomainBslSi;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
-import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.BierChannelApiService;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelWithPortInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.QueryChannelWithPortOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.api.rev161102.query.channel.with.port.output.QueryChannel;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BpAssignmentStrategy;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.ChannelKey;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.EgressNode;
-import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.channel.egress.node.RcvTp;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
-import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.BierPceService;
-import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortOutput;
-import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.channel.through.port.output.RelatedChannel;
-import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.TePath;
-import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.PathBuilder;
-import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.bier.te.path.PathKey;
-import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.te.path.Bitstring;
-import org.opendaylight.yang.gen.v1.urn.bier.te.path.rev170503.te.path.BitstringBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.BierNetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
@@ -69,7 +51,6 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.info.te.subdomain.TeBslBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,25 +59,16 @@ public class BiftInfoProcess {
 
     private static final Logger LOG = LoggerFactory.getLogger(BiftInfoProcess.class);
     private final DataBroker dataBroker;
-    private final RpcConsumerRegistry rpcConsumerRegistry;
     private final BierTeBiftWriter bierTeBiftWriter;
-    private final BierTeBitstringWriter bierTeBitstringWriter;
-    private BitStringDB bitStringDB;
     private NotificationProvider notificationProvider;
     private static final int TE_ADJ_TYPE_CONNECTED = 1;
     private static final int TE_ADJ_TYPE_LOCALDECAP = 2;
-    public static final int SET_LOCALDECAP = 3;
-    public static final int DEL_LOCALDECAP = 4;
-    private static final int ADD = 5;
+    private static final int ADD = 3;
     private static final int DELETE = 6;
 
-    public BiftInfoProcess(final DataBroker dataBroker, final RpcConsumerRegistry rpcConsumerRegistry,
-                           final BierTeBiftWriter bierTeBiftWriter, final BierTeBitstringWriter bierTeBitstringWriter) {
+    public BiftInfoProcess(final DataBroker dataBroker, final BierTeBiftWriter bierTeBiftWriter) {
         this.dataBroker = dataBroker;
-        this.rpcConsumerRegistry = rpcConsumerRegistry;
         this.bierTeBiftWriter = bierTeBiftWriter;
-        this.bierTeBitstringWriter = bierTeBitstringWriter;
-        this.bitStringDB = new BitStringDB(dataBroker);
         notificationProvider = new NotificationProvider();
     }
 
@@ -110,9 +82,8 @@ public class BiftInfoProcess {
         LOG.info("Process find bier link contains this node as source");
         BierLink bierLink = queryLinkByNodeIdAndTpId(homeNodeId, homeNodeTpId);
         if (null == bierLink) {
-            LOG.info("Could not find matched bierLink, check bp type whether local decap or not");
-            processLocalDecapBpInfoAndBitString(ADD, homeNodeId, domainId, subDomainId, bsl, si, homeNodeTpId,
-                    homeNodeBp);
+            LOG.info("Process the BP as local-decap");
+            processLocalDecapBpInfo(ADD, homeNodeId, subDomainId, bsl, si, homeNodeBp);
             return;
         }
         LOG.info("BierLink is " + bierLink);
@@ -142,34 +113,6 @@ public class BiftInfoProcess {
         LOG.info("Process added home node bift info");
         processAddedNodeBiftInfo(homeNodeId, subDomainId, bsl, si, homeNodeTpId, destNodeBp,
                 destNodeInLabel, homeNodeInLabel);
-
-        LOG.info("Query home node tpId channel by link");
-        List<RelatedChannel> homeNodeChannelList = queryChannelByLink(homeNodeId, homeNodeTpId);
-        if (null != homeNodeChannelList && homeNodeChannelList.isEmpty()) {
-            List<Channel> transferedHomeNodeChannelList = transferConnectedTypeBpChannel(homeNodeChannelList,
-                    domainId, subDomainId);
-            if (null != transferedHomeNodeChannelList && !transferedHomeNodeChannelList.isEmpty()) {
-                queryBitStringByChannelAndSendToSouth(ADD, transferedHomeNodeChannelList,
-                        subDomainId, bsl, si, destNodeBp);
-            }
-        }
-
-        LOG.info("Query dest node tpId channel by link");
-        List<RelatedChannel> destNodeChannelList = queryChannelByLink(bierLink.getLinkDest().getDestNode(),
-                bierLink.getLinkDest().getDestTp());
-        if (null == destNodeChannelList || destNodeChannelList.isEmpty()) {
-            LOG.info("Could not find matched channel");
-            return;
-        }
-
-        List<Channel> transferedDestNodeChannelList = transferConnectedTypeBpChannel(destNodeChannelList,
-                domainId, subDomainId);
-        if (null == transferedDestNodeChannelList || transferedDestNodeChannelList.isEmpty()) {
-            return;
-        }
-
-        queryBitStringByChannelAndSendToSouth(ADD, transferedDestNodeChannelList, subDomainId, bsl,
-                si, homeNodeBp);
     }
 
     public void processModifiedFwdInfo(InstanceIdentifier<TeBp> identifier, TeBp after) {
@@ -187,8 +130,7 @@ public class BiftInfoProcess {
         BierLink bierLink = queryLinkByNodeIdAndTpId(homeNodeId, homeNodeTpId);
         if (null == bierLink) {
             LOG.info("Could not find matched bierLink, check bp type whether local decap or not");
-            processLocalDecapBpInfoAndBitString(DELETE, homeNodeId, domainId, subDomainId, bsl, si,
-                    homeNodeTpId, homeNodeBp);
+            processLocalDecapBpInfo(DELETE, homeNodeId, subDomainId, bsl, si, homeNodeBp);
             return;
         }
         LOG.info("BierLink is " + bierLink);
@@ -207,35 +149,6 @@ public class BiftInfoProcess {
 
         LOG.info("Process deleted home node bift info");
         processDeletedNodeBiftInfo(homeNodeId, subDomainId, bsl, si, destNodeBp);
-
-        LOG.info("Query home node tpId channel by link");
-        List<RelatedChannel> homeNodeChannelList = queryChannelByLink(homeNodeId, homeNodeTpId);
-        if (null != homeNodeChannelList && !homeNodeChannelList.isEmpty()) {
-            List<Channel> transferedHomeNodeChannelList = transferConnectedTypeBpChannel(homeNodeChannelList,
-                    domainId, subDomainId);
-            if (null != transferedHomeNodeChannelList && !transferedHomeNodeChannelList.isEmpty()) {
-                queryBitStringByChannelAndSendToSouth(DELETE, transferedHomeNodeChannelList, subDomainId, bsl,
-                        si, destNodeBp);
-            }
-        }
-
-
-        LOG.info("Query dest node tpId channel by link");
-        List<RelatedChannel> destNodeChannelList = queryChannelByLink(bierLink.getLinkDest().getDestNode(),
-                bierLink.getLinkDest().getDestTp());
-        if (null == destNodeChannelList || destNodeChannelList.isEmpty()) {
-            LOG.info("Could not find matched channel");
-            return;
-        }
-
-        List<Channel> transferedDestNodeChannelList = transferConnectedTypeBpChannel(destNodeChannelList,
-                domainId, subDomainId);
-        if (null == transferedDestNodeChannelList || transferedDestNodeChannelList.isEmpty()) {
-            return;
-        }
-
-        queryBitStringByChannelAndSendToSouth(DELETE, transferedDestNodeChannelList, subDomainId, bsl,
-                si, homeNodeBp);
     }
 
     private void processAddedNodeBiftInfo(String nodeId, SubDomainId subDomainId, Bsl bsl, Si si, String tpId,
@@ -377,74 +290,6 @@ public class BiftInfoProcess {
         return null;
     }
 
-    public boolean processSetLocalDecapToBfirBfer(int type, Channel channel) {
-        LOG.info("Process bfir");
-        if (!processSetLocalDecapToBfir(type, channel.getDomainId(), channel.getSubDomainId(),
-                channel.getIngressNode(), channel.getSrcTp())) {
-            LOG.error("process set bp-te-adj-type of bfir failed");
-            return false;
-        }
-        LOG.info("Process bfer");
-        if (!processSetLocalDecapToBfer(type, channel.getDomainId(), channel.getSubDomainId(),
-                channel.getEgressNode())) {
-            LOG.error("process set bp-te-adj-type of  bfer failed");
-            return false;
-        }
-        LOG.info("process set bp-te-adj-type of bfir and bfer succeed");
-        return true;
-    }
-
-    private boolean processSetLocalDecapToBfir(int type, DomainId domainId, SubDomainId subDomainId, String nodeId,
-                                               String srcTp) {
-        if (null == domainId || null == subDomainId || null == nodeId || null == srcTp) {
-            return false;
-        }
-        LOG.info("Bfir");
-        BierNode bfir = getBierNodeById(nodeId);
-        if (null == bfir) {
-            LOG.info("Get bfir from datastore failed");
-            webSocketToApp("Bfir is not in datastore");
-            return false;
-        }
-        LOG.info("Get bfir info");
-        List<TeInfo> teInfoList = getBiftTeInfoFromInput(domainId, subDomainId,bfir,srcTp);
-        if (SET_LOCALDECAP == type) {
-            return processSendInfoToSouthbound(nodeId, teInfoList, ConfigurationType.ADD);
-        } else {
-            return processSendInfoToSouthbound(nodeId, teInfoList, ConfigurationType.DELETE);
-        }
-    }
-
-    private boolean processSetLocalDecapToBfer(int type, DomainId domainId, SubDomainId subDomainId,
-                                               List<EgressNode> bferList) {
-        if (null == domainId || null == subDomainId || null == bferList || bferList.isEmpty()) {
-            return false;
-        }
-        LOG.info("Bfer");
-        for (EgressNode node : bferList) {
-            BierNode bfer = getBierNodeById(node.getNodeId());
-            if (null == bfer) {
-                LOG.info("Get bfer from datastore failed");
-                webSocketToApp("Bfer: " + node.getNodeId() + " is not in datastore");
-                return false;
-            }
-            LOG.info("Get bfer info");
-            for (RcvTp rcvTpId : node.getRcvTp()) {
-                List<TeInfo> teInfoList = getBiftTeInfoFromInput(domainId, subDomainId,bfer,rcvTpId.getTp());
-                if (SET_LOCALDECAP == type) {
-                    if (!processSendInfoToSouthbound(node.getNodeId(), teInfoList, ConfigurationType.ADD)) {
-                        return false;
-                    }
-                } else {
-                    if (!processSendInfoToSouthbound(node.getNodeId(), teInfoList, ConfigurationType.DELETE)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
     public BierNode getBierNodeById(String nodeId) {
         BierTopology bierTopology = getBierTopologyFromDataStore();
         if (null == bierTopology || null == bierTopology.getBierNode() || bierTopology.getBierNode().isEmpty()) {
@@ -459,11 +304,11 @@ public class BiftInfoProcess {
         return null;
     }
 
+    public List<TeInfo> getBiftTeInfoFromInput(BPAllocateStrategy bpAllocateStrategy, Channel channel,
+                                               BierNode node, String tpId) {
+        LOG.info("The bps of channel: " + channel.getName() + " is assigned by " + channel.getBpAssignmentStrategy());
 
-    public List<TeInfo> getBiftTeInfoFromInput(DomainId domainId, SubDomainId subDomainId, BierNode node,
-                                                String tpId) {
-
-        List<TeBsl> teBslList = getBslListFromDomainInfo(domainId, subDomainId, node);
+        List<TeBsl> teBslList = getBslListFromDomainInfo(channel.getDomainId(), channel.getSubDomainId(), node);
         LOG.info("teBsl list: " + teBslList);
         if (null == teBslList || teBslList.isEmpty()) {
             return null;
@@ -473,15 +318,35 @@ public class BiftInfoProcess {
         for (TeBsl teBsl : teBslList) {
             for (TeSi teSi : teBsl.getTeSi()) {
                 for (TeBp teBp : teSi.getTeBp()) {
-                    LOG.info("Inside tebp, tpId is " + teBp.getTpId());
-                    if (teBp.getTpId().equals(tpId)) {
-                        LOG.info("TeInfo");
-                        TeInfo teInfo = processConstructTeInfo(TE_ADJ_TYPE_LOCALDECAP, subDomainId,
-                                teBsl.getBitstringlength(), teSi.getSi(), teBp.getBitposition(),null,
-                                null,null);
-                        if (null != teInfo) {
-                            LOG.info("Add Info, teInfo is " + teInfo);
-                            teInfoList.add(teInfo);
+                    if (channel.getBpAssignmentStrategy().equals(BpAssignmentStrategy.Automatic)) {
+                        List<SubdomainBslSi> subdomainBslSiList =
+                                bpAllocateStrategy.getSubdomainBslSiAllocatedToChannel(channel);
+                        for (SubdomainBslSi subdomainBslSi:subdomainBslSiList) {
+                            int bslValue = subdomainBslSi.getTeBsl().getBitstringlength().getIntValue();
+                            int siValue = subdomainBslSi.getTeSi().getSi().getValue();
+                            if (teBp.getTpId().equals(tpId)
+                                    && teBsl.getBitstringlength().getIntValue() == bslValue
+                                    && teSi.getSi().getValue() == siValue) {
+                                LOG.info("Bp of tpId " + tpId + " is " + teBp.getBitposition());
+                                constructAndAddTeInfoToList(channel.getSubDomainId(), teBsl, teSi, teBp, teInfoList);
+                                break;
+                            }
+                        }
+                    } else if (teBp.getTpId().equals(tpId)) {
+                        List<SubdomainBslSi> subdomainBslSiList = bpAllocateStrategy.getAllAllocatedSubdomainBslSi();
+                        boolean isAllocateByStrategy = false;
+                        for (SubdomainBslSi subdomainBslSi:subdomainBslSiList) {
+                            int bslValue = subdomainBslSi.getTeBsl().getBitstringlength().getIntValue();
+                            int siValue = subdomainBslSi.getTeSi().getSi().getValue();
+                            if (teBsl.getBitstringlength().getIntValue() == bslValue
+                                    && teSi.getSi().getValue() == siValue) {
+                                isAllocateByStrategy = true;
+                                break;
+                            }
+                        }
+
+                        if (!isAllocateByStrategy) {
+                            constructAndAddTeInfoToList(channel.getSubDomainId(), teBsl, teSi, teBp, teInfoList);
                         }
                     }
                 }
@@ -491,6 +356,17 @@ public class BiftInfoProcess {
         return teInfoList;
     }
 
+    private void constructAndAddTeInfoToList(SubDomainId subDomainId, TeBsl teBsl, TeSi teSi, TeBp teBp,
+                                             List<TeInfo> teInfoList) {
+        LOG.info("TeInfo");
+        TeInfo teInfo = processConstructTeInfo(TE_ADJ_TYPE_LOCALDECAP, subDomainId,
+                teBsl.getBitstringlength(), teSi.getSi(), teBp.getBitposition(),null,
+                null,null);
+        if (null != teInfo) {
+            LOG.info("Add Info, teInfo is " + teInfo);
+            teInfoList.add(teInfo);
+        }
+    }
 
     private List<TeBsl>  getBslListFromDomainInfo(DomainId domainId, SubDomainId subDomainId, BierNode node) {
         for (TeDomain teDomain : node.getBierTeNodeParams().getTeDomain()) {
@@ -500,9 +376,6 @@ public class BiftInfoProcess {
                 }
             }
         }
-        LOG.info("Bfer {} is not exit in the domain of channel", node.getNodeId());
-        webSocketToApp("Bfer: " + node.getNodeId() + " is not exit in domain "
-                + domainId.toString());
         return null;
     }
 
@@ -694,177 +567,20 @@ public class BiftInfoProcess {
         notificationProvider.notifyFailureReason(failureReason);
     }
 
-    private void processLocalDecapBpInfoAndBitString(int type, String nodeId, DomainId domainId,
-                                                     SubDomainId subDomainId, Bsl bsl, Si si, String tpId, Integer bp) {
-        QueryChannelWithPortInputBuilder builder = new QueryChannelWithPortInputBuilder();
-        builder.setNodeId(nodeId);
-        builder.setDomainId(domainId);
-        builder.setSubDomainId(subDomainId);
-        builder.setTpId(tpId);
-        Future<RpcResult<QueryChannelWithPortOutput>> future = rpcConsumerRegistry
-                .getRpcService(BierChannelApiService.class).queryChannelWithPort(builder.build());
-        try {
-            QueryChannelWithPortOutput output = future.get().getResult();
-            if (null == output || null == output.getQueryChannel() || output.getQueryChannel().isEmpty()) {
-                LOG.info("Channel is null");
-                return;
-            } else {
-                TeInfo teInfo = processConstructTeInfo(TE_ADJ_TYPE_LOCALDECAP, subDomainId, bsl, si, bp,
-                        null, null, null);
-                List<TeInfo> teInfoList = new ArrayList<>();
-                teInfoList.add(teInfo);
-                if (ADD == type) {
-                    if (!processSendInfoToSouthbound(nodeId, teInfoList, ConfigurationType.ADD)) {
-                        return;
-                    }
-                } else {
-                    if (!processSendInfoToSouthbound(nodeId, teInfoList, ConfigurationType.DELETE)) {
-                        return;
-                    }
-                }
-                processBitString(type, output.getQueryChannel(), domainId, subDomainId, bsl, si, bp);
-            }
-
-        } catch (InterruptedException | ExecutionException e) {
-            LOG.error("Process is Interrupted by", e);
-        }
-    }
-
-    private void processBitString(int type, List<QueryChannel> channelList, DomainId domainId,
-                                  SubDomainId subDomainId, Bsl bsl, Si si, Integer bp) {
-        List<QueryChannel> tmpList = new ArrayList<>();
-        for (QueryChannel channel : channelList) {
-            if (channel.isIsRcvTp()) {
-                tmpList.add(channel);
-            }
-        }
-        if (tmpList.isEmpty()) {
-            return;
-        }
-        List<Channel> transferedChannelList = transferLocalDecapTypeBpChannel(tmpList, domainId, subDomainId);
-
-        queryBitStringByChannelAndSendToSouth(type, transferedChannelList, subDomainId, bsl, si, bp);
-
-    }
-
-    private List<RelatedChannel> queryChannelByLink(String nodeId, String tpId) {
-        QueryChannelThroughPortInputBuilder builder = new QueryChannelThroughPortInputBuilder();
-        builder.setNodeId(nodeId);
-        builder.setTpId(tpId);
-        Future<RpcResult<QueryChannelThroughPortOutput>> future = rpcConsumerRegistry
-                .getRpcService(BierPceService.class).queryChannelThroughPort(builder.build());
-        try {
-            QueryChannelThroughPortOutput output = future.get().getResult();
-            if (null != output) {
-                LOG.info("Channel list is exit " + output);
-                return output.getRelatedChannel();
-            }
-            LOG.info("Channel list is null");
-            return null;
-
-        } catch (InterruptedException | ExecutionException e) {
-            LOG.error("Process is Interrupted by", e);
-        }
-        return null;
-    }
-
-    private void queryBitStringByChannelAndSendToSouth(int type, List<Channel> channelList, SubDomainId subDomainId,
-                                                       Bsl bsl, Si si, Integer bp) {
-        for (Channel channel : channelList) {
-            List<TePath> tempList = new ArrayList<>();
-            List<TePath> tePathList = bitStringDB.getTePathFromChannel(channel.getName());
-            if (null == tePathList || tePathList.isEmpty()) {
-                continue;
-            } else {
-                for (TePath tePath : tePathList) {
-                    if (tePath.getSubdomainId().equals(subDomainId) && tePath.getBitstringlength().equals(bsl)
-                            && tePath.getSi().equals(si)) {
-                        tempList.add(constructNewTePath(type, tePath, bp));
-                    }
-                }
-            }
-
-            sendBitStringToSouthAndSetToDataStore(channel, tempList);
-        }
-    }
-
-    private TePath constructNewTePath(int type, TePath tePath, Integer bp) {
-        PathBuilder pathBuilder = new PathBuilder();
-        pathBuilder.setPathId(tePath.getPathId());
-        pathBuilder.setKey(new PathKey(tePath.getPathId()));
-        pathBuilder.setSubdomainId(tePath.getSubdomainId());
-        pathBuilder.setBitstringlength(tePath.getBitstringlength());
-        pathBuilder.setSi(tePath.getSi());
-        BitstringBuilder bitstringBuilder = new BitstringBuilder();
-        bitstringBuilder.setBitposition(new BitString(bp));
-        List<Bitstring> list = tePath.getBitstring();
+    private void processLocalDecapBpInfo(int type, String nodeId,
+                                                     SubDomainId subDomainId, Bsl bsl, Si si, Integer bp) {
+        TeInfo teInfo = processConstructTeInfo(TE_ADJ_TYPE_LOCALDECAP, subDomainId, bsl, si, bp,
+                null, null, null);
+        List<TeInfo> teInfoList = new ArrayList<>();
+        teInfoList.add(teInfo);
         if (ADD == type) {
-            list.add(bitstringBuilder.build());
-            pathBuilder.setBitstring(list);
-        } else if (DELETE == type) {
-            list.remove(bitstringBuilder.build());
-            pathBuilder.setBitstring(list);
-        }
-        return pathBuilder.build();
-    }
-
-    private List<Channel> transferConnectedTypeBpChannel(List<RelatedChannel> channelList, DomainId domainId,
-                                                         SubDomainId subDomainId) {
-        List<Channel> tempList = new ArrayList<>();
-        for (RelatedChannel channel : channelList) {
-            ChannelBuilder builder = new ChannelBuilder();
-            builder.setKey(new ChannelKey(channel.getChannelName()));
-            builder.setName(channel.getChannelName());
-            builder.setDomainId(domainId);
-            builder.setSubDomainId(subDomainId);
-            builder.setIngressNode(channel.getBfir());
-            tempList.add(builder.build());
-        }
-        return tempList;
-    }
-
-    private List<Channel> transferLocalDecapTypeBpChannel(List<QueryChannel> channelList, DomainId domainId,
-                                                          SubDomainId subDomainId) {
-        List<Channel> tempList = new ArrayList<>();
-        for (QueryChannel channel : channelList) {
-            ChannelBuilder builder = new ChannelBuilder();
-            builder.setKey(new ChannelKey(channel.getChannelName()));
-            builder.setName(channel.getChannelName());
-            builder.setDomainId(domainId);
-            builder.setSubDomainId(subDomainId);
-            builder.setIngressNode(channel.getBfir());
-            tempList.add(builder.build());
-        }
-        return tempList;
-    }
-
-    private void sendBitStringToSouthAndSetToDataStore(Channel channel, List<TePath> tePathList) {
-        if (null == channel) {
-            return;
-        }
-        if (tePathList.isEmpty()) {
-            return;
-        }
-        for (TePath tePath : tePathList) {
-            LOG.info("Send new bitString to south");
-            if (setBitStringConfigToSouthbound(channel.getIngressNode(), ConfigurationType.MODIFY, tePath)) {
-                LOG.info("Set new bitString to data store");
-                bitStringDB.setBitStringToDataStore(channel, tePath);
+            if (!processSendInfoToSouthbound(nodeId, teInfoList, ConfigurationType.ADD)) {
+                return;
+            }
+        } else {
+            if (!processSendInfoToSouthbound(nodeId, teInfoList, ConfigurationType.DELETE)) {
+                return;
             }
         }
     }
-
-    private boolean setBitStringConfigToSouthbound(String bfir, ConfigurationType type, TePath tePath) {
-        if (null == bfir || null == tePath) {
-            return false;
-        }
-        LOG.info("Process send BitString to southbound");
-        ConfigurationResult result = bierTeBitstringWriter.writeBierTeBitstring(type,bfir,tePath);
-        if (!result.isSuccessful()) {
-            webSocketToApp(result.getFailureReason());
-            return false;
-        }
-        return true;
-    }
-
 }

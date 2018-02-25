@@ -86,6 +86,90 @@ public class ChannelChangeListenerTest extends AbstractConcurrentDataBrokerTest 
                 channelConfigWriterMock, teChannelWriter, bierTeBiftWriter, bierTeBitstringWriter);
     }
 
+    @Test
+    public void channelListenerTset() {
+        addNodeToDatastore("node-1",1,2,5);
+        addNodeToDatastore("node-2",1,2,6);
+        addNodeToDatastore("node-3",1,2,7);
+        addNodeToDatastore("node-4",1,2,8);
+
+        //Test add channel without ingress node and egress node
+        Channel channelAdd = constructChannel("channel-1","1.1.1.1","102.112.20.40",1,2,
+                (short)30,(short)40,4,null,null, BierForwardingType.Bier);
+        channelChangeListener.onDataTreeChanged(setChannelData(null,channelAdd,ModificationType.WRITE));
+        Assert.assertNull(channelConfigWriterMock.getChannelFromList(channelAdd.getName()));
+        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelAdd.getName()));
+
+        //Test modify channel without ingress node and egress node
+        Channel channelModify = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
+                (short)30,(short)40,5,null,null, BierForwardingType.Bier);
+        channelChangeListener.onDataTreeChanged(setChannelData(channelAdd,
+                channelModify,ModificationType.SUBTREE_MODIFIED));
+        Assert.assertNull(channelConfigWriterMock.getChannelFromList(channelModify.getName()));
+        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelModify.getName()));
+
+        //Test deploy channel with ingress node and egress node
+        List<EgressNode> egressList = new ArrayList<>();
+        egressList.add(constructEgressNode(6,"node-2"));
+        Channel channelDeploy = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
+                (short)30,(short)40,5,"node-1",egressList, BierForwardingType.Bier);
+        channelChangeListener.onDataTreeChanged(setChannelData(channelModify,
+                channelDeploy,ModificationType.SUBTREE_MODIFIED));
+        assertChannelData(channelDeploy,channelConfigWriterMock.getChannelFromList(channelDeploy.getName()));
+        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelDeploy.getName()));
+
+        //Test modify ingress node of channel
+        List<EgressNode> egressList1 = new ArrayList<>();
+        egressList1.add(constructEgressNode(5,"node-1"));
+        Channel channelModifyDeploy = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
+                (short)30,(short)40,6,"node-2",egressList1, BierForwardingType.Bier);
+        channelChangeListener.onDataTreeChanged(
+                setChannelData(channelDeploy, channelModifyDeploy, ModificationType.SUBTREE_MODIFIED));
+        assertChannelData(channelModifyDeploy,
+                channelConfigWriterMock.getChannelFromList(channelModifyDeploy.getName()));
+        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelModifyDeploy.getName()));
+
+        //Test add two egressNode
+        List<EgressNode> egressList2 = new ArrayList<>();
+        egressList2.add(constructEgressNode(5,"node-1"));
+        egressList2.add(constructEgressNode(7, "node-3"));
+        egressList2.add(constructEgressNode(8, "node-4"));
+        Channel channelModify2 = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
+                (short)30,(short)40,6,"node-2",egressList2, BierForwardingType.Bier);
+        channelChangeListener.onDataTreeChanged(
+                setChannelData(channelModifyDeploy, channelModify2, ModificationType.SUBTREE_MODIFIED));
+        assertChannelData(channelModifyDeploy,channelConfigWriterMock.getChannelFromList(channelModify2.getName()));
+        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelModify2.getName()));
+        List<EgressNode> egressListAdd = new ArrayList<>();
+        egressListAdd.add(constructEgressNode(7, "node-3"));
+        egressListAdd.add(constructEgressNode(8, "node-4"));
+        Channel channelAddEgress = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
+                (short)30,(short)40,6,"node-2",egressListAdd, BierForwardingType.Bier);
+        assertChannelData(channelAddEgress,
+                channelConfigWriterMock.getChannelEgressAddFromList("channel-1"));
+
+        //Test Delete EgressNode
+        List<EgressNode> egressList3 = new ArrayList<>();
+        egressList3.add(constructEgressNode(5,"node-1"));
+        Channel channelDeleteEgress = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
+                (short)30,(short)40,6,"node-2",egressList3, BierForwardingType.Bier);
+        channelChangeListener.onDataTreeChanged(
+                setChannelData(channelModify2,channelDeleteEgress,ModificationType.SUBTREE_MODIFIED));
+        assertChannelData(channelModifyDeploy,
+                channelConfigWriterMock.getChannelFromList(channelDeleteEgress.getName()));
+        List<EgressNode> egressListDel = new ArrayList<>();
+        egressListDel.add(constructEgressNode(7,"node-3"));
+        egressListDel.add(constructEgressNode(8,"node-4"));
+        Channel channelDeleteEgressNode = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
+                (short)30,(short)40,6,"node-2",egressListDel, BierForwardingType.Bier);
+        assertChannelData(channelDeleteEgressNode,
+                channelConfigWriterMock.getChannelEgressDelFromList(channelDeleteEgress.getName()));
+
+        //Test Delete channel
+        channelChangeListener.onDataTreeChanged(setChannelData(channelDeleteEgress,null,ModificationType.DELETE));
+        Assert.assertNull(channelConfigWriterMock.getChannelFromList(channelDeleteEgressNode.getName()));
+    }
+
     private static class DataTreeModificationMock implements DataTreeModification<Channel> {
         private Channel before;
         private Channel after;
@@ -192,6 +276,7 @@ public class ChannelChangeListenerTest extends AbstractConcurrentDataBrokerTest 
 
         private List<Channel> channelList = new ArrayList<>();
         private List<Channel> channelEgressDelList = new ArrayList<>();
+        private List<Channel> channelEgressAddList = new ArrayList<>();
 
         @Override
         public ConfigurationResult writeChannel(ConfigurationType type, Channel channel) {
@@ -228,7 +313,12 @@ public class ChannelChangeListenerTest extends AbstractConcurrentDataBrokerTest 
         public ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
             switch (type) {
                 case ADD:
-                    return new ConfigurationResult(ConfigurationResult.Result.FAILED);
+                    if (null != channel) {
+                        channelEgressAddList.add(channel);
+                    } else {
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
+                    }
+                    break;
                 case MODIFY:
                     return new ConfigurationResult(ConfigurationResult.Result.FAILED);
                 case DELETE:
@@ -242,6 +332,12 @@ public class ChannelChangeListenerTest extends AbstractConcurrentDataBrokerTest 
                     throw new IllegalArgumentException("Type is not matched");
             }
             return new ConfigurationResult(ConfigurationResult.Result.SUCCESSFUL);
+        }
+
+        @Override
+        public ConfigurationResult writeChannelEgressNodeTp(ConfigurationType type, Channel channel) {
+            // TODO
+            return null;
         }
 
         public Channel getChannelFromList(String name) {
@@ -261,6 +357,18 @@ public class ChannelChangeListenerTest extends AbstractConcurrentDataBrokerTest 
                 return null;
             }
             for (Channel channel : channelEgressDelList) {
+                if (channel.getName().equals(name)) {
+                    return channel;
+                }
+            }
+            return null;
+        }
+
+        public Channel getChannelEgressAddFromList(String name) {
+            if (null == name) {
+                return null;
+            }
+            for (Channel channel : channelEgressAddList) {
                 if (channel.getName().equals(name)) {
                     return channel;
                 }
@@ -379,77 +487,6 @@ public class ChannelChangeListenerTest extends AbstractConcurrentDataBrokerTest 
         mock.setChannelData(before, after, type);
         collection.add(mock);
         return collection;
-    }
-
-    @Test
-    public void channelListenerTset() {
-        //Test Add channel
-        Channel channelAdd = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
-                (short)30,(short)40,4,null,null, BierForwardingType.Bier);
-        channelChangeListener.onDataTreeChanged(setChannelData(null,channelAdd,ModificationType.WRITE));
-        Assert.assertNull(channelConfigWriterMock.getChannelFromList(channelAdd.getName()));
-        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelAdd.getName()));
-
-        //Test Modify channel
-        Channel channelModify = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
-                (short)30,(short)40,5,null,null, BierForwardingType.Bier);
-        channelChangeListener.onDataTreeChanged(setChannelData(channelAdd,
-                channelModify,ModificationType.SUBTREE_MODIFIED));
-        Assert.assertNull(channelConfigWriterMock.getChannelFromList(channelModify.getName()));
-        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelModify.getName()));
-
-        //Test Deploy Channel
-        List<EgressNode> egressList = new ArrayList<>();
-        egressList.add(constructEgressNode(6,"node-2"));
-        addNodeToDatastore("node-1",1,2,5);
-        addNodeToDatastore("node-2",1,2,6);
-        Channel channelDeploy = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,2,
-                (short)30,(short)40,5,"node-1",egressList, BierForwardingType.Bier);
-        channelChangeListener.onDataTreeChanged(setChannelData(channelModify,
-                channelDeploy,ModificationType.SUBTREE_MODIFIED));
-        assertChannelData(channelDeploy,channelConfigWriterMock.getChannelFromList(channelDeploy.getName()));
-        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelDeploy.getName()));
-
-        //Test Modify-Deploy channel
-        Channel channelModifyDeploy = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,3,
-                (short)30,(short)40,5,"node-1",egressList, BierForwardingType.Bier);
-        addNodeToDatastore("node-1",1,3,5);
-        addNodeToDatastore("node-2",1,3,6);
-        channelChangeListener.onDataTreeChanged(
-                setChannelData(channelModify,channelModifyDeploy,ModificationType.SUBTREE_MODIFIED));
-        assertChannelData(channelModifyDeploy,
-                channelConfigWriterMock.getChannelFromList(channelModifyDeploy.getName()));
-        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelModifyDeploy.getName()));
-
-        //Test Modify EgressNode
-        egressList.add(constructEgressNode(7,"node-3"));
-        addNodeToDatastore("node-3",1,3,7);
-        Channel channelModify2 = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,3,
-                (short)30,(short)40,5,"node-1",egressList, BierForwardingType.Bier);
-        channelChangeListener.onDataTreeChanged(
-                setChannelData(channelModifyDeploy,channelModify2,ModificationType.SUBTREE_MODIFIED));
-        assertChannelData(channelModify2,channelConfigWriterMock.getChannelFromList(channelModify2.getName()));
-        Assert.assertNull(channelConfigWriterMock.getChannelEgressDelFromList(channelModify2.getName()));
-
-        //Test Delete EgressNode
-        List<EgressNode> egressList2 = new ArrayList<>();
-        egressList2.add(constructEgressNode(6,"node-2"));
-        Channel channelDeleteEgress = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,3,
-                (short)30,(short)40,5,"node-1",egressList2, BierForwardingType.Bier);
-        channelChangeListener.onDataTreeChanged(
-                setChannelData(channelModify2,channelDeleteEgress,ModificationType.SUBTREE_MODIFIED));
-        assertChannelData(channelDeleteEgress,
-                channelConfigWriterMock.getChannelFromList(channelDeleteEgress.getName()));
-        List<EgressNode> egressListDel = new ArrayList<>();
-        egressListDel.add(constructEgressNode(7,"node-3"));
-        Channel channelDeleteEgressNode = constructChannel("channel-1","10.84.220.5","102.112.20.40",1,3,
-                (short)30,(short)40,5,"node-1",egressListDel, BierForwardingType.Bier);
-        assertChannelData(channelDeleteEgressNode,
-                channelConfigWriterMock.getChannelEgressDelFromList(channelDeleteEgress.getName()));
-
-        //Test Delete channel
-        channelChangeListener.onDataTreeChanged(setChannelData(channelDeleteEgress,null,ModificationType.DELETE));
-        Assert.assertNull(channelConfigWriterMock.getChannelFromList(channelDeleteEgressNode.getName()));
     }
 
 }

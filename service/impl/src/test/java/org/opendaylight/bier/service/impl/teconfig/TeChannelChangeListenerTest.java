@@ -33,11 +33,12 @@ import org.opendaylight.controller.md.sal.binding.api.DataObjectModification.Mod
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierForwardingType;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BierNetworkChannel;
+import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.BpAssignmentStrategy;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannel;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.BierChannelKey;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
@@ -51,15 +52,20 @@ import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.BierPceService;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateBierPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateBierPathOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateTeFrrPathInput;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.CreateTeFrrPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierInstancePathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierInstancePathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryBierPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryChannelThroughPortOutput;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryTeFrrPathInput;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.QueryTeFrrPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveBierPathOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.RemoveTeFrrPathInput;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.BferBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.bfer.BierPathBuilder;
@@ -94,7 +100,6 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.BitString;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.TeInfo;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.te.rev161013.te.adj.type.te.adj.type.LocalDecapBuilder;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.IpAddress;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.mpls.rev160705.MplsLabel;
@@ -111,7 +116,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTest {
+public class TeChannelChangeListenerTest extends AbstractDataBrokerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TeChannelChangeListenerTest.class);
 
@@ -180,19 +185,21 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
         addTopologyToDataStore(topologyBuilder.build());
     }
 
+
     @Test
     public void teChannelChangeListenerTest() {
+
         setUp();
 
         //Test add channel with no ingressNode and egressNode
         Channel channelAdd = constructTeChannel("channel-1","10.84.220.5","102.112.20.40",1,1,
-                (short)30,(short)40,null, 1, null, null, null);
+                (short)30,(short)40,null, 1, null, null, null, BpAssignmentStrategy.Manual);
         channelChangeListener.onDataTreeChanged(setTeChannelData(null, channelAdd, ModificationType.WRITE));
         Assert.assertNull(bierTeChannelWriterMock.getChannelFromList(channelAdd.getName()));
 
         //Test modify channel with no ingressNode and egressNode
         Channel channelModify = constructTeChannel("channel-1","10.84.220.5","102.112.20.40",1,1,
-                (short)30,(short)40,null, 2, null, null, null);
+                (short)30,(short)40,null, 2, null, null, null, BpAssignmentStrategy.Manual);
         channelChangeListener.onDataTreeChanged(setTeChannelData(channelAdd, channelModify,
                 ModificationType.SUBTREE_MODIFIED));
         Assert.assertNull(bierTeChannelWriterMock.getChannelFromList(channelModify.getName()));
@@ -202,10 +209,10 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
         egressNodeList1.add(constructEgressNode("003", 4, "009"));
         egressNodeList1.add(constructEgressNode("004", 5, "012"));
         Channel channelDeploy = constructTeChannel("channel-1","10.84.220.5","102.112.20.40",1,1,
-                (short)30,(short)40,"001", 2, "003", egressNodeList1, BierForwardingType.BierTe);
+                (short)30,(short)40,"001", 2, "003", egressNodeList1, BierForwardingType.BierTe,
+                BpAssignmentStrategy.Manual);
         channelChangeListener.onDataTreeChanged(setTeChannelData(channelModify, channelDeploy,
                 ModificationType.SUBTREE_MODIFIED));
-        assertAddedChannelBfirBferTeInfo(bierTeBiftWriterMock.getTeInfoAddedList());
         assertAddedChannelTeBitString(bierTeBitstringWriterMock.getTePathList());
         assertAddedTeChannel(bierTeChannelWriterMock.getChannelFromList("channel-1"));
 
@@ -213,10 +220,10 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
         List<EgressNode> egressNodeList2 = new ArrayList<>();
         egressNodeList2.add(constructEgressNode("003", 4, "009"));
         Channel channelDeploy2 = constructTeChannel("channel-1","10.84.220.5","102.112.20.40",1,1,
-                (short)30,(short)40,"001", 2, "003", egressNodeList2, BierForwardingType.BierTe);
+                (short)30,(short)40,"001", 2, "003", egressNodeList2, BierForwardingType.BierTe,
+                BpAssignmentStrategy.Manual);
         channelChangeListener.onDataTreeChanged(setTeChannelData(channelDeploy, channelDeploy2,
                 ModificationType.SUBTREE_MODIFIED));
-        assertModifiedChannelBfirBferTeInfo1(bierTeBiftWriterMock.getTeInfoAddedList());
         assertModifiedChannelTeBitString1(bierTeBitstringWriterMock.getTePathList());
         assertModifiedTeChannel1(bierTeChannelWriterMock.getChannelFromList("channel-1"));
 
@@ -225,19 +232,19 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
         egressNodeList3.add(constructEgressNode("003", 4, "009"));
         egressNodeList3.add(constructEgressNode("004", 5, "012"));
         Channel channelDeploy3 = constructTeChannel("channel-1","10.84.220.5","102.112.20.40",1,1,
-                (short)30,(short)40,"001", 2, "003", egressNodeList3, BierForwardingType.BierTe);
+                (short)30,(short)40,"001", 2, "003", egressNodeList3, BierForwardingType.BierTe,
+                BpAssignmentStrategy.Manual);
         channelChangeListener.onDataTreeChanged(setTeChannelData(channelDeploy2, channelDeploy3,
                 ModificationType.SUBTREE_MODIFIED));
-        assertModifiedChannelBfirBferTeInfo2(bierTeBiftWriterMock.getTeInfoAddedList());
         assertModifiedChannelTeBitString2(bierTeBitstringWriterMock.getTePathList());
         assertModifiedTeChannel2(bierTeChannelWriterMock.getChannelFromList("channel-1"));
 
         //Test modify ingressNode
         Channel channelDeploy4 = constructTeChannel("channel-1","10.84.220.5","102.112.20.40",1,1,
-                (short)30,(short)40,"002", 2, "006", egressNodeList3, BierForwardingType.BierTe);
+                (short)30,(short)40,"002", 2, "006", egressNodeList3, BierForwardingType.BierTe,
+                BpAssignmentStrategy.Manual);
         channelChangeListener.onDataTreeChanged(setTeChannelData(channelDeploy3, channelDeploy4,
                 ModificationType.SUBTREE_MODIFIED));
-        assertModifiedChannelBfirBferTeInfo3(bierTeBiftWriterMock.getTeInfoAddedList());
         assertModifiedChannelTeBitString3(bierTeBitstringWriterMock.getTePathList());
         assertModifiedTeChannel3(bierTeChannelWriterMock.getChannelFromList("channel-1"));
 
@@ -246,10 +253,10 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
         egressNodeList4.add(constructEgressNode("001", 1, "003"));
         egressNodeList4.add(constructEgressNode("003", 4, "009"));
         Channel channelDeploy5 = constructTeChannel("channel-1","10.84.220.5","102.112.20.40",1,1,
-                (short)30,(short)40,"002", 2, "006", egressNodeList4, BierForwardingType.BierTe);
+                (short)30,(short)40,"002", 2, "006", egressNodeList4, BierForwardingType.BierTe,
+                BpAssignmentStrategy.Manual);
         channelChangeListener.onDataTreeChanged(setTeChannelData(channelDeploy4, channelDeploy5,
                 ModificationType.SUBTREE_MODIFIED));
-        assertModifiedChannelBfirBferTeInfo4(bierTeBiftWriterMock.getTeInfoAddedList());
         assertModifiedChannelTeBitString4(bierTeBitstringWriterMock.getTePathList());
         assertModifiedTeChannel4(bierTeChannelWriterMock.getChannelFromList("channel-1"));
 
@@ -377,7 +384,8 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
 
     private Channel constructTeChannel(String name, String srcIp, String dstGroup, int domainId, int subDomainId,
                                        short srcWild, short groupWild, String ingress, int bfrId, String srcTp,
-                                       List<EgressNode> egressList, BierForwardingType type) {
+                                       List<EgressNode> egressList, BierForwardingType type,
+                                       BpAssignmentStrategy bpAssignmentStrategy) {
         ChannelBuilder builder = new ChannelBuilder();
         builder.setName(name);
         builder.setSrcIp(new IpAddress(new Ipv4Address(srcIp)));
@@ -391,55 +399,10 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
         builder.setSrcTp(srcTp);
         builder.setEgressNode(egressList);
         builder.setBierForwardingType(type);
+        builder.setBpAssignmentStrategy(bpAssignmentStrategy);
         return builder.build();
     }
 
-    private void assertAddedChannelBfirBferTeInfo(List<TeInfo> list) {
-        Assert.assertEquals(list.size(), 3);
-        assertTeInfo(list.get(0), new Integer(3));
-        assertTeInfo(list.get(1), new Integer(9));
-        assertTeInfo(list.get(2), new Integer(12));
-    }
-
-    private void assertModifiedChannelBfirBferTeInfo1(List<TeInfo> list) {
-        Assert.assertEquals(list.size(), 5);
-        assertTeInfo(list.get(3), new Integer(3));
-        assertTeInfo(list.get(4), new Integer(9));
-    }
-
-    private void assertModifiedChannelBfirBferTeInfo2(List<TeInfo> list) {
-        Assert.assertEquals(list.size(), 8);
-        assertTeInfo(list.get(5), new Integer(3));
-        assertTeInfo(list.get(6), new Integer(9));
-        assertTeInfo(list.get(7), new Integer(12));
-    }
-
-    private void assertModifiedChannelBfirBferTeInfo3(List<TeInfo> list) {
-        Assert.assertEquals(list.size(), 11);
-        assertTeInfo(list.get(8), new Integer(6));
-        assertTeInfo(list.get(9), new Integer(9));
-        assertTeInfo(list.get(10), new Integer(12));
-    }
-
-    private void assertModifiedChannelBfirBferTeInfo4(List<TeInfo> list) {
-        Assert.assertEquals(list.size(), 14);
-        assertTeInfo(list.get(11), new Integer(6));
-        assertTeInfo(list.get(12), new Integer(3));
-        assertTeInfo(list.get(13), new Integer(9));
-    }
-
-    private void assertTeInfo(TeInfo teInfo, Integer bp) {
-        Assert.assertEquals(teInfo.getTeSubdomain().size(), 1);
-        Assert.assertEquals(teInfo.getTeSubdomain().get(0).getTeBsl().size(), 1);
-        Assert.assertEquals(teInfo.getTeSubdomain().get(0).getTeBsl().get(0).getFwdBsl(), new Integer(64));
-        Assert.assertEquals(teInfo.getTeSubdomain().get(0).getTeBsl().get(0).getTeSi().size(), 1);
-        Assert.assertEquals(teInfo.getTeSubdomain().get(0).getTeBsl().get(0).getTeSi().get(0).getSi(), new Si(1));
-        Assert.assertEquals(teInfo.getTeSubdomain().get(0).getTeBsl().get(0).getTeSi().get(0).getTeFIndex().size(), 1);
-        Assert.assertEquals(teInfo.getTeSubdomain().get(0).getTeBsl().get(0).getTeSi().get(0).getTeFIndex().get(0)
-                .getTeFIndex(), new BitString(new Integer(bp)));
-        Assert.assertEquals(teInfo.getTeSubdomain().get(0).getTeBsl().get(0).getTeSi().get(0).getTeFIndex().get(0)
-                .getTeAdjType(), new LocalDecapBuilder().setLocalDecap(true).build());
-    }
 
     private void assertAddedChannelTeBitString(List<TePath> list) {
         Assert.assertEquals(list.size(), 1);
@@ -704,6 +667,11 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
         }
 
         @Override
+        public Future<RpcResult<QueryTeFrrPathOutput>> queryTeFrrPath(QueryTeFrrPathInput queryTeFrrPathInput) {
+            return null;
+        }
+
+        @Override
         public Future<RpcResult<CreateBierPathOutput>> createBierPath(CreateBierPathInput input) {
             CreateBierPathOutputBuilder builder = new CreateBierPathOutputBuilder();
             if (input.getBfirNodeId().equals("001")) {
@@ -774,12 +742,22 @@ public class TeChannelChangeListenerTest extends AbstractConcurrentDataBrokerTes
         }
 
         @Override
+        public Future<RpcResult<Void>> removeTeFrrPath(RemoveTeFrrPathInput removeTeFrrPathInput) {
+            return null;
+        }
+
+        @Override
         public Future<RpcResult<QueryBierPathOutput>> queryBierPath(QueryBierPathInput input) {
             return null;
         }
 
         @Override
         public Future<RpcResult<QueryBierInstancePathOutput>> queryBierInstancePath(QueryBierInstancePathInput input) {
+            return null;
+        }
+
+        @Override
+        public Future<RpcResult<CreateTeFrrPathOutput>> createTeFrrPath(CreateTeFrrPathInput createTeFrrPathInput) {
             return null;
         }
 

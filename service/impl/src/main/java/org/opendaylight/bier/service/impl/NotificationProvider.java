@@ -8,15 +8,19 @@
 package org.opendaylight.bier.service.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
+import org.opendaylight.controller.md.sal.binding.api.NotificationService;
 import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.ReportMessage;
 import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.ReportMessageBuilder;
 import org.opendaylight.yangtools.yang.binding.Notification;
+import org.opendaylight.yangtools.yang.binding.NotificationListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class NotificationProvider {
     private static NotificationProvider instance = new NotificationProvider();
     private NotificationPublishService notificationService;
+    private NotificationService registerService;
     private static final Logger LOG = LoggerFactory.getLogger(NotificationProvider.class);
 
 
@@ -32,6 +36,10 @@ public class NotificationProvider {
         this.notificationService = notificationService;
     }
 
+    public void setRegisterService(NotificationService registerService) {
+        this.registerService = registerService;
+    }
+
     public <T extends Notification> void notify(T notification) {
         if (null != notificationService) {
             LOG.info("notification publish!");
@@ -43,5 +51,12 @@ public class NotificationProvider {
         LOG.info("report failureReason to app");
         ReportMessage message = new ReportMessageBuilder().setFailureReason(failureReason).build();
         NotificationProvider.getInstance().notify(message);
+    }
+
+    public <T extends NotificationListener> void registerNotificationListener(T notificationListener) {
+        if (null != registerService) {
+            registerService.registerNotificationListener(notificationListener);
+        }
+
     }
 }

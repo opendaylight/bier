@@ -16,7 +16,7 @@ import java.util.Set;
 
 import org.opendaylight.bier.pce.impl.provider.NotificationProvider;
 import org.opendaylight.bier.pce.impl.provider.PcePathDb;
-import org.opendaylight.bier.pce.impl.topology.PathsRecordPerTopology;
+import org.opendaylight.bier.pce.impl.topology.PathsRecordPerSubDomain;
 import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
 import org.opendaylight.bier.pce.impl.util.ComUtility;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.BierPathUpdate;
@@ -28,13 +28,14 @@ import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.create.bier.path.inpu
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.instance.path.output.Link;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.query.bier.instance.path.output.LinkBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BierTeInstance {
     private static final Logger LOG = LoggerFactory.getLogger(BierTeInstance.class);
     private String channelName;
-    private String topoId;
+    private SubDomainId subDomainId;
     private String bfirNodeId;
     private LinkedHashMap<BierPathUnifyKey, SingleBierPath> bierPaths = new LinkedHashMap<>();
     private LinkedList<BierLink> allPaths = new LinkedList<>();
@@ -43,31 +44,18 @@ public class BierTeInstance {
     public BierTeInstance(CreateBierPathInput input) {
         this.channelName = input.getChannelName();
         this.bfirNodeId = input.getBfirNodeId();
-        this.topoId = (input.getTopologyId() != null) ? input.getTopologyId() : TopologyProvider.DEFAULT_TOPO_ID_STRING;
+        this.subDomainId = input.getSubDomainId();
     }
-
-/*    public BierTeInstance(BierTEInstance data) {
-
-        this.channelName = data.getChannelName();
-        this.bfirNodeId = data.getBfirNodeId();
-        this.topoId = (data.getTopologyId() != null) ? data.getTopologyId() : TopologyProvider.DEFAULT_TOPO_ID_STRING;
-        for (org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.Bfer bfer : data.getBfer()) {
-            SingleBierPath bierPath = new SingleBierPath(bfirNodeId, bfer, topoId,channelName);
-            BierPathUnifyKey pathKey = new BierPathUnifyKey(channelName,bfirNodeId, bfer.getBferNodeId());
-            bierPaths.put(pathKey, bierPath);
-            allPaths.addAll(bierPath.getPath());
-            BierTesRecordPerPort.getInstance().update(pathKey, null, bierPath.getPath());
-        }
-    }*/
 
     public void calcPath(CreateBierPathInput input, boolean isUpdate) {
         boolean isFailRollback = (input.isSaveCreateFail() != null) && (!input.isSaveCreateFail());
         String bfirNode = input.getBfirNodeId();
-        String topoId = input.getTopologyId();
+        SubDomainId subDomainId = input.getSubDomainId();
         String channelName = input.getChannelName();
         for (Bfer bfer : input.getBfer()) {
-            SingleBierPath bierPath = new SingleBierPath(bfirNode,bfer,topoId,channelName);
-            bierPath.calcPath(isFailRollback,allPaths,topoId);
+            SingleBierPath bierPath = new SingleBierPath(bfirNode,bfer,TopologyProvider.DEFAULT_TOPO_ID_STRING,
+                    channelName,subDomainId);
+            bierPath.calcPath(isFailRollback,allPaths,TopologyProvider.DEFAULT_TOPO_ID_STRING);
             if (isFailRollback && ((bierPath.getPath() == null) || (bierPath.getPath().isEmpty()))) {
                 //do nothing
 
@@ -75,10 +63,10 @@ public class BierTeInstance {
                 if (isUpdate) {
                     bierPath.writeDb();
                 }
-                BierPathUnifyKey pathKey = new BierPathUnifyKey(channelName,bierPath.getBfirNodeId(),
+                BierPathUnifyKey pathKey = new BierPathUnifyKey(channelName,subDomainId,bierPath.getBfirNodeId(),
                         bierPath.getBferNodeId());
                 bierPaths.put(pathKey,bierPath);
-                PathsRecordPerTopology.getInstance().add(this.topoId, pathKey);
+                PathsRecordPerSubDomain.getInstance().add(this.subDomainId, pathKey);
                 if (bierPath.getPath() != null && !bierPath.getPath().isEmpty()) {
                     allPaths.addAll(bierPath.getPath());
                 }
@@ -111,8 +99,8 @@ public class BierTeInstance {
         return this.bfirNodeId;
     }
 
-    public String getTopoId() {
-        return this.topoId;
+    public SubDomainId getSubDomainId() {
+        return this.subDomainId;
     }
 
     public List<SingleBierPath> getAllBierPath() {
@@ -127,11 +115,14 @@ public class BierTeInstance {
         if (null == path) {
             return;
         }
-        BierPathUnifyKey key = new BierPathUnifyKey(path.getChannelName(),path.getBfirNodeId(), path.getBferNodeId());
+        BierPathUnifyKey key = new BierPathUnifyKey(path.getChannelName(),path.getSubDomainId(),path.getBfirNodeId(),
+                path.getBferNodeId());
 
         bierPaths.remove(key);
-        for (BierLink link : path.getPath()) {
-            allPaths.removeFirstOccurrence(link);
+        if (path.getPath() != null) {
+            for (BierLink link : path.getPath()) {
+                allPaths.removeFirstOccurrence(link);
+            }
         }
         path.removeDb();
     }

@@ -4,13 +4,23 @@ module bier-pce {
     prefix "bier-pce";
 
     import bier-topology {prefix topo; }
+    import ietf-bier {prefix bier;}
 
     revision "2017-03-28" {
         description "Initial revision of bier-pce model";
     }
 
 
-
+    typedef path-type{
+       type enumeration {
+            enum "next-hop" {
+                value 0;
+            }
+            enum "next-next-hop" {
+                value 1;
+            }
+       }
+    }
 
 
     grouping links {
@@ -49,12 +59,43 @@ module bier-pce {
          }
     }
 
+    grouping backup-path {
+        leaf destination-node {
+            type string;
+        }
+        list path {
+            uses topo:bier-link;
+        }
+    }
+    grouping te-frr-path {
+        container frr-path {
+            container next-hop-path {
+                uses backup-path;
+            }
+            list next-next-hop-path {
+                uses backup-path;
+            }
+            list excluding-link {
+                uses topo:bier-link;
+            }
+        }
+    }
 
+    grouping frr-key {
+        container te-frr-key {
+            leaf sub-domain-id {
+                type bier:sub-domain-id;
+            }
+            container protected-link {
+                uses topo:bier-link;
+            }
+        }
+    }
 
     rpc create-bier-path {
         input {
-            leaf topology-id {
-                type string;
+            leaf sub-domain-id {
+                type bier:sub-domain-id;
             }
             leaf channel-name {
                 type string;
@@ -88,6 +129,9 @@ module bier-pce {
         input {
             leaf channel-name {
                 type string;
+            }
+            leaf sub-domain-id {
+                type bier:sub-domain-id;
             }
             leaf bfir-node-id {
                  type string;
@@ -127,7 +171,9 @@ module bier-pce {
             leaf channel-name {
                 type string;
             }
-
+            leaf sub-domain-id {
+                type bier:sub-domain-id;
+            }
             leaf bfir-node-id {
                  type string;
             }
@@ -180,4 +226,36 @@ module bier-pce {
 		}
 	}
 
+	rpc create-te-frr-path {
+    	input {
+    		uses frr-key;
+    	}
+    	output {
+    		uses te-frr-path;
+    	}
+    }
+
+    rpc remove-te-frr-path {
+    	input {
+    		uses frr-key;
+    	}
+    }
+
+    notification te-frr-path-update {
+        uses frr-key;
+        uses te-frr-path;
+    }
+
+    rpc query-te-frr-path {
+        input {
+			uses frr-key;
+        }
+        output {
+            list link {
+                leaf link-id {
+                    type string;
+                }
+            }
+        }
+    }
 }

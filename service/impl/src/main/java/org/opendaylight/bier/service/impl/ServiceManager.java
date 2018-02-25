@@ -10,18 +10,29 @@ package org.opendaylight.bier.service.impl;
 import org.opendaylight.bier.adapter.api.BierConfigWriter;
 import org.opendaylight.bier.adapter.api.BierTeBiftWriter;
 import org.opendaylight.bier.adapter.api.BierTeBitstringWriter;
+import org.opendaylight.bier.adapter.api.BierTeBtaftWriter;
 import org.opendaylight.bier.adapter.api.BierTeChannelWriter;
 import org.opendaylight.bier.adapter.api.BierTeLabelRangeConfigWriter;
 import org.opendaylight.bier.adapter.api.ChannelConfigWriter;
+import org.opendaylight.bier.service.impl.allocatebp.TopoBasedBpAllocateStrategy;
 import org.opendaylight.bier.service.impl.bierconfig.BierNodeChangeListener;
+import org.opendaylight.bier.service.impl.teconfig.AddResetBitMaskProcess;
 import org.opendaylight.bier.service.impl.teconfig.BierNodeTeBpChangeListener;
+import org.opendaylight.bier.service.impl.teconfig.BierServiceApiImpl;
 import org.opendaylight.bier.service.impl.teconfig.BierTeLabelRangeChangeListener;
+import org.opendaylight.bier.service.impl.teconfig.BiftInfoProcess;
+import org.opendaylight.bier.service.impl.teconfig.BitStringProcess;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
+import org.opendaylight.controller.md.sal.binding.api.NotificationService;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.RpcConsumerRegistry;
+import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.bier.channel.rev161102.bier.network.channel.bier.channel.Channel;
+import org.opendaylight.yang.gen.v1.urn.bier.frr.rev171122.te.frr.configure.topology.te.frr.link.te.frr.te.frr.domain.te.frr.sub.domain.te.frr.bsl.TeFrrSi;
+import org.opendaylight.yang.gen.v1.urn.bier.service.api.rev170105.BierServiceApiService;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierNodeParams;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeLableRange;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.te.bsl.te.si.TeBp;
@@ -39,14 +50,21 @@ public class ServiceManager {
     private NetconfStateChangeListener netconfStateChangeListener;
     private BierNodeTeBpChangeListener bierNodeTeBpChangeListener;
     private BierTeLabelRangeChangeListener bierTeLabelRangeChangeListener;
+    private TeFrrBpChangeListener teFrrBpChangeListener;
+    private BindingAwareBroker.RpcRegistration<BierServiceApiService> service;
 
     public ServiceManager(final DataBroker dataBroker, final NotificationPublishService notificationService,
-                          final RpcConsumerRegistry rpcConsumerRegistry, BierConfigWriter bierConfig,
+                          final RpcConsumerRegistry rpcConsumerRegistry,
+                          final RpcProviderRegistry rpcProviderRegistry, BierConfigWriter bierConfig,
                           ChannelConfigWriter channelConfigWriter, BierTeChannelWriter teChannelWriter,
-                          BierTeBiftWriter bierTeBiftWriter, BierTeBitstringWriter bierTeBitstringWriter,
-                          BierTeLabelRangeConfigWriter bierTeLabelRangeConfigWriter) {
+                          BierTeBiftWriter bierTeBiftWriter, BierTeBtaftWriter bierTeBtaftWriter,
+                          BierTeBitstringWriter bierTeBitstringWriter,
+                          BierTeLabelRangeConfigWriter bierTeLabelRangeConfigWriter,
+                          NotificationService registerService) {
         LOG.info("set notificationPublishService");
         NotificationProvider.getInstance().setNotificationService(notificationService);
+        NotificationProvider.getInstance().setRegisterService(registerService);
+
         LOG.info("register bier-node listener");
         bierNodeChangeListener = new BierNodeChangeListener(bierConfig);
         dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<BierNodeParams>(
@@ -64,8 +82,7 @@ public class ServiceManager {
                 LogicalDatastoreType.OPERATIONAL, netconfStateChangeListener.getNodeId()), netconfStateChangeListener);
 
         LOG.info("register bier-node-tebp listener");
-        bierNodeTeBpChangeListener = new BierNodeTeBpChangeListener(dataBroker, rpcConsumerRegistry, bierTeBiftWriter,
-                bierTeBitstringWriter);
+        bierNodeTeBpChangeListener = new BierNodeTeBpChangeListener(dataBroker, bierTeBiftWriter);
         dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<TeBp>(
                         LogicalDatastoreType.CONFIGURATION, bierNodeTeBpChangeListener.getTeBpIid()),
                 bierNodeTeBpChangeListener);
@@ -74,6 +91,41 @@ public class ServiceManager {
         dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<BierTeLableRange>(
                 LogicalDatastoreType.CONFIGURATION, bierTeLabelRangeChangeListener.getBierTeLableRangeIid()),
                 bierTeLabelRangeChangeListener);
+
+        LOG.info("Register te-frr-tebp listener");
+        teFrrBpChangeListener = new TeFrrBpChangeListener(dataBroker);
+        dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<TeFrrSi>(
+                        LogicalDatastoreType.CONFIGURATION, teFrrBpChangeListener.getTeFrrSiIid()),
+                teFrrBpChangeListener);
+
+        BierServiceApiImpl bierServiceApi = new BierServiceApiImpl(dataBroker, rpcConsumerRegistry);
+        service = rpcProviderRegistry.addRpcImplementation(BierServiceApiService.class, bierServiceApi);
+
+        LOG.info("Resume bp allocate strategy params!");
+        TopoBasedBpAllocateStrategy.getInstance().setDataBroker(dataBroker);
+        TopoBasedBpAllocateStrategy.getInstance().setRpcConsumerRegistry(rpcConsumerRegistry);
+        TopoBasedBpAllocateStrategy.getInstance().resumeAbstractDataStructures();
+        TopoBasedBpAllocateStrategy.getInstance().resumeTopoBasedDataStructures();
+
+//        PathMonopolyBPAllocateStrategy.getInstance().setDataBroker(dataBroker);
+//        PathMonopolyBPAllocateStrategy.getInstance().setRpcConsumerRegistry(rpcConsumerRegistry);
+
+        LOG.info("Initialize add reset bit mask process");
+        AddResetBitMaskProcess addResetBitMaskProcess = AddResetBitMaskProcess.getInstance();
+        addResetBitMaskProcess.setBierTeBiftWriter(bierTeBiftWriter);
+        addResetBitMaskProcess.setBierTeBtaftWriter(bierTeBtaftWriter);
+        addResetBitMaskProcess.setRpcConsumerRegistry(rpcConsumerRegistry);
+        addResetBitMaskProcess.setUtil(new Util(dataBroker));
+        addResetBitMaskProcess.setBiftInfoProcess(new BiftInfoProcess(dataBroker, bierTeBiftWriter));
+        addResetBitMaskProcess.setBitStringProcess(new BitStringProcess(dataBroker, rpcConsumerRegistry,
+                bierTeBitstringWriter, bierTeBiftWriter));
+        addResetBitMaskProcess.setBpAllocateStrategy(TopoBasedBpAllocateStrategy.getInstance());
+    }
+
+    public void close() {
+        if (null != service) {
+            service.close();
+        }
     }
 
 }

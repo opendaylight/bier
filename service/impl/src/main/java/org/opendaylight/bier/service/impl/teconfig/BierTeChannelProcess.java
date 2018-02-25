@@ -51,21 +51,13 @@ public class BierTeChannelProcess {
                                 BierTeBitstringWriter bierTeBitstringWriter) {
         this.dataBroker = dataBroker;
         this.teChannelWriter = teChannelWriter;
-        this.biftInfoProcess = new BiftInfoProcess(dataBroker, rpcConsumerRegistry,
-                bierTeBiftWriter, bierTeBitstringWriter);
+        this.biftInfoProcess = new BiftInfoProcess(dataBroker, bierTeBiftWriter);
         this.bitStringProcess = new BitStringProcess(dataBroker,rpcConsumerRegistry,
                 bierTeBitstringWriter, bierTeBiftWriter);
     }
 
 
     public void processAddedTeChannel(Channel channel) {
-        LOG.info("Process set bp te-adj-type of bfir and bfer to local-decap");
-        boolean result = biftInfoProcess.processSetLocalDecapToBfirBfer(biftInfoProcess.SET_LOCALDECAP, channel);
-        if (false == result) {
-            LOG.info("Process set bp type failed");
-            return;
-        }
-
         LOG.info("Process bitString");
         boolean processBitStringResult = bitStringProcess.bierTeBitStringProcess(channel, channel,
                 bitStringProcess.PATH_ADD);
@@ -83,8 +75,6 @@ public class BierTeChannelProcess {
     }
 
     public void processDeletedTeChannel(Channel channel) {
-        LOG.info("Process delete channel bfir and bfer bp info");
-        biftInfoProcess.processSetLocalDecapToBfirBfer(biftInfoProcess.DEL_LOCALDECAP, channel);
         LOG.info("Process bitString");
         boolean processBitStringResult = bitStringProcess.bierTeBitStringProcess(channel, null,
                 bitStringProcess.PATH_REMOVE_ALL);
@@ -98,15 +88,6 @@ public class BierTeChannelProcess {
     }
 
     public void processModifiedTeChannel(Channel before, Channel after) {
-        LOG.info("Process delete channel before bfir and bfer bp info");
-        biftInfoProcess.processSetLocalDecapToBfirBfer(biftInfoProcess.DEL_LOCALDECAP, before);
-        LOG.info("Process set bp te-adj-type of bfir and bfer to local-decap");
-        boolean result = biftInfoProcess.processSetLocalDecapToBfirBfer(biftInfoProcess.SET_LOCALDECAP, after);
-        if (false == result) {
-            LOG.info("Process set bp type failed");
-            return;
-        }
-
         if (!before.getIngressNode().equals(after.getIngressNode())) {
             if (processIngressNodeChange(before, after)) {
                 flag = 1;
@@ -246,7 +227,7 @@ public class BierTeChannelProcess {
         builder.setSrcTp(channel.getSrcTp());
         builder.setEgressNode(list);
         builder.setBierForwardingType(channel.getBierForwardingType());
-
+        builder.setBpAssignmentStrategy(channel.getBpAssignmentStrategy());
         return builder.build();
     }
 
@@ -283,6 +264,7 @@ public class BierTeChannelProcess {
         builder.setIngressBfrId(channelTemp.getIngressBfrId());
         builder.setSrcTp(channelTemp.getSrcTp());
         builder.setBierForwardingType(channelTemp.getBierForwardingType());
+        builder.setBpAssignmentStrategy(channelTemp.getBpAssignmentStrategy());
         return builder;
     }
 

@@ -31,6 +31,7 @@ public class PathProvider<T extends ITransformer<BierLink>> {
     private List<BierLink> path;
     private List<BierLink> oldPath;
     private List<BierLink> tryToOverlapLinks = Lists.newArrayList();
+    private List<BierLink> excludePaths = new ArrayList<>();
     private BierPathUnifyKey bierPathUnifyKey;
     private long pathMetric;
     private ICalcStrategy<String, BierLink> strategy;
@@ -85,14 +86,28 @@ public class PathProvider<T extends ITransformer<BierLink>> {
             result.setCalcFail(true);
             return;
         }
-
-        recordPerPort();
     }
 
     private void calcPathProcess() {
+        if (excludePaths.isEmpty()) {
+            calcShortestPath();
+            recordPerPort();
+        } else {
+            calcConstrainedPath();
+        }
+    }
 
-        calcShortestPath();
+    private void calcConstrainedPath() {
+        List<String> destNodeList = new ArrayList<>();
+        destNodeList.add(bferNodeId);
+        ContrainedOptimalPath cspf = new ContrainedOptimalPath(bfirNodeId,bferNodeId,
+                TopologyProvider.getInstance().getTopoGraph(bierPathUnifyKey.getSubDomainId()), strategy);
+        cspf.setExcludePath(excludePaths);
+        cspf.setDestNodeList(destNodeList);
 
+
+        path = cspf.calcCspf(bfirNodeId);
+        calcPathMetric();
     }
 
 
@@ -120,7 +135,7 @@ public class PathProvider<T extends ITransformer<BierLink>> {
         destNodeList.add(bferNodeId);
 
         OptimalPath<String, BierLink> sp = new OptimalPath(
-                bfirNodeId, TopologyProvider.getInstance().getTopoGraph(topoId), strategy);
+                bfirNodeId, TopologyProvider.getInstance().getTopoGraph(bierPathUnifyKey.getSubDomainId()), strategy);
         sp.setDestNodeList(destNodeList);
         sp.setEdgeMeasure(getMetricTransform());
 
@@ -141,5 +156,9 @@ public class PathProvider<T extends ITransformer<BierLink>> {
 
     private ITransformer<BierLink> getMetricTransform() {
         return (T) factory.create(tryToOverlapLinks);
+    }
+
+    public void setExcludePath(List<BierLink> excludeLinks) {
+        this.excludePaths = excludeLinks;
     }
 }

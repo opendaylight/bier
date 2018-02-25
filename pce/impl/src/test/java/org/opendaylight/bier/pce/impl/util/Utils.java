@@ -12,11 +12,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
+import org.opendaylight.bier.pce.impl.biertepath.BierPathUnifyKey;
 import org.opendaylight.bier.pce.impl.provider.DbProvider;
+import org.opendaylight.bier.pce.impl.topology.PathsRecordPerSubDomain;
 import org.opendaylight.bier.pce.impl.topology.TopologyProvider;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.backup.path.Path;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.BferKey;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.bfer.BierPath;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.bierpath.bfer.BierPathBuilder;
@@ -37,6 +42,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLinkKey;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 public class Utils {
@@ -62,6 +68,19 @@ public class Utils {
         assertEquals(actualPath.get(1).getLinkDest().getDestNode(), node3);
         assertEquals(actualPath.get(2).getLinkSource().getSourceNode(), node3);
         assertEquals(actualPath.get(2).getLinkDest().getDestNode(), node4);
+    }
+
+    public static void checkPath(List<PathLink> actualPath, String node1, String node2, String node3,
+                                 String node4, String node5) {
+        assertEquals(4, actualPath.size());
+        assertEquals(actualPath.get(0).getLinkSource().getSourceNode(), node1);
+        assertEquals(actualPath.get(0).getLinkDest().getDestNode(), node2);
+        assertEquals(actualPath.get(1).getLinkSource().getSourceNode(), node2);
+        assertEquals(actualPath.get(1).getLinkDest().getDestNode(), node3);
+        assertEquals(actualPath.get(2).getLinkSource().getSourceNode(), node3);
+        assertEquals(actualPath.get(2).getLinkDest().getDestNode(), node4);
+        assertEquals(actualPath.get(3).getLinkSource().getSourceNode(), node4);
+        assertEquals(actualPath.get(3).getLinkDest().getDestNode(), node5);
     }
 
     public static void checkLinkId(List<Link> actualLink, BierLink link1, BierLink link2, BierLink link3) {
@@ -190,7 +209,7 @@ public class Utils {
         return new PathLinkBuilder(TopoMockUtils.buildLinkEx(sourceNode,srcTp,destNode,destTp,metric)).build();
     }
 
-    public static void assertQueryLinks(String channelName, List<Link> links) {
+    public static void assertQueryLinks(String channelName, List<Link> links, boolean isUpdate) {
         if (channelName.equals("channel-1")) {
             assertEquals(3,links.size());
             links.contains(new LinkBuilder()
@@ -201,15 +220,27 @@ public class Utils {
                     .setLinkId(buildLinkId("5.5.5.5","56.56.56.56","65.65.65.65","6.6.6.6")).build());
         }
         if (channelName.equals("channel-2")) {
-            assertEquals(4,links.size());
-            links.contains(new LinkBuilder()
-                    .setLinkId(buildLinkId("1.1.1.1","12.12.12.12","21.21.21.21","2.2.2.2")).build());
-            links.contains(new LinkBuilder()
-                    .setLinkId(buildLinkId("2.2.2.2","23.23.23.23","32.32.32.32","3.3.3.3")).build());
-            links.contains(new LinkBuilder()
-                    .setLinkId(buildLinkId("3.3.3.3","36.36.36.36","63.63.63.63","6.6.6.6")).build());
-            links.contains(new LinkBuilder()
-                    .setLinkId(buildLinkId("2.2.2.2","25.25.25.25","52.52.52.52","5.5.5.5")).build());
+            if (isUpdate) {
+                assertEquals(4, links.size());
+                links.contains(new LinkBuilder()
+                        .setLinkId(buildLinkId("1.1.1.1", "14.14.14.14", "41.41.41.41", "4.4.4.4")).build());
+                links.contains(new LinkBuilder()
+                        .setLinkId(buildLinkId("4.4.4.4", "45.45.45.45", "54.54.54.54", "5.5.5.5")).build());
+                links.contains(new LinkBuilder()
+                        .setLinkId(buildLinkId("5.5.5.5", "56.56.56.56", "65.65.65.65", "6.6.6.6")).build());
+                links.contains(new LinkBuilder()
+                        .setLinkId(buildLinkId("6.6.6.6", "63.63.63.63", "36.36.36.36", "3.3.3.3")).build());
+            } else {
+                assertEquals(4, links.size());
+                links.contains(new LinkBuilder()
+                        .setLinkId(buildLinkId("1.1.1.1", "12.12.12.12", "21.21.21.21", "2.2.2.2")).build());
+                links.contains(new LinkBuilder()
+                        .setLinkId(buildLinkId("2.2.2.2", "23.23.23.23", "32.32.32.32", "3.3.3.3")).build());
+                links.contains(new LinkBuilder()
+                        .setLinkId(buildLinkId("3.3.3.3", "36.36.36.36", "63.63.63.63", "6.6.6.6")).build());
+                links.contains(new LinkBuilder()
+                        .setLinkId(buildLinkId("2.2.2.2", "25.25.25.25", "52.52.52.52", "5.5.5.5")).build());
+            }
         }
         if (channelName.equals("channel-3")) {
             assertEquals(2,links.size());
@@ -218,10 +249,20 @@ public class Utils {
             links.contains(new LinkBuilder()
                     .setLinkId(buildLinkId("5.5.5.5","54.54.54.54","45.45.45.45","4.4.4.4")).build());
         }
-
+        if (channelName.equals("channel-4")) {
+            assertEquals(4,links.size());
+            links.contains(new LinkBuilder()
+                    .setLinkId(buildLinkId("1.1.1.1","14.14.14.14","41.41.41.41","4.4.4.4")).build());
+            links.contains(new LinkBuilder()
+                    .setLinkId(buildLinkId("4.4.4.4","45.45.45.45","54.54.54.54","5.5.5.5")).build());
+            links.contains(new LinkBuilder()
+                    .setLinkId(buildLinkId("5.5.5.5","56.56.56.56","65.65.65.65","6.6.6.6")).build());
+            links.contains(new LinkBuilder()
+                    .setLinkId(buildLinkId("6.6.6.6","63.63.63.63","36.36.36.36","3.3.3.3")).build());
+        }
     }
 
-    private static String buildLinkId(String srcNode, String srcPort, String destPort, String destNode) {
+    public static String buildLinkId(String srcNode, String srcPort, String destPort, String destNode) {
         return srcNode + srcPort + destPort + destNode;
     }
 
@@ -229,5 +270,65 @@ public class Utils {
         assertEquals(1,channels.size());
         assertTrue(channels.contains(new RelatedChannelBuilder().setChannelName(channelName)
                 .setBfir(bfirNode).build()));
+    }
+
+
+    public static void assertPathsPerSubDomain(SubDomainId subDomainId, int channelNum) {
+        Set<BierPathUnifyKey> pathSet = PathsRecordPerSubDomain.getInstance()
+                .getBierPathSetBySubDomainId(subDomainId);
+
+        if (subDomainId.getValue() == 1) {
+            BierPathUnifyKey pathKey114 = new BierPathUnifyKey("channel-1",new SubDomainId(1),"1.1.1.1","4.4.4.4");
+            BierPathUnifyKey pathKey115 = new BierPathUnifyKey("channel-1",new SubDomainId(1),"1.1.1.1","5.5.5.5");
+            BierPathUnifyKey pathKey116 = new BierPathUnifyKey("channel-1",new SubDomainId(1),"1.1.1.1","6.6.6.6");
+            BierPathUnifyKey pathKey213 = new BierPathUnifyKey("channel-2",new SubDomainId(1),"1.1.1.1","3.3.3.3");
+            BierPathUnifyKey pathKey215 = new BierPathUnifyKey("channel-2",new SubDomainId(1),"1.1.1.1","5.5.5.5");
+            BierPathUnifyKey pathKey216 = new BierPathUnifyKey("channel-2",new SubDomainId(1),"1.1.1.1","6.6.6.6");
+            BierPathUnifyKey pathKey324 = new BierPathUnifyKey("channel-3",new SubDomainId(1),"2.2.2.2","4.4.4.4");
+            BierPathUnifyKey pathKey325 = new BierPathUnifyKey("channel-3",new SubDomainId(1),"2.2.2.2","5.5.5.5");
+
+            if (channelNum == 1) {
+                assertEquals(3,pathSet.size());
+                assertTrue(pathSet.contains(pathKey213));
+                assertTrue(pathSet.contains(pathKey215));
+                assertTrue(pathSet.contains(pathKey216));
+            } else {
+                assertEquals(8,pathSet.size());
+                assertTrue(pathSet.contains(pathKey114));
+                assertTrue(pathSet.contains(pathKey115));
+                assertTrue(pathSet.contains(pathKey116));
+                assertTrue(pathSet.contains(pathKey213));
+                assertTrue(pathSet.contains(pathKey215));
+                assertTrue(pathSet.contains(pathKey216));
+                assertTrue(pathSet.contains(pathKey324));
+                assertTrue(pathSet.contains(pathKey325));
+            }
+        } else {
+            assertEquals(3,pathSet.size());
+            BierPathUnifyKey pathKey13 = new BierPathUnifyKey("channel-4",new SubDomainId(2),"1.1.1.1","3.3.3.3");
+            BierPathUnifyKey pathKey15 = new BierPathUnifyKey("channel-4",new SubDomainId(2),"1.1.1.1","5.5.5.5");
+            BierPathUnifyKey pathKey16 = new BierPathUnifyKey("channel-4",new SubDomainId(2),"1.1.1.1","6.6.6.6");
+            assertTrue(pathSet.contains(pathKey13));
+            assertTrue(pathSet.contains(pathKey15));
+            assertTrue(pathSet.contains(pathKey16));
+        }
+    }
+
+    public static List<PathLink> transPath(List<Path> paths) {
+        List<PathLink> pathLinks = new ArrayList<>();
+        for (Path path : paths) {
+            pathLinks.add(new PathLinkBuilder(path).build());
+        }
+
+        return pathLinks;
+    }
+
+    public static List<PathLink> transPath(LinkedList<BierLink> paths) {
+        List<PathLink> pathLinks = new ArrayList<>();
+        for (BierLink path : paths) {
+            pathLinks.add(new PathLinkBuilder(path).build());
+        }
+
+        return pathLinks;
     }
 }

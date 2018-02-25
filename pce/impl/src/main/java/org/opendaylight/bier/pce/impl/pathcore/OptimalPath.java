@@ -155,7 +155,6 @@ public class OptimalPath<V, E> implements ISpt<V, E> {
             List<E> incomingEdges = tentIncomingEdgesMap.get(node);
             tentIncomingEdgesMap.remove(node);
 
-            setDestNodeDescendFlag(incomingEdges);
             Number distance = optimalNodeDistanceEntry.getValue();
 
             pathDistanceMap.put(node, distance);
@@ -163,10 +162,6 @@ public class OptimalPath<V, E> implements ISpt<V, E> {
             distanceOrderList.addLast(node);
 
             return optimalNodeDistanceEntry.getKey();
-        }
-
-        @Override
-        public void setDestNodeDescendFlag(List<E> incomingEdges) {
         }
 
         @Override

@@ -48,11 +48,11 @@ public class BitStringDB {
         return true;
     }
 
-    public boolean setBitStringToDataStore(Channel channel,TePath tePath) {
-        if (null == channel || null == tePath) {
+    public boolean setBitStringToDataStore(Channel channel,List<TePath> tePathList) {
+        if (null == channel || null == tePathList) {
             return false;
         }
-        ChannelBitstring channelBitstring = constructChannelBitString(channel,tePath);
+        ChannelBitstring channelBitstring = constructChannelBitString(channel,tePathList);
         LOG.info("" + channelBitstring);
 
         InstanceIdentifier<ChannelBitstring> path = getChannelBitstringPath(channel.getName());
@@ -129,24 +129,24 @@ public class BitStringDB {
                         .child(ChannelBitstring.class, new ChannelBitstringKey(name));
     }
 
-    private ChannelBitstring constructChannelBitString(Channel channel,TePath tePath) {
+    private ChannelBitstring constructChannelBitString(Channel channel,List<TePath> tePathList) {
         ChannelBitstringBuilder builder = new ChannelBitstringBuilder();
         builder.setDomainId(channel.getDomainId());
         builder.setSubDomainId(channel.getSubDomainId());
         builder.setKey(new ChannelBitstringKey(channel.getName()));
         builder.setName(channel.getName());
 
-        PathBitstringBuilder pathBuilder = new PathBitstringBuilder();
-        pathBuilder.setBitstringlength(tePath.getBitstringlength());
-        pathBuilder.setSubdomainId(tePath.getSubdomainId());
-        pathBuilder.setPathId(tePath.getPathId());
-        pathBuilder.setSi(tePath.getSi());
-        pathBuilder.setKey(new PathBitstringKey(tePath.getPathId()));
-        pathBuilder.setBitstring(tePath.getBitstring());
-
         List<PathBitstring> pathList = new ArrayList<>();
-        pathList.add(pathBuilder.build());
-
+        for (TePath tePath : tePathList) {
+            PathBitstringBuilder pathBuilder = new PathBitstringBuilder();
+            pathBuilder.setBitstringlength(tePath.getBitstringlength());
+            pathBuilder.setSubdomainId(tePath.getSubdomainId());
+            pathBuilder.setPathId(tePath.getPathId());
+            pathBuilder.setSi(tePath.getSi());
+            pathBuilder.setKey(new PathBitstringKey(tePath.getPathId()));
+            pathBuilder.setBitstring(tePath.getBitstring());
+            pathList.add(pathBuilder.build());
+        }
         builder.setPathBitstring(pathList);
         return builder.build();
     }

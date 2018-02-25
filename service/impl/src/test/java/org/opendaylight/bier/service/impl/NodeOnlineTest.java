@@ -413,6 +413,11 @@ public class NodeOnlineTest extends AbstractConcurrentDataBrokerTest {
                     break;
                 case MODIFY:
                     // TODO
+                    if (null != channel) {
+                        channelList.add(channel);
+                    } else {
+                        return new ConfigurationResult(ConfigurationResult.Result.FAILED);
+                    }
                     break;
                 case DELETE:
                     // TODO
@@ -425,6 +430,12 @@ public class NodeOnlineTest extends AbstractConcurrentDataBrokerTest {
 
         @Override
         public ConfigurationResult writeChannelEgressNode(ConfigurationType type, Channel channel) {
+            // TODO
+            return null;
+        }
+
+        @Override
+        public ConfigurationResult writeChannelEgressNodeTp(ConfigurationType type, Channel channel) {
             // TODO
             return null;
         }

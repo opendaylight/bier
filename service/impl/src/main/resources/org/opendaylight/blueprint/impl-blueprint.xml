@@ -16,6 +16,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     odl:type="default" />
   <reference id="rpcConsumerRegistry"
              interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry" />
+  <reference id="rpcProviderRegistry"
+             interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry" />
   <reference id="notificationService"
              interface="org.opendaylight.controller.md.sal.binding.api.NotificationPublishService"/>
   <reference id="bierConfigWriter"
@@ -28,23 +30,30 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
              interface="org.opendaylight.bier.adapter.api.BierConfigReader"/>
   <reference id="bierTeBiftWriter"
              interface="org.opendaylight.bier.adapter.api.BierTeBiftWriter" />
+  <reference id="bierTeBtaftWriter"
+             interface="org.opendaylight.bier.adapter.api.BierTeBtaftWriter" />
   <reference id="bierTeBitstringWriter"
              interface="org.opendaylight.bier.adapter.api.BierTeBitstringWriter" />
   <reference id="bierTeLabelRangeConfigWriter"
              interface="org.opendaylight.bier.adapter.api.BierTeLabelRangeConfigWriter" />
+  <reference id="registerService"
+             interface="org.opendaylight.controller.md.sal.binding.api.NotificationService"/>
 
   <bean id="provider"
     class="org.opendaylight.bier.service.impl.ServiceProvider"
     init-method="init" destroy-method="close">
     <argument ref="dataBroker" />
     <argument ref="rpcConsumerRegistry" />
+    <argument ref="rpcProviderRegistry" />
     <argument ref="notificationService" />
     <argument ref="bierConfigWriter" />
     <argument ref="channelConfigWriter" />
     <argument ref="teChannelWriter" />
     <argument ref="bierTeBiftWriter" />
+    <argument ref="bierTeBtaftWriter" />
     <argument ref="bierTeBitstringWriter" />
     <argument ref="bierTeLabelRangeConfigWriter" />
+    <argument ref="registerService" />
     <property name="bierConfigReader" ref="bierConfigReader"/>
   </bean>
 
@@ -56,6 +65,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <argument ref="bierTeBitstringWriter" />
   </bean>
 
+  <bean id="linkChangeListener" class="org.opendaylight.bier.service.impl.allocatebp.BierLinkChangeProcess">
+  </bean>
+
   <odl:notification-listener ref="pceListener"/>
+  <odl:notification-listener ref="linkChangeListener"/>
+
 
 </blueprint>

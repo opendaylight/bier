@@ -14,6 +14,7 @@ import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.SparseMultigraph;
 import edu.uci.ics.jung.graph.util.EdgeType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +30,11 @@ import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
 import org.opendaylight.yang.gen.v1.urn.bier.pce.rev170328.BierPceService;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.BierTeConfigApiListener;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.TeSubdomainAdd;
+import org.opendaylight.yang.gen.v1.urn.bier.te.config.api.rev161102.TeSubdomainDelete;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.BierTopologyApiListener;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LinkAdd;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LinkChange;
@@ -40,21 +45,30 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.top
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.BierTopologyKey;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLink;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierLinkBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNode;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.network.topology.bier.topology.BierNodeKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.node.BierTeNodeParams;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.TeDomainKey;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomain;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomainKey;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.bier.rev160723.SubDomainId;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class TopologyProvider implements BierTopologyApiListener {
+public class TopologyProvider implements BierTopologyApiListener, BierTeConfigApiListener {
     private static final Logger LOG = LoggerFactory.getLogger(TopologyProvider.class);
     public static final String DEFAULT_TOPO_ID_STRING = "example-linkstate-topology";
+    public static final Integer DOMAIN_ID = 1;
     private final DataBroker dataBroker;
     private final RpcProviderRegistry rpcRegistry;
     private final NotificationPublishService notificationPublishService;
     private BindingAwareBroker.RpcRegistration<BierPceService> pceService;
     private static TopologyProvider instance;
-    protected Map<String, Graph<String, BierLink>> topoGraphMap = new ConcurrentHashMap<>();
-    protected Map<String, Graph<String, BierLink>> topoGraphMapAllLink = new ConcurrentHashMap<>();
+    protected Map<SubDomainId, Graph<String, BierLink>> topoGraphMap = new ConcurrentHashMap<>();
+    protected Map<SubDomainId, Graph<String, BierLink>> topoGraphMapAllLink = new ConcurrentHashMap<>();
     private PcePathImpl pcePathImpl = PcePathImpl.getInstance();
     protected ExecutorService executor = Executors.newFixedThreadPool(1);
 
@@ -74,40 +88,81 @@ public class TopologyProvider implements BierTopologyApiListener {
     @Override
     public void onLinkAdd(LinkAdd linkAdd) {
         LOG.info("pce-topo:onLinkAdd:" + linkAdd);
-        String topoId = linkAdd.getTopoId();
-        Graph<String,BierLink> topoGraph = topoGraphMap.get(topoId);
-        Graph<String,BierLink> topoGraphAllLink = topoGraphMapAllLink.get(topoId);
-        BierLink link = transBierLink(linkAdd.getAddLink());
-        if (topoGraph != null && topoGraphAllLink != null) {
-            addLink(link, topoGraphAllLink, topoGraph,topoId);
+        String srcNode = linkAdd.getAddLink().getLinkSource().getSourceNode();
+        String destNode = linkAdd.getAddLink().getLinkDest().getDestNode();
+        List<TeSubDomain> srcNodeTeInfo = getNodeTeSubDomain(srcNode);
+        if (srcNodeTeInfo == null || srcNodeTeInfo.isEmpty()) {
+            return;
         }
+        for (TeSubDomain teSubDomain : srcNodeTeInfo) {
+            SubDomainId subDomainId = teSubDomain.getSubDomainId();
+            if (nodeBelongsSubdomain(subDomainId,destNode)) {
+                Graph<String,BierLink> topoGraph = topoGraphMap.get(subDomainId);
+                Graph<String,BierLink> topoGraphAllLink = topoGraphMapAllLink.get(subDomainId);
+                BierLink link = transBierLink(linkAdd.getAddLink());
+                if (topoGraph != null && topoGraphAllLink != null) {
+                    addLink(link, topoGraphAllLink, topoGraph,subDomainId);
+                }
+            }
+        }
+
 
     }
 
+    private List<TeSubDomain> getNodeTeSubDomain(String srcNode) {
+        InstanceIdentifier<TeDomain> path = InstanceIdentifier.builder(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(DEFAULT_TOPO_ID_STRING))
+                .child(BierNode.class, new BierNodeKey(srcNode))
+                .child(BierTeNodeParams.class)
+                .child(TeDomain.class, new TeDomainKey(new DomainId(DOMAIN_ID)))
+                .build();
+        TeDomain teDomain = DbProvider.getInstance().readData(LogicalDatastoreType.CONFIGURATION,path);
+        return teDomain == null ? null : teDomain.getTeSubDomain();
+    }
 
 
     @Override
     public void onLinkRemove(LinkRemove linkRemove) {
         LOG.info("pce-topo:onLinkRemove:" + linkRemove);
-        String topoId = linkRemove.getTopoId();
-        Graph<String,BierLink> topoGraph = topoGraphMap.get(topoId);
-        Graph<String,BierLink> topoGraphAllLink = topoGraphMapAllLink.get(topoId);
-        BierLink link = new BierLinkBuilder(new BierLinkBuilder(linkRemove.getRemoveLink()).build()).build();
-        if (topoGraph != null && topoGraphAllLink != null) {
-            removeLink(link, topoGraphAllLink, topoGraph,topoId);
+        String srcNode = linkRemove.getRemoveLink().getLinkSource().getSourceNode();
+        String destNode = linkRemove.getRemoveLink().getLinkDest().getDestNode();
+        List<TeSubDomain> srcNodeTeInfo = getNodeTeSubDomain(srcNode);
+        if (srcNodeTeInfo == null || srcNodeTeInfo.isEmpty()) {
+            return;
+        }
+        for (TeSubDomain teSubDomain : srcNodeTeInfo) {
+            SubDomainId subDomainId = teSubDomain.getSubDomainId();
+            if (nodeBelongsSubdomain(subDomainId, destNode)) {
+                Graph<String, BierLink> topoGraph = topoGraphMap.get(subDomainId);
+                Graph<String, BierLink> topoGraphAllLink = topoGraphMapAllLink.get(subDomainId);
+                BierLink link = new BierLinkBuilder(new BierLinkBuilder(linkRemove.getRemoveLink()).build()).build();
+                if (topoGraph != null && topoGraphAllLink != null) {
+                    removeLink(link, topoGraphAllLink, topoGraph, subDomainId);
+                }
+            }
         }
     }
 
     @Override
     public void onLinkChange(LinkChange linkChange) {
         LOG.info("pce-topo:onLinkChange:" + linkChange);
-        String topoId = linkChange.getTopoId();
-        Graph<String,BierLink> topoGraph = topoGraphMap.get(topoId);
-        Graph<String,BierLink> topoGraphAllLink = topoGraphMapAllLink.get(topoId);
-        BierLink linkOld = new BierLinkBuilder(linkChange.getOldLink()).build();
-        BierLink linkNew = new BierLinkBuilder(linkChange.getNewLink()).build();
-        if (topoGraph != null && topoGraphAllLink != null) {
-            updateLink(linkOld,linkNew, topoGraphAllLink, topoGraph,topoId);
+        String srcNode = linkChange.getNewLink().getLinkSource().getSourceNode();
+        String destNode = linkChange.getNewLink().getLinkDest().getDestNode();
+        List<TeSubDomain> srcNodeTeInfo = getNodeTeSubDomain(srcNode);
+        if (srcNodeTeInfo == null || srcNodeTeInfo.isEmpty()) {
+            return;
+        }
+        for (TeSubDomain teSubDomain : srcNodeTeInfo) {
+            SubDomainId subDomainId = teSubDomain.getSubDomainId();
+            if (nodeBelongsSubdomain(subDomainId, destNode)) {
+                Graph<String, BierLink> topoGraph = topoGraphMap.get(subDomainId);
+                Graph<String, BierLink> topoGraphAllLink = topoGraphMapAllLink.get(subDomainId);
+                BierLink linkOld = new BierLinkBuilder(linkChange.getOldLink()).build();
+                BierLink linkNew = new BierLinkBuilder(linkChange.getNewLink()).build();
+                if (topoGraph != null && topoGraphAllLink != null) {
+                    updateLink(linkOld, linkNew, topoGraphAllLink, topoGraph, subDomainId);
+                }
+            }
         }
     }
 
@@ -133,7 +188,7 @@ public class TopologyProvider implements BierTopologyApiListener {
         pceService = rpcRegistry.addRpcImplementation(BierPceService.class,pcePathImpl);
         pcePathImpl.writeDbRoot();
         setPcePathImpl(pcePathImpl);
-        PathsRecordPerTopology.getInstance().setPcePathService(pcePathImpl);
+        PathsRecordPerSubDomain.getInstance().setPcePathService(pcePathImpl);
     }
 
     public void close() {
@@ -145,18 +200,6 @@ public class TopologyProvider implements BierTopologyApiListener {
             pceService.close();
         }
     }
-
-/*
-    public Graph<String, BierLink> getTopoGraphRecover(String topoId) {
-        Graph<String, BierLink> topoGraph = topoGraphMap.get(topoId);
-        if (topoGraph == null) {
-            topoGraph = newTopoGraph(topoId);
-        }
-
-        return topoGraph;
-    }
-*/
-
 
     private Graph<String, BierLink> transformTopo2Graph(List<BierLink> list) {
         Graph<String, BierLink> graph = new SparseMultigraph<>();
@@ -198,7 +241,7 @@ public class TopologyProvider implements BierTopologyApiListener {
 
     private void updateLink(BierLink originLink, BierLink updatedLink,
                             Graph<String, BierLink> topoGraphAllLink,
-                            Graph<String, BierLink> topoGraph, String topoId) {
+                            Graph<String, BierLink> topoGraph, SubDomainId subDomainId) {
         linkInfo2Log("topo:updateLink", updatedLink);
 
         removeLinkFromGraphAllLink(originLink,topoGraphAllLink);
@@ -207,7 +250,8 @@ public class TopologyProvider implements BierTopologyApiListener {
         if (topoGraph.containsEdge(originLink)) {
             removeLinkFromGraph(originLink, topoGraph, "topoGraph");
             addLink2Gragh(updatedLink, topoGraph,"topoGraph");
-            pcePathImpl.refreshAllBierTePath(topoId);
+            pcePathImpl.refreshAllBierTePath(subDomainId);
+            pcePathImpl.refreshAllTeFrrInstance(subDomainId);
         }
     }
 
@@ -229,9 +273,22 @@ public class TopologyProvider implements BierTopologyApiListener {
         linkInfo2Log("topo:removelink from topoGraphAllLink", link);
     }
 
-    protected List<BierLink> getLinks(String topoId) {
+    protected List<BierLink> getLinks(SubDomainId subDomainId) {
+        List<BierLink> allBierLinks = getAllBierLinks();
+        List<BierLink> bierLinks = new ArrayList<>();
+        if (allBierLinks != null) {
+            for (BierLink bierLink : allBierLinks) {
+                if (linkBelongsSubdomain(subDomainId,bierLink)) {
+                    bierLinks.add(bierLink);
+                }
+            }
+        }
+        return bierLinks;
+    }
+
+    private List<BierLink> getAllBierLinks() {
         InstanceIdentifier<BierTopology> path = InstanceIdentifier.builder(BierNetworkTopology.class)
-                .child(BierTopology.class, new BierTopologyKey(topoId))
+                .child(BierTopology.class, new BierTopologyKey(DEFAULT_TOPO_ID_STRING))
                 .build();
 
         BierTopology topology = DbProvider.getInstance().readData(LogicalDatastoreType.CONFIGURATION,path);
@@ -239,23 +296,36 @@ public class TopologyProvider implements BierTopologyApiListener {
         return (topology != null) ? topology.getBierLink() : null;
     }
 
-    public void initGraph() {
-        newTopoGraph(DEFAULT_TOPO_ID_STRING);
+    private boolean linkBelongsSubdomain(SubDomainId subDomainId, BierLink bierLink) {
+        String srcNode = bierLink.getLinkSource().getSourceNode();
+        String destNode = bierLink.getLinkDest().getDestNode();
+        return nodeBelongsSubdomain(subDomainId,srcNode) && nodeBelongsSubdomain(subDomainId,destNode);
+    }
+
+    private boolean nodeBelongsSubdomain(SubDomainId subDomainId, String srcNode) {
+        InstanceIdentifier<TeSubDomain> path = InstanceIdentifier.builder(BierNetworkTopology.class)
+                .child(BierTopology.class, new BierTopologyKey(DEFAULT_TOPO_ID_STRING))
+                .child(BierNode.class, new BierNodeKey(srcNode))
+                .child(BierTeNodeParams.class)
+                .child(TeDomain.class, new TeDomainKey(new DomainId(DOMAIN_ID)))
+                .child(TeSubDomain.class, new TeSubDomainKey(subDomainId))
+                .build();
+        TeSubDomain teSubDomain = DbProvider.getInstance().readData(LogicalDatastoreType.CONFIGURATION,path);
+        return teSubDomain == null ? false : true;
     }
 
     public void setPcePathImpl(PcePathImpl pcePathImpl) {
         this.pcePathImpl = pcePathImpl;
     }
 
-    public Graph<String, BierLink> getTopoGraph(String topoIdInput) {
-        String topoId = (topoIdInput == null) ? DEFAULT_TOPO_ID_STRING : topoIdInput;
+    public Graph<String, BierLink> getTopoGraph(SubDomainId subDomainId) {
 
-        Graph<String, BierLink> topoGraph = topoGraphMap.get(topoId);
+        Graph<String, BierLink> topoGraph = topoGraphMap.get(subDomainId);
         if (topoGraph == null) {
             synchronized (this) {
-                topoGraph = topoGraphMap.get(topoId);
+                topoGraph = topoGraphMap.get(subDomainId);
                 if (topoGraph == null) {
-                    topoGraph = newTopoGraph(topoId);
+                    topoGraph = newTopoGraph(subDomainId);
                     if (topoGraph == null) {
                         LOG.error("getTopoGraph:topoGraph is null!");
                         return null;
@@ -271,19 +341,19 @@ public class TopologyProvider implements BierTopologyApiListener {
         instance = provider;
     }
 
-    private Graph<String, BierLink> newTopoGraph(String topoId) {
-        List<BierLink> links = getLinks(topoId);
+    private Graph<String, BierLink> newTopoGraph(SubDomainId subDomainId) {
+        List<BierLink> links = getLinks(subDomainId);
         Graph<String, BierLink> topoGraphAllLink = transformTopo2Graph(links);
         if (topoGraphAllLink == null) {
             return null;
         }
-        topoGraphMapAllLink.put(topoId, topoGraphAllLink);
+        topoGraphMapAllLink.put(subDomainId, topoGraphAllLink);
 
         Graph<String, BierLink> topoGraph = newTopoGraphBidirect(topoGraphAllLink);
         if (topoGraph == null) {
             return null;
         }
-        topoGraphMap.put(topoId, topoGraph);
+        topoGraphMap.put(subDomainId, topoGraph);
 
         return topoGraph;
     }
@@ -313,7 +383,7 @@ public class TopologyProvider implements BierTopologyApiListener {
     }
 
     protected void addLink(BierLink link, Graph<String, BierLink> topoGraphAllLink,
-                           Graph<String, BierLink> topoGraph,String topoId) {
+                           Graph<String, BierLink> topoGraph,SubDomainId subDomainId) {
 
         addLink2Gragh(link, topoGraphAllLink, "topoGraphAllLink");
 
@@ -323,11 +393,12 @@ public class TopologyProvider implements BierTopologyApiListener {
             return;
         }
         addLink2Graph(link, linkReverse, topoGraph, "topoGraph");
-        pcePathImpl.refreshAllBierTePath(topoId);
+        pcePathImpl.refreshAllBierTePath(subDomainId);
+        pcePathImpl.refreshAllTeFrrInstance(subDomainId);
     }
 
     protected void removeLink(BierLink link, Graph<String, BierLink> topoGraphAllLink,
-                              Graph<String, BierLink> topoGraph,String topoId) {
+                              Graph<String, BierLink> topoGraph,SubDomainId subDomainId) {
         removeLinkFromGraph(link, topoGraphAllLink, "topoGraphAllLink");
 
         if (topoGraph.containsEdge(link)) {
@@ -343,7 +414,8 @@ public class TopologyProvider implements BierTopologyApiListener {
                 }
             }
 
-            pcePathImpl.refreshAllBierTePath(topoId);
+            pcePathImpl.refreshAllBierTePath(subDomainId);
+            pcePathImpl.refreshAllTeFrrInstance(subDomainId);
         }
     }
 
@@ -401,4 +473,50 @@ public class TopologyProvider implements BierTopologyApiListener {
         return new BierLinkBuilder(addLink).build();
     }
 
+    public List<BierLink> getNNHLinks(SubDomainId subDomainId, BierLink nextHopLink) {
+        Graph<String, BierLink> topoGraph = getTopoGraph(subDomainId);
+        String nextNode = nextHopLink.getLinkDest().getDestNode();
+        List<BierLink> nextNextHopLinks = new ArrayList<>();
+        if (topoGraph != null && topoGraph.getOutEdges(nextNode) != null) {
+            for (BierLink link : topoGraph.getOutEdges(nextNode)) {
+                if (link.getLinkDest().getDestNode() != nextHopLink.getLinkSource().getSourceNode()) {
+                    nextNextHopLinks.add(link);
+                }
+            }
+        }
+        return nextNextHopLinks;
+    }
+
+    public void onTeSubdomainDelete(TeSubdomainDelete teSubdomainDelete) {
+        LOG.info("pce-topo:onTeSubdomainDelete:" + teSubdomainDelete);
+       // List<BierLink> links = getAllBierLinks();
+        Graph<String,BierLink> topoGraph = topoGraphMap.get(teSubdomainDelete.getSubDomainId());
+        Graph<String,BierLink> topoGraphAllLink = topoGraphMapAllLink.get(teSubdomainDelete.getSubDomainId());
+        List<BierLink> links = new ArrayList<>(topoGraphAllLink.getEdges());
+        if (links != null) {
+            for (BierLink link : links) {
+                if (link.getLinkSource().getSourceNode().equals(teSubdomainDelete.getNodeId())
+                        || link.getLinkDest().getDestNode().equals(teSubdomainDelete.getNodeId())) {
+                    BierLink bierLink = new BierLinkBuilder(link).build();
+                    removeLink(bierLink,topoGraphAllLink,topoGraph,teSubdomainDelete.getSubDomainId());
+                }
+            }
+        }
+    }
+
+    public void onTeSubdomainAdd(TeSubdomainAdd teSubdomainAdd) {
+        LOG.info("pce-topo:onTeSubdomainAdd:" + teSubdomainAdd);
+        List<BierLink> links = getLinks(teSubdomainAdd.getSubDomainId());
+        Graph<String,BierLink> topoGraph = topoGraphMap.get(teSubdomainAdd.getSubDomainId());
+        Graph<String,BierLink> topoGraphAllLink = topoGraphMapAllLink.get(teSubdomainAdd.getSubDomainId());
+        if (!links.isEmpty() && topoGraph != null && topoGraphAllLink != null) {
+            for (BierLink link : links) {
+                if (link.getLinkSource().getSourceNode().equals(teSubdomainAdd.getNodeId())
+                        || link.getLinkDest().getDestNode().equals(teSubdomainAdd.getNodeId())) {
+                    BierLink bierLink = new BierLinkBuilder(link).build();
+                    addLink(bierLink, topoGraphAllLink, topoGraph, teSubdomainAdd.getSubDomainId());
+                }
+            }
+        }
+    }
 }
