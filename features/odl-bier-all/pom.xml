@@ -60,6 +60,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
+<!--
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>odl-bier-te-pce</artifactId>
@@ -74,7 +75,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
-<!--
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>odl-bier-app</artifactId>
