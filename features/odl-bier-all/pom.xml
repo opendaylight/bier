@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!--
 Copyright © 2017 ZTE, Inc. and others.
 
@@ -74,13 +74,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
+<!--
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>odl-bier-app</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-bier-oam</artifactId>

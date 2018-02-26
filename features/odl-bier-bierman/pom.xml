@@ -46,6 +46,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <classifier>features</classifier>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.netconf</groupId>
+            <artifactId>odl-restconf</artifactId>
+            <version>${restconf.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.dluxapps</groupId>
             <artifactId>odl-dluxapps-yangman</artifactId>
             <version>${dluxapps.version}</version>
