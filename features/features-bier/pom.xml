@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 Copyright (c) 2015 ZTE and others.  All rights reserved.
 
@@ -27,13 +27,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>ODL :: bier :: ${project.artifactId}</name>
 
     <dependencies>
-<!--    <dependency>
+       <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-bier-app</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
-        </dependency>  -->
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-bier-channel</artifactId>
@@ -62,7 +62,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
- <!--
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-bier-te-pce</artifactId>
@@ -70,7 +69,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
-        <dependency>
+<!--       <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-bier-service</artifactId>
             <version>${project.version}</version>
