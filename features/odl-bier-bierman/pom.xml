@@ -39,6 +39,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <classifier>features</classifier>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.controller</groupId>
+            <artifactId>odl-mdsal-model-inventory</artifactId>
+            <version>${mdsal.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>odl-bier-models</artifactId>
             <version>${project.version}</version>
