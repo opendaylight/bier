@@ -27,13 +27,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependencies>
        <dependency>
             <groupId>org.opendaylight.bier</groupId>
-            <artifactId>odl-bier-bierman</artifactId>
-            <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-       <dependency>
-            <groupId>org.opendaylight.bier</groupId>
             <artifactId>odl-bier-channel</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
