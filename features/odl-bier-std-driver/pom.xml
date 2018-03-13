@@ -23,30 +23,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <version>0.3.1-SNAPSHOT</version>
     <packaging>feature</packaging>
     <name>OpenDaylight :: bier :: std :: driver</name>
-    <properties>
-        <netconf.version>1.4.1-SNAPSHOT</netconf.version>
-        <mdsal.version>1.7.1-SNAPSHOT</mdsal.version>
-    </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>odl-mdsal-broker</artifactId>
-            <version>${mdsal.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
          <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>odl-bier-adapter</artifactId>
             <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.netconf</groupId>
-            <artifactId>odl-netconf-console</artifactId>
-            <version>${netconf.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>

@@ -28,13 +28,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependencies>
             <!-- Controller infrastructure -->
             <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>mdsal-artifacts</artifactId>
-                <version>1.7.1-SNAPSHOT</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
                 <groupId>org.opendaylight.netconf</groupId>
                 <artifactId>netconf-artifacts</artifactId>
                 <version>1.4.1-SNAPSHOT</version>
@@ -45,12 +38,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>odl-mdsal-broker</artifactId>
-            <classifier>features</classifier>
-            <type>xml</type>
-        </dependency>
         <dependency>
             <groupId>org.opendaylight.netconf</groupId>
             <artifactId>odl-netconf-console</artifactId>
