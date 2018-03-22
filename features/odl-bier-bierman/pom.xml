@@ -33,7 +33,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
-            <artifactId>odl-mdsal-model-inventory</artifactId>
+            <artifactId>odl-controller-model-topology</artifactId>
             <version>${mdsal.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
