@@ -8,6 +8,6 @@
  -->
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="odl-bier-te-pce">
     <feature name="odl-bier-te-pce">
-        <feature version="[3.0.2,4)">odl-jung-2.1</feature>
+        <feature version="[3.1.0,4)">odl-jung-2.1</feature>
     </feature>
 </features>
