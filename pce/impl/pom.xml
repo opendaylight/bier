@@ -57,20 +57,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>sal-binding-util</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.servicemix.bundles</groupId>
-            <artifactId>org.apache.servicemix.bundles.jung-graph-impl</artifactId>
-            <version>2.0.1_2</version>
+            <groupId>net.sf.jung</groupId>
+            <artifactId>jung-graph-impl</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.servicemix.bundles</groupId>
-            <artifactId>org.apache.servicemix.bundles.collections-generic</artifactId>
-            <version>4.01_1</version>
-        </dependency>
-        <!--dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
-        </dependency-->
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>bier-topology-model</artifactId>

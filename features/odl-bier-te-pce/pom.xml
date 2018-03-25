@@ -33,6 +33,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <classifier>features</classifier>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.odlparent</groupId>
+            <artifactId>odl-jung-2.1</artifactId>
+            <version>3.0.2</version>
+            <classifier>features</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>pce-api</artifactId>
             <version>${project.version}</version>
