@@ -27,6 +27,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>ODL :: bier :: ${project.artifactId}</name>
 
     <dependencies>
+ <!-- Remove the app due to the dlux dependency delete
        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-bier-app</artifactId>
@@ -34,6 +35,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
+-->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-bier-channel</artifactId>

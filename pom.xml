@@ -69,7 +69,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>bier</name> <!-- DO NOT CHANGE - Used by Sonar to set project name -->
 
     <modules>
-        <module>bierapp</module>
+      <!--Remove the app due to the dlux dependency delete    
+        <module>bierapp</module> -->
         <module>common</module>
         <module>bierman</module>
         <module>channel</module>

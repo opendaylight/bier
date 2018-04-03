@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!--
 Copyright © 2017 ZTE, Inc. and others.
 
@@ -24,20 +24,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <packaging>feature</packaging>
     <name>OpenDaylight :: bier :: bierapp</name>
     <dependencies>
-        <dependency>
-            <groupId>org.opendaylight.dlux</groupId>
-            <artifactId>odl-dlux-core</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.dluxapps</groupId>
-            <artifactId>odl-dluxapps-yangman</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>bierapp-bundle</artifactId>
