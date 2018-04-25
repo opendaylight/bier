@@ -18,7 +18,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <groupId>org.opendaylight.bier</groupId>
     <artifactId>odl-bier-std-driver</artifactId>
-    <version>0.3.1-SNAPSHOT</version>
+    <version>0.3.2-SNAPSHOT</version>
     <packaging>feature</packaging>
     <name>OpenDaylight :: bier :: std :: driver</name>
 
