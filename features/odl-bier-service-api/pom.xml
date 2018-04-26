@@ -14,17 +14,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>single-feature-parent</artifactId>
-        <version>1.8.4-SNAPSHOT</version>
+        <version>1.8.5-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
     <groupId>org.opendaylight.bier</groupId>
     <artifactId>odl-bier-service-api</artifactId>
-    <version>0.1.4-SNAPSHOT</version>
+    <version>0.1.5-SNAPSHOT</version>
     <packaging>feature</packaging>
     <name>OpenDaylight :: bier :: service :: api</name>
     <properties>
-        <mdsal.model.version>0.10.4-SNAPSHOT</mdsal.model.version>
+        <mdsal.model.version>0.10.5-SNAPSHOT</mdsal.model.version>
     </properties>
     <dependencies>
         <dependency>

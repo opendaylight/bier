@@ -4,12 +4,12 @@
   <parent>
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>features-parent</artifactId>
-    <version>1.8.4-SNAPSHOT</version>
+    <version>1.8.5-SNAPSHOT</version>
     <relativePath/>
   </parent>
   <groupId>org.opendaylight.bier</groupId>
   <artifactId>features-bier</artifactId>
-  <version>0.1.4-SNAPSHOT</version>
+  <version>0.1.5-SNAPSHOT</version>
   <packaging>jar</packaging>
   <!-- <name> formatting is used by autorelease to parse and notify projects on
        build failure. Please do not modify this unless you have a good reason. -->
@@ -20,14 +20,14 @@
   </prerequisites>
 
   <properties>
-    <mdsal.model.version>0.10.4-SNAPSHOT</mdsal.model.version>
-    <mdsal.version>1.5.4-SNAPSHOT</mdsal.version>
-    <restconf.version>1.5.4-SNAPSHOT</restconf.version>
-    <netconf.version>1.2.4-SNAPSHOT</netconf.version>
-    <yangtools.version>1.1.4-SNAPSHOT</yangtools.version>
-    <dluxapps.version>0.5.4-SNAPSHOT</dluxapps.version>
-    <openflowplugin.version>0.4.4-SNAPSHOT</openflowplugin.version>
-    <openflowjava.version>0.9.4-SNAPSHOT</openflowjava.version>
+    <mdsal.model.version>0.10.5-SNAPSHOT</mdsal.model.version>
+    <mdsal.version>1.5.5-SNAPSHOT</mdsal.version>
+    <restconf.version>1.5.5-SNAPSHOT</restconf.version>
+    <netconf.version>1.2.5-SNAPSHOT</netconf.version>
+    <yangtools.version>1.1.5-SNAPSHOT</yangtools.version>
+    <dluxapps.version>0.5.5-SNAPSHOT</dluxapps.version>
+    <openflowplugin.version>0.4.5-SNAPSHOT</openflowplugin.version>
+    <openflowjava.version>0.9.5-SNAPSHOT</openflowjava.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
 

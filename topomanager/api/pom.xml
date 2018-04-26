@@ -12,13 +12,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <parent>
     <groupId>org.opendaylight.mdsal</groupId>
     <artifactId>binding-parent</artifactId>
-    <version>0.10.4-SNAPSHOT</version>
+    <version>0.10.5-SNAPSHOT</version>
     <relativePath/>
   </parent>
 
   <groupId>org.opendaylight.bier</groupId>
   <artifactId>topomanager-api</artifactId>
-  <version>0.1.4-SNAPSHOT</version>
+  <version>0.1.5-SNAPSHOT</version>
   <!-- <name> formatting is used by autorelease to parse and notify projects on
        build failure. Please do not modify this unless you have a good reason. -->
   <name>ODL :: bier :: ${project.artifactId}</name>
@@ -27,17 +27,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
         <groupId>org.opendaylight.bier</groupId>
         <artifactId>ietf-bier-2016-07-23</artifactId>
-        <version>0.1.4-SNAPSHOT</version>
+        <version>0.1.5-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>org.opendaylight.bier</groupId>
         <artifactId>bier-common-model</artifactId>
-        <version>0.1.4-SNAPSHOT</version>
+        <version>0.1.5-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>org.opendaylight.bier</groupId>
         <artifactId>bier-topology-model</artifactId>
-        <version>0.1.4-SNAPSHOT</version>
+        <version>0.1.5-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <packaging>bundle</packaging>
