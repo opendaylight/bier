@@ -18,14 +18,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <groupId>org.opendaylight.bier</groupId>
     <artifactId>odl-bier-service</artifactId>
-    <version>0.2.3-SNAPSHOT</version>
+    <version>0.2.4-SNAPSHOT</version>
     <packaging>feature</packaging>
     <name>OpenDaylight :: bier :: service</name>
     <properties>
-        <mdsal.version>1.6.3-SNAPSHOT</mdsal.version>
-        <mdsal.model.version>0.11.3-SNAPSHOT</mdsal.model.version>
-        <restconf.version>1.6.3-SNAPSHOT</restconf.version>
-        <dluxapps.version>0.6.3-SNAPSHOT</dluxapps.version>
+        <mdsal.version>1.6.4-SNAPSHOT</mdsal.version>
+        <mdsal.model.version>0.11.4-SNAPSHOT</mdsal.model.version>
+        <restconf.version>1.6.4-SNAPSHOT</restconf.version>
+        <dluxapps.version>0.6.4-SNAPSHOT</dluxapps.version>
     </properties>
     <dependencies>
         <dependency>
