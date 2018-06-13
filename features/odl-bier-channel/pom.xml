@@ -18,11 +18,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <groupId>org.opendaylight.bier</groupId>
     <artifactId>odl-bier-channel</artifactId>
-    <version>0.3.2-SNAPSHOT</version>
+    <version>0.3.3-SNAPSHOT</version>
     <packaging>feature</packaging>
     <name>OpenDaylight :: bier :: channel</name>
     <properties>
-        <mdsal.version>1.7.2-SNAPSHOT</mdsal.version>
+        <mdsal.version>1.7.3-SNAPSHOT</mdsal.version>
     </properties>
     <dependencies>
         <dependency>

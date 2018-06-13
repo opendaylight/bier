@@ -4,7 +4,7 @@
     <parent>
         <artifactId>bierapp</artifactId>
         <groupId>org.opendaylight.bier</groupId>
-        <version>0.3.2-SNAPSHOT</version>
+        <version>0.3.3-SNAPSHOT</version>
     </parent>
     <artifactId>bierapp-bundle</artifactId>
     <name>ODL :: bier :: ${project.artifactId}</name>
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>org.opendaylight.bier</groupId>
             <artifactId>bierapp-module</artifactId>
-            <version>0.3.2-SNAPSHOT</version>
+            <version>0.3.3-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
