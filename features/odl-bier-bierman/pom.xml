@@ -18,15 +18,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <groupId>org.opendaylight.bier</groupId>
     <artifactId>odl-bier-bierman</artifactId>
-    <version>0.3.4-SNAPSHOT</version>
+    <version>0.3.5-SNAPSHOT</version>
     <packaging>feature</packaging>
     <name>OpenDaylight :: bier :: bierman</name>
     <properties>
-        <mdsal.version>1.7.4-SNAPSHOT</mdsal.version>
-        <restconf.version>1.7.4-SNAPSHOT</restconf.version>
-        <dluxapps.version>0.7.4-SNAPSHOT</dluxapps.version>
-        <bgpcep.version>0.9.4-SNAPSHOT</bgpcep.version>
-        <netconf.version>1.4.4-SNAPSHOT</netconf.version>
+        <mdsal.version>1.7.5-SNAPSHOT</mdsal.version>
+        <restconf.version>1.7.5-SNAPSHOT</restconf.version>
+        <dluxapps.version>0.7.5-SNAPSHOT</dluxapps.version>
+        <bgpcep.version>0.9.5-SNAPSHOT</bgpcep.version>
+        <netconf.version>1.4.5-SNAPSHOT</netconf.version>
     </properties>
     <dependencies>
         <dependency>
