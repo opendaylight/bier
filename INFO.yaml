@@ -1,0 +1,43 @@
+---
+project: 'bier'
+project_creation_date: '22-06-2017'
+project_category: ''
+lifecycle_state: 'Incubation'
+project_lead: &odl_bier_ptl
+    name: 'Quan Xiong'
+    email: 'xiong.quan@zte.com.cn'
+    company: 'zte.com'
+    id: 'xiongquan'
+    timezone: 'Unknown/Unknown'
+primary_contact: *odl_bier_ptl
+issue_tracking:
+    type: 'jira'
+    url: 'https://jira.opendaylight.org/projects/'
+    key: 'bier'
+mailing_list:
+    type: 'groups.io'
+    url: 'app-dev@lists.opendaylight.org'
+    tag: '[]'
+realtime_discussion:
+    type: 'irc'
+    server: 'freenode.net'
+    channel: '#opendaylight'
+meetings:
+    - type: 'gotomeeting+irc'
+      agenda: 'https://wiki.opendaylight.org'
+      url: ''
+      server: 'freenode.net'
+      channel: '#opendaylight'
+      repeats: ''
+      time: ''
+repositories:
+    - bier
+committers:
+    - <<: *odl_bier_ptl
+tsc:
+    # yamllint disable rule:line-length
+    approval: 'https://meetings.opendaylight.org/opendaylight-meeting/2017/tsc/opendaylight-meeting-tsc.2017-06-22-03.30.html'
+    changes:
+        - type: ''
+          name: ''
+          link: ''
