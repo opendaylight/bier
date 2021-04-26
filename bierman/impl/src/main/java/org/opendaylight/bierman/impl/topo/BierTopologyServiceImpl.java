@@ -8,10 +8,10 @@
 package org.opendaylight.bierman.impl.topo;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import org.opendaylight.bierman.impl.BierDataManager;
 import org.opendaylight.bierman.impl.NotificationProvider;
@@ -30,6 +30,7 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteDomain
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.DeleteSubdomainOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LoadTopologyInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LoadTopologyOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.LoadTopologyOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryDomainInput;
@@ -59,6 +60,8 @@ import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTeSubdo
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyInput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.QueryTopologyOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TestNotificationPublishInput;
+import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TestNotificationPublishOutput;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.TopoChangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.load.topology.output.Topology;
 import org.opendaylight.yang.gen.v1.urn.bier.topology.api.rev161102.load.topology.output.TopologyBuilder;
@@ -108,7 +111,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         this.topoManager = topoManager;
     }
 
-    public Future<RpcResult<LoadTopologyOutput>> loadTopology() {
+    public ListenableFuture<RpcResult<LoadTopologyOutput>> loadTopology(LoadTopologyInput input) {
         List<Topology> topoList = new ArrayList<Topology>();
         TopologyBuilder topoBuilder = new TopologyBuilder();
         topoBuilder.setTopologyId(BierDataManager.TOPOLOGY_ID);
@@ -118,7 +121,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<QueryTopologyOutput>> queryTopology(QueryTopologyInput input) {
+    public ListenableFuture<RpcResult<QueryTopologyOutput>> queryTopology(QueryTopologyInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -171,7 +174,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<QueryNodeOutput>> queryNode(QueryNodeInput input) {
+    public ListenableFuture<RpcResult<QueryNodeOutput>> queryNode(QueryNodeInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -214,7 +217,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<QueryLinkOutput>> queryLink(QueryLinkInput input) {
+    public ListenableFuture<RpcResult<QueryLinkOutput>> queryLink(QueryLinkInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -257,7 +260,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<ConfigureDomainOutput>> configureDomain(ConfigureDomainInput input) {
+    public ListenableFuture<RpcResult<ConfigureDomainOutput>> configureDomain(ConfigureDomainInput input) {
         ConfigureDomainOutputBuilder builder = new ConfigureDomainOutputBuilder();
 
         if (null == input) {
@@ -302,7 +305,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             BierDomainBuilder bierDomainBuilder = new BierDomainBuilder();
             bierDomainBuilder.setDomainId(domainId);
             BierDomainKey domainKey = new BierDomainKey(domainId);
-            bierDomainBuilder.setKey(domainKey);
+            bierDomainBuilder.withKey(domainKey);
             addDomainList.add(bierDomainBuilder.build());
         }
 
@@ -315,7 +318,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<ConfigureSubdomainOutput>> configureSubdomain(ConfigureSubdomainInput input) {
+    public ListenableFuture<RpcResult<ConfigureSubdomainOutput>> configureSubdomain(ConfigureSubdomainInput input) {
         ConfigureSubdomainOutputBuilder builder = new ConfigureSubdomainOutputBuilder();
         if (null == input) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"input is null!"));
@@ -360,7 +363,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
             BierSubDomainBuilder subDomainBuilder = new BierSubDomainBuilder();
             subDomainBuilder.setSubDomainId(subDomainId);
             BierSubDomainKey subDomainKey = new BierSubDomainKey(subDomainId);
-            subDomainBuilder.setKey(subDomainKey);
+            subDomainBuilder.withKey(subDomainKey);
             addSubDomainList.add(subDomainBuilder.build());
         }
 
@@ -373,7 +376,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<QueryDomainOutput>> queryDomain(QueryDomainInput input) {
+    public ListenableFuture<RpcResult<QueryDomainOutput>> queryDomain(QueryDomainInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -407,12 +410,12 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<Void>> testNotificationPublish() {
+    public ListenableFuture<RpcResult<TestNotificationPublishOutput>> testNotificationPublish(TestNotificationPublishInput input) {
         NotificationProvider.getInstance().notify(new TopoChangeBuilder().setTopoId("flow:1").build());
-        return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
+        return Futures.immediateFuture(RpcResultBuilder.<TestNotificationPublishOutput>success().build());
     }
 
-    public Future<RpcResult<QuerySubdomainOutput>> querySubdomain(QuerySubdomainInput input) {
+    public ListenableFuture<RpcResult<QuerySubdomainOutput>> querySubdomain(QuerySubdomainInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -446,7 +449,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<QuerySubdomainNodeOutput>> querySubdomainNode(QuerySubdomainNodeInput input) {
+    public ListenableFuture<RpcResult<QuerySubdomainNodeOutput>> querySubdomainNode(QuerySubdomainNodeInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -475,7 +478,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<QuerySubdomainLinkOutput>> querySubdomainLink(QuerySubdomainLinkInput input) {
+    public ListenableFuture<RpcResult<QuerySubdomainLinkOutput>> querySubdomainLink(QuerySubdomainLinkInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -500,7 +503,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<QueryTeSubdomainNodeOutput>> queryTeSubdomainNode(QueryTeSubdomainNodeInput input) {
+    public ListenableFuture<RpcResult<QueryTeSubdomainNodeOutput>> queryTeSubdomainNode(QueryTeSubdomainNodeInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -530,7 +533,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
 
     }
 
-    public Future<RpcResult<QueryTeSubdomainLinkOutput>> queryTeSubdomainLink(QueryTeSubdomainLinkInput input) {
+    public ListenableFuture<RpcResult<QueryTeSubdomainLinkOutput>> queryTeSubdomainLink(QueryTeSubdomainLinkInput input) {
         if (null == input) {
             return RpcUtil.returnRpcErr("input is null!");
         }
@@ -555,7 +558,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<DeleteDomainOutput>> deleteDomain(DeleteDomainInput input) {
+    public ListenableFuture<RpcResult<DeleteDomainOutput>> deleteDomain(DeleteDomainInput input) {
         DeleteDomainOutputBuilder builder = new DeleteDomainOutputBuilder();
         if (null == input) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"input is null!"));
@@ -591,7 +594,7 @@ public class BierTopologyServiceImpl implements BierTopologyApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<DeleteSubdomainOutput>> deleteSubdomain(DeleteSubdomainInput input) {
+    public ListenableFuture<RpcResult<DeleteSubdomainOutput>> deleteSubdomain(DeleteSubdomainInput input) {
         DeleteSubdomainOutputBuilder builder = new DeleteSubdomainOutputBuilder();
         if (null == input) {
             builder.setConfigureResult(RpcUtil.getConfigResult(false,"input is null!"));

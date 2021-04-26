@@ -275,7 +275,7 @@ public class BierTeFrrConfigServiceImpl implements BierTeFrrConfigApiService {
 
         TeFrrSiBuilder teFrrSiBuilder = new TeFrrSiBuilder();
         teFrrSiBuilder.setSi(si);
-        teFrrSiBuilder.setKey(new TeFrrSiKey(si));
+        teFrrSiBuilder.withKey(new TeFrrSiKey(si));
         teFrrSiBuilder.setTeFrrBp(bitString);
         BpAssignmentStrategy bpAssignmentStrategy = getBpAssignmentStrategy(topologyId, subDomainId, bsl, si);
         if (null != bpAssignmentStrategy) {
@@ -624,21 +624,21 @@ public class BierTeFrrConfigServiceImpl implements BierTeFrrConfigApiService {
 
             TeDomainBuilder teDomainBuilder = new TeDomainBuilder();
             teDomainBuilder.setDomainId(teDomainTopo.getDomainId());
-            teDomainBuilder.setKey(new TeDomainKey(teDomainTopo.getDomainId()));
+            teDomainBuilder.withKey(new TeDomainKey(teDomainTopo.getDomainId()));
 
             List<TeSubDomain> teSubDomainList = new ArrayList<>();
             for (org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.TeSubDomain
                     teSubDomainTopo : teDomainTopo.getTeSubDomain()) {
                 TeSubDomainBuilder teSubDomainBuilder = new TeSubDomainBuilder();
                 teSubDomainBuilder.setSubDomainId(teSubDomainTopo.getSubDomainId());
-                teSubDomainBuilder.setKey(new TeSubDomainKey(teSubDomainTopo.getSubDomainId()));
+                teSubDomainBuilder.withKey(new TeSubDomainKey(teSubDomainTopo.getSubDomainId()));
 
                 List<TeBsl> bslList = new ArrayList<>();
                 for (org.opendaylight.yang.gen.v1.urn.bier.topology.rev161102.bier.te.node.params.te.domain.te.sub.domain.TeBsl
                         teBslTopo : teSubDomainTopo.getTeBsl()) {
                     TeBslBuilder teBslBuilder = new TeBslBuilder();
                     teBslBuilder.setBitstringlength(teBslTopo.getBitstringlength());
-                    teBslBuilder.setKey(new TeBslKey(teBslTopo.getBitstringlength()));
+                    teBslBuilder.withKey(new TeBslKey(teBslTopo.getBitstringlength()));
 
                     List<TeSi> teSiList = constructTeSi(topologyId,linkId,linkDest,teDomainTopo,teSubDomainTopo,teBslTopo);
                     if (null != teSiList && !teSiList.isEmpty()) {
@@ -701,7 +701,7 @@ public class BierTeFrrConfigServiceImpl implements BierTeFrrConfigApiService {
                 teSiTopo : teBslTopo.getTeSi()) {
             TeSiBuilder teSiBuilder = new TeSiBuilder();
             teSiBuilder.setSi(teSiTopo.getSi());
-            teSiBuilder.setKey(new TeSiKey(teSiTopo.getSi()));
+            teSiBuilder.withKey(new TeSiKey(teSiTopo.getSi()));
             if (null == teSiTopo.getTeBp()) {
                 LOG.info("teBpTopo is not existed!");
                 return null;

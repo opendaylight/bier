@@ -9,12 +9,11 @@
 package org.opendaylight.bierman.impl.teconfig;
 
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
 import org.opendaylight.bierman.impl.RpcUtil;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
@@ -63,7 +62,7 @@ public class BierBpAllocateParamsConfigServiceImpl implements BierBpAllocatePara
     }
 
     @Override
-    public Future<RpcResult<QuerySubdomainBslSiOutput>> querySubdomainBslSi(QuerySubdomainBslSiInput input) {
+    public ListenableFuture<RpcResult<QuerySubdomainBslSiOutput>> querySubdomainBslSi(QuerySubdomainBslSiInput input) {
         LOG.info("QuerySubdomainBslSiInput" + input);
         if (null == input || null == input.getTopologyId() || null == input.getSubdomainValue()
                 || null == input.getAllocateModel()) {
@@ -84,7 +83,7 @@ public class BierBpAllocateParamsConfigServiceImpl implements BierBpAllocatePara
                     for (SiBpAllocate siBpAllocate : siBpAllocateList) {
                         if (siBpAllocate.getAllocateModel().getIntValue() == input.getAllocateModel().getIntValue()) {
                             SiOfModelBuilder siOfModelBuilder = new SiOfModelBuilder();
-                            siOfModelBuilder.setKey(new SiOfModelKey(siBpAllocate.getSiValue()));
+                            siOfModelBuilder.withKey(new SiOfModelKey(siBpAllocate.getSiValue()));
                             siOfModelBuilder.setSiValue(siBpAllocate.getSiValue());
                             siOfModelList.add(siOfModelBuilder.build());
                         }
@@ -121,7 +120,7 @@ public class BierBpAllocateParamsConfigServiceImpl implements BierBpAllocatePara
     }
 
     @Override
-    public Future<RpcResult<DeleteSubdomainBslSiOutput>> deleteSubdomainBslSi(DeleteSubdomainBslSiInput input) {
+    public ListenableFuture<RpcResult<DeleteSubdomainBslSiOutput>> deleteSubdomainBslSi(DeleteSubdomainBslSiInput input) {
         LOG.info("DeleteSubdomainBslSiInput" + input);
         DeleteSubdomainBslSiOutputBuilder builder = new DeleteSubdomainBslSiOutputBuilder();
         if (null == input || null == input.getTopologyId() || null == input.getSubdomainValue()
@@ -170,7 +169,7 @@ public class BierBpAllocateParamsConfigServiceImpl implements BierBpAllocatePara
     }
 
     @Override
-    public Future<RpcResult<AddSubdomainBslSiOutput>> addSubdomainBslSi(AddSubdomainBslSiInput input) {
+    public ListenableFuture<RpcResult<AddSubdomainBslSiOutput>> addSubdomainBslSi(AddSubdomainBslSiInput input) {
         LOG.info("AddSubdomainBslSiInput" + input);
         AddSubdomainBslSiOutputBuilder builder = new AddSubdomainBslSiOutputBuilder();
         if (null == input || null == input.getTopologyId() || null == input.getSubdomainValue()
@@ -182,26 +181,26 @@ public class BierBpAllocateParamsConfigServiceImpl implements BierBpAllocatePara
         SiBpAllocateBuilder siBpAllocateBuilder = new SiBpAllocateBuilder();
         siBpAllocateBuilder.setSiValue(input.getSiValue());
         siBpAllocateBuilder.setAllocateModel(input.getAllocateModel());
-        siBpAllocateBuilder.setKey(new SiBpAllocateKey(input.getSiValue()));
+        siBpAllocateBuilder.withKey(new SiBpAllocateKey(input.getSiValue()));
         List<SiBpAllocate> siBpAllocateList = new ArrayList<>();
         siBpAllocateList.add(siBpAllocateBuilder.build());
 
         BslBpAllocateBuilder bslBpAllocateBuilder = new BslBpAllocateBuilder();
         bslBpAllocateBuilder.setBslValue(input.getBslValue());
-        bslBpAllocateBuilder.setKey(new BslBpAllocateKey(input.getBslValue()));
+        bslBpAllocateBuilder.withKey(new BslBpAllocateKey(input.getBslValue()));
         bslBpAllocateBuilder.setSiBpAllocate(siBpAllocateList);
         List<BslBpAllocate> bslBpAllocateList = new ArrayList<>();
         bslBpAllocateList.add(bslBpAllocateBuilder.build());
 
         SubdomainBpAllocateBuilder subdomainBpAllocateBuilder = new SubdomainBpAllocateBuilder();
-        subdomainBpAllocateBuilder.setKey(new SubdomainBpAllocateKey(input.getSubdomainValue()));
+        subdomainBpAllocateBuilder.withKey(new SubdomainBpAllocateKey(input.getSubdomainValue()));
         subdomainBpAllocateBuilder.setSubdomainValue(input.getSubdomainValue());
         subdomainBpAllocateBuilder.setBslBpAllocate(bslBpAllocateList);
         List<SubdomainBpAllocate> subdomainBpAllocateList = new ArrayList<>();
         subdomainBpAllocateList.add(subdomainBpAllocateBuilder.build());
 
         TopoBpAllocateParamsBuilder topoBpAllocateParamsBuilder = new TopoBpAllocateParamsBuilder();
-        topoBpAllocateParamsBuilder.setKey(new TopoBpAllocateParamsKey(input.getTopologyId()));
+        topoBpAllocateParamsBuilder.withKey(new TopoBpAllocateParamsKey(input.getTopologyId()));
         topoBpAllocateParamsBuilder.setSubdomainBpAllocate(subdomainBpAllocateList);
         topoBpAllocateParamsBuilder.setTopologyId(input.getTopologyId());
 

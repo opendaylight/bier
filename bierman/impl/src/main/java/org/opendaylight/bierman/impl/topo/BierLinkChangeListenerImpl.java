@@ -116,8 +116,8 @@ public class BierLinkChangeListenerImpl
         final Link linkBefore = modification.getRootNode().getDataBefore();
         final Link linkAfter = modification.getRootNode().getDataAfter();
 
-        Long metric1 = linkBefore.getAugmentation(Link1.class).getIgpLinkAttributes().getMetric();
-        Long metric2 = linkAfter.getAugmentation(Link1.class).getIgpLinkAttributes().getMetric();
+        Long metric1 = linkBefore.augmentation(Link1.class).getIgpLinkAttributes().getMetric();
+        Long metric2 = linkAfter.augmentation(Link1.class).getIgpLinkAttributes().getMetric();
         if (metric1 != metric2) {
             BierLink bierLink = BIER_TOPOLOGY_ADAPTER.toBierLink(linkAfter);
             bierLink = bierDataManager.transferBierLink(bierLink);

@@ -7,8 +7,7 @@
  */
 package org.opendaylight.bierman.impl.bierconfig;
 
-import java.util.concurrent.Future;
-
+import com.google.common.util.concurrent.ListenableFuture;
 import org.opendaylight.bierman.impl.BierDataManager;
 import org.opendaylight.bierman.impl.RpcUtil;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.DomainId;
@@ -45,7 +44,7 @@ public class BierConfigServiceImpl implements BierConfigApiService {
         this.topoManager = topoManager;
     }
 
-    public Future<RpcResult<ConfigureNodeOutput>> configureNode(ConfigureNodeInput input) {
+    public ListenableFuture<RpcResult<ConfigureNodeOutput>> configureNode(ConfigureNodeInput input) {
         ConfigureNodeOutputBuilder configureBuilder = new ConfigureNodeOutputBuilder();
         if (null == input) {
             configureBuilder.setConfigureResult(RpcUtil.getConfigResult(false,"input is null!"));
@@ -101,7 +100,7 @@ public class BierConfigServiceImpl implements BierConfigApiService {
         return RpcResultBuilder.success(configureBuilder.build()).buildFuture();
     }
 
-    public Future<RpcResult<DeleteNodeOutput>> deleteNode(DeleteNodeInput input) {
+    public ListenableFuture<RpcResult<DeleteNodeOutput>> deleteNode(DeleteNodeInput input) {
         DeleteNodeOutputBuilder builder = new DeleteNodeOutputBuilder();
 
         String errorCause = checkNode(input,input.getTopologyId(),input.getDomainId(),input.getSubDomainId(),
@@ -121,7 +120,7 @@ public class BierConfigServiceImpl implements BierConfigApiService {
         return RpcResultBuilder.success(builder.build()).buildFuture();
     }
 
-    public Future<RpcResult<DeleteIpv4Output>> deleteIpv4(DeleteIpv4Input input)  {
+    public ListenableFuture<RpcResult<DeleteIpv4Output>> deleteIpv4(DeleteIpv4Input input)  {
         DeleteIpv4OutputBuilder builder = new  DeleteIpv4OutputBuilder();
 
         String errorCause = checkNode(input,input.getTopologyId(),input.getDomainId(),input.getSubDomainId(),
@@ -150,7 +149,7 @@ public class BierConfigServiceImpl implements BierConfigApiService {
 
     }
 
-    public Future<RpcResult<DeleteIpv6Output>> deleteIpv6(DeleteIpv6Input input) {
+    public ListenableFuture<RpcResult<DeleteIpv6Output>> deleteIpv6(DeleteIpv6Input input) {
         DeleteIpv6OutputBuilder builder = new  DeleteIpv6OutputBuilder();
 
         String errorCause = checkNode(input,input.getTopologyId(),input.getDomainId(),

@@ -7,7 +7,7 @@
  */
 package org.opendaylight.bierman.impl;
 
-import java.util.concurrent.Future;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResult;
 import org.opendaylight.yang.gen.v1.urn.bier.common.rev161102.configure.result.ConfigureResultBuilder;
@@ -28,7 +28,7 @@ public class RpcUtil {
         return cfgResultBuilder.build();
     }
 
-    public static <T> Future<RpcResult<T>> returnRpcErr(String errMsg) {
+    public static <T> ListenableFuture<RpcResult<T>> returnRpcErr(String errMsg) {
         return RpcResultBuilder.<T>failed().withError(RpcError.ErrorType.APPLICATION, errMsg).buildFuture();
     }
 }

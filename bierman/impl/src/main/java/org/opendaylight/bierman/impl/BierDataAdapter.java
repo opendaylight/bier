@@ -143,7 +143,7 @@ public class BierDataAdapter {
         TopologyBuilder topoBuilder = new TopologyBuilder(topo);
         bierTopoBuilder.setTopologyId(topoBuilder.getTopologyId().getValue());
         BierTopologyKey bierTopoKey = new BierTopologyKey(topoBuilder.getTopologyId().getValue());
-        bierTopoBuilder.setKey(bierTopoKey);
+        bierTopoBuilder.withKey(bierTopoKey);
 
         List<BierNode> bierNodeList = new ArrayList<BierNode>();
         List<Node> nodeList = topoBuilder.getNode();
@@ -178,7 +178,7 @@ public class BierDataAdapter {
         String bierNodeId = toBierNodeId(nodeId);
         bierNodeBuilder.setNodeId(bierNodeId);
         BierNodeKey bierNodeKey = new BierNodeKey(bierNodeId);
-        bierNodeBuilder.setKey(bierNodeKey);
+        bierNodeBuilder.withKey(bierNodeKey);
 
         List<BierTerminationPoint> bierTpList = new ArrayList<BierTerminationPoint>();
         List<TerminationPoint> tpList = nodeBuilder.getTerminationPoint();
@@ -268,7 +268,7 @@ public class BierDataAdapter {
         String tpId = toBierTpId(tpBuilder.getTpId().getValue());
         bierTpBuilder.setTpId(tpId);
         BierTerminationPointKey bierTpKey = new BierTerminationPointKey(tpId);
-        bierTpBuilder.setKey(bierTpKey);
+        bierTpBuilder.withKey(bierTpKey);
 
         return bierTpBuilder.build();
     }
@@ -278,7 +278,7 @@ public class BierDataAdapter {
         String linkId = toBierLinkId(link.getLinkId().getValue());
         bierLinkBuilder.setLinkId(linkId);
         BierLinkKey bierLinkKey = new BierLinkKey(linkId);
-        bierLinkBuilder.setKey(bierLinkKey);
+        bierLinkBuilder.withKey(bierLinkKey);
 
         Source source = link.getSource();
         LinkSourceBuilder bierSource = new LinkSourceBuilder();
@@ -294,7 +294,7 @@ public class BierDataAdapter {
         bierDest.setDestTp(toBierTpId(dest.getDestTp().getValue()));
         bierLinkBuilder.setLinkDest(bierDest.build());
 
-        Long metric = link.getAugmentation(Link1.class).getIgpLinkAttributes().getMetric();
+        Long metric = link.augmentation(Link1.class).getIgpLinkAttributes().getMetric();
         bierLinkBuilder.setMetric(BigInteger.valueOf(metric));
         bierLinkBuilder.setDelay(BigInteger.valueOf(0));
         bierLinkBuilder.setLoss(BigInteger.valueOf(0));

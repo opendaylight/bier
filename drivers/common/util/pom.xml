@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.opendaylight.mdsal</groupId>
     <artifactId>binding-parent</artifactId>
-    <version>0.13.0-SNAPSHOT</version>
+    <version>0.13.0</version>
     <relativePath/>
   </parent>
 
@@ -15,7 +15,7 @@
   <name>ODL :: bier :: ${project.artifactId}</name>
 
   <properties>
-    <ietf.topology.version>2013.10.21.13.0-SNAPSHOT</ietf.topology.version>
+    <ietf.topology.version>2013.10.21.13.0</ietf.topology.version>
   </properties>
 
   <dependencies>

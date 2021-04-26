@@ -12,7 +12,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>single-feature-parent</artifactId>
-        <version>3.1.0</version>
+        <version>3.1.3</version>
         <relativePath/>
     </parent>
 
@@ -22,10 +22,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <packaging>feature</packaging>
     <name>OpenDaylight :: bier :: bierman</name>
     <properties>
-        <mdsal.version>1.8.0-SNAPSHOT</mdsal.version>
-        <restconf.version>1.8.0-SNAPSHOT</restconf.version>
-        <bgpcep.version>0.10.0-SNAPSHOT</bgpcep.version>
-        <netconf.version>1.5.0-SNAPSHOT</netconf.version>
+        <mdsal.version>1.8.0</mdsal.version>
+        <restconf.version>1.8.0</restconf.version>
+        <bgpcep.version>0.10.0</bgpcep.version>
+        <netconf.version>1.5.0</netconf.version>
     </properties>
     <dependencies>
         <dependency>

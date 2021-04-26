@@ -65,15 +65,15 @@ public class NetConfigStateChangeListenerImpl extends BierDataTreeChangeListener
                 case WRITE:
                     String addNodeId = rootNode.getDataAfter().getNodeId().getValue();
                     LOG.info("Node {} was created",addNodeId);
-                    NetconfNode ncNode = rootNode.getDataAfter().getAugmentation(NetconfNode.class);
+                    NetconfNode ncNode = rootNode.getDataAfter().augmentation(NetconfNode.class);
                     if (ncNode.getConnectionStatus() == NetconfNodeConnectionStatus.ConnectionStatus.Connected) {
                         updateBierNodeTp(addNodeId);
                     }
                     break;
                 case SUBTREE_MODIFIED:
                     LOG.info("process modify procedure");
-                    NetconfNode ncNodeNew = rootNode.getDataAfter().getAugmentation(NetconfNode.class);
-                    NetconfNode ncNodeOld = rootNode.getDataBefore().getAugmentation(NetconfNode.class);
+                    NetconfNode ncNodeNew = rootNode.getDataAfter().augmentation(NetconfNode.class);
+                    NetconfNode ncNodeOld = rootNode.getDataBefore().augmentation(NetconfNode.class);
                     if ((ncNodeNew.getConnectionStatus() == NetconfNodeConnectionStatus.ConnectionStatus.Connected)
                             && (ncNodeOld.getConnectionStatus() != NetconfNodeConnectionStatus
                             .ConnectionStatus.Connected)) {
@@ -131,7 +131,7 @@ public class NetConfigStateChangeListenerImpl extends BierDataTreeChangeListener
             if (index1 == -1 && index2 == -1 && index3 == -1) {
                 BierTerminationPointBuilder tpBuilder = new BierTerminationPointBuilder(devTp);
                 tpBuilder.setTpId(ifname);
-                tpBuilder.setKey(new BierTerminationPointKey(ifname));
+                tpBuilder.withKey(new BierTerminationPointKey(ifname));
                 newBierTpList.add(tpBuilder.build());
             }
         }

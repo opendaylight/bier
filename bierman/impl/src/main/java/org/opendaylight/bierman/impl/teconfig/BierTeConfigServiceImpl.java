@@ -142,7 +142,7 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             TeSiBuilder teSiBuilder = new TeSiBuilder();
             teSiBuilder.setTeBp(input.getTeDomain().get(0).getTeSubDomain().get(0).getTeBsl().get(0)
                     .getTeSi().get(0).getTeBp());
-            teSiBuilder.setKey(new TeSiKey(si));
+            teSiBuilder.withKey(new TeSiKey(si));
             teSiBuilder.setSi(si);
             teSiBuilder.setFtLabel(ftLabel);
             List<TeSi> teSiList = new ArrayList<TeSi>();
@@ -152,7 +152,7 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             TeBslBuilder teBslBuilder = new TeBslBuilder();
             teBslBuilder.setTeSi(teSiList);
             teBslBuilder.setBitstringlength(teBsl);
-            teBslBuilder.setKey(new TeBslKey(teBsl));
+            teBslBuilder.withKey(new TeBslKey(teBsl));
             List<TeBsl> teBslList = new ArrayList<TeBsl>();
             teBslList.add(teBslBuilder.build());
 
@@ -160,7 +160,7 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             TeSubDomainBuilder teSubDomainBuilder = new TeSubDomainBuilder();
             teSubDomainBuilder.setTeBsl(teBslList);
             teSubDomainBuilder.setSubDomainId(teSubDomainId);
-            teSubDomainBuilder.setKey(new TeSubDomainKey(teSubDomainId));
+            teSubDomainBuilder.withKey(new TeSubDomainKey(teSubDomainId));
             List<TeSubDomain> teSubDomainList = new ArrayList<TeSubDomain>();
             teSubDomainList.add(teSubDomainBuilder.build());
 
@@ -168,7 +168,7 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
             TeDomainBuilder teDomainBuilder = new TeDomainBuilder();
             teDomainBuilder.setTeSubDomain(teSubDomainList);
             teDomainBuilder.setDomainId(teDomainId);
-            teDomainBuilder.setKey(new TeDomainKey(teDomainId));
+            teDomainBuilder.withKey(new TeDomainKey(teDomainId));
             List<TeDomain> teDomainList = new ArrayList<TeDomain>();
             teDomainList.add(teDomainBuilder.build());
 
@@ -403,7 +403,7 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
         SubDomainId teSubDomainId = input.getSubDomainId();
         TeSubDomainBuilder teSubDomainBuilder = new TeSubDomainBuilder();
         teSubDomainBuilder.setSubDomainId(teSubDomainId);
-        teSubDomainBuilder.setKey(new TeSubDomainKey(teSubDomainId));
+        teSubDomainBuilder.withKey(new TeSubDomainKey(teSubDomainId));
         List<TeSubDomain> teSubDomainList = new ArrayList<TeSubDomain>();
         teSubDomainList.add(teSubDomainBuilder.build());
 
@@ -411,7 +411,7 @@ public class BierTeConfigServiceImpl implements BierTeConfigApiService {
         TeDomainBuilder teDomainBuilder = new TeDomainBuilder();
         teDomainBuilder.setTeSubDomain(teSubDomainList);
         teDomainBuilder.setDomainId(teDomainId);
-        teDomainBuilder.setKey(new TeDomainKey(teDomainId));
+        teDomainBuilder.withKey(new TeDomainKey(teDomainId));
         List<TeDomain> teDomainList = new ArrayList<TeDomain>();
         teDomainList.add(teDomainBuilder.build());
 

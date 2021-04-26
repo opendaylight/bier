@@ -126,7 +126,7 @@ public class BierDataManager {
 
         if (!isBierTopologyExist(path)) {
             final ReadWriteTransaction tx = dataBroker.newReadWriteTransaction();
-            tx.put(datastoreType, path, new BierTopologyBuilder().setKey(key).build(), true);
+            tx.put(datastoreType, path, new BierTopologyBuilder().withKey(key).build(), true);
             try {
                 tx.submit().get();
             } catch (InterruptedException | ExecutionException e) {
@@ -162,7 +162,7 @@ public class BierDataManager {
                 BierDataProcess.FLAG_WRITE,(new BierTopologyBuilder()).build());
 
         final InstanceIdentifier<BierTopology> path = InstanceIdentifier.create(BierNetworkTopology.class)
-                .child(BierTopology.class, bierTopology.getKey());
+                .child(BierTopology.class, bierTopology.key());
         processor.enqueueOperation(new BierDataOperation() {
             @Override
             public void writeOperation(ReadWriteTransaction transaction) {
