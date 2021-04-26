@@ -26,23 +26,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependency>
         <groupId>org.opendaylight.mdsal.model</groupId>
         <artifactId>ietf-inet-types-2013-07-15</artifactId>
-        <version>${mdsal.model.version}</version>
-
     </dependency>
     <dependency>
         <groupId>org.opendaylight.mdsal.model</groupId>
         <artifactId>ietf-yang-types-20130715</artifactId>
-        <version>${yang.types.version}</version>
     </dependency>
     <dependency>
         <groupId>org.opendaylight.mdsal.model</groupId>
         <artifactId>ietf-interfaces</artifactId>
-        <version>${ietf.interaces.version}</version>
     </dependency>
     <dependency>
         <groupId>org.opendaylight.mdsal.model</groupId>
         <artifactId>yang-ext</artifactId>
-        <version>${yang.ex.version}</version>
     </dependency>
     <dependency>
         <groupId>org.opendaylight.bier</groupId>
